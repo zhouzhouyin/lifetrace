@@ -1,0 +1,163 @@
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async'; // 使用 react-helmet-async
+import axios from 'axios';
+import { AppContext } from '../context/AppContext';
+
+// 清理用户输入，防止 XSS
+const sanitizeInput = (input) => {
+  return input.replace(/[<>"'&]/g, '');
+};
+
+const Login = () => {
+  const { setIsLoggedIn, setToken, setUsername: setContextUsername, setError } = useContext(AppContext);
+  const [username, setLocalUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  // 若未登录，清除本地缓存的 username，避免非浏览器自动填充情况下残留旧账号
+  useEffect(() => {
+    const hasToken = !!localStorage.getItem('token');
+    if (!hasToken) {
+      try { localStorage.removeItem('username'); } catch (_) {}
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const sanitizedUsername = sanitizeInput(username);
+    const sanitizedPassword = sanitizeInput(password);
+
+    if (!sanitizedUsername || !sanitizedPassword) {
+      setMessage('用户名和密码不能为空');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('Login.js: Sending login request:', { username: sanitizedUsername });
+      // 清除旧 token
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      setToken('');
+      setContextUsername('');
+      setIsLoggedIn(false);
+
+      const response = await axios.post('/api/login', {
+        username: sanitizedUsername,
+        password: sanitizedPassword,
+      });
+      const { token, username: returnedUsername, userId, uid } = response.data;
+      console.log('Login.js: Login successful, token:', token, 'username:', returnedUsername);
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('username', returnedUsername);
+      if (userId) localStorage.setItem('userId', userId);
+      if (uid) localStorage.setItem('uid', uid);
+      setToken(token);
+      setContextUsername(returnedUsername);
+      if (userId) {
+        // 延迟设置，避免未提供的情况下污染上下文
+        try { window.dispatchEvent(new Event('userId-set')); } catch (_) {}
+      }
+      setIsLoggedIn(true);
+      setMessage('登录成功！');
+      setTimeout(() => navigate('/'), 1000);
+    } catch (err) {
+      console.error('Login.js: Login error:', err.response?.data || err.message);
+      let errorMessage = '登录失败，请检查用户名或密码';
+      const respMsg = err.response?.data?.message || '';
+      if (respMsg.includes('用户不存在')) {
+        errorMessage = '用户名不存在，请重新输入';
+      } else if (respMsg.includes('密码错误')) {
+        errorMessage = '密码错误，请重新输入';
+      } else if (err.response) {
+        if (err.response.status === 429) errorMessage = '请求过于频繁，请稍后再试';
+        else if (err.response.status === 500) errorMessage = '服务器错误，请稍后重试';
+        else errorMessage = respMsg || errorMessage;
+      }
+      setMessage(errorMessage);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 清除提示信息
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="card max-w-md w-full p-6">
+        <Helmet>
+          <title>登录 - 永念</title>
+        </Helmet>
+        <h2 className="text-2xl font-bold text-center mb-6">登录</h2>
+        {message && (
+          <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('错误') ? 'bg-red-500' : 'bg-green-500'}`}>
+            {message}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+            <input
+              type="text"
+              className="input w-full"
+              placeholder="请输入用户名"
+              value={username}
+              onChange={(e) => setLocalUsername(sanitizeInput(e.target.value))}
+              required
+              disabled={isLoading}
+              autoComplete="username"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <div className="flex gap-2">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input w-full"
+                placeholder="请输入密码"
+                value={password}
+                onChange={(e) => setPassword(sanitizeInput(e.target.value))}
+                required
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="btn bg-gray-500 hover:bg-gray-600 whitespace-nowrap"
+                onClick={() => setShowPassword((v) => !v)}
+                disabled={isLoading}
+                aria-label={showPassword ? '隐藏密码' : '显示密码'}
+              >
+                {showPassword ? '隐藏' : '显示'}
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="btn w-full" disabled={isLoading}>
+            {isLoading ? '登录中...' : '登录'}
+          </button>
+          <button
+            type="button"
+            className="btn bg-gray-500 hover:bg-gray-600 w-full"
+            onClick={() => navigate('/register')}
+            disabled={isLoading}
+          >
+            去注册
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

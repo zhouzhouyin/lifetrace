@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 18px; /* 适老化：基础字号提升 */
+  line-height: 1.7; /* 适老化：行高增大，提升可读性 */
+}
+
+.btn {
+  @apply bg-blue-500 text-white px-5 py-3 rounded hover:bg-blue-600 transition font-semibold;
+  font-size: 18px; /* 适老化：按钮字号提升 */
+}
+
+.input {
+  @apply border border-gray-300 rounded px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500;
+  font-size: 18px; /* 适老化：输入框字号提升 */
+}
+
+.card {
+  @apply border border-gray-200 rounded p-6 shadow-sm bg-white;
+}
+
+.progress-container {
+  @apply w-full bg-gray-200 rounded h-2;
+}
+
+.progress-bar {
+  @apply bg-blue-500 h-full rounded transition-all;
+}
+
+.chat-container {
+  @apply border border-gray-300 rounded p-4;
+}
+
+.chat-messages {
+  @apply h-64 overflow-y-auto mb-4 p-2 bg-gray-50;
+}
+
+.chat-input {
+  @apply flex gap-2;
+}
+
+/* 适老化：说明/注释等小号文字统一放大 */
+.text-sm { font-size: 1.0625rem; line-height: 1.7; } /* 17px */
+.text-xs { font-size: 0.9375rem; line-height: 1.7; } /* 15px */

@@ -1,0 +1,872 @@
+{"level":"info","message":"Server running on port 5002","timestamp":"2025-08-18T05:55:33.687Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-18T05:55:33.730Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T05:57:04.629Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T05:57:04.641Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T05:57:05.849Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:04:14.433Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:04:19.482Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:04:22.564Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:04:23.032Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:10:44.221Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:10:44.230Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:28:40.665Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:28:40.673Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:30:00.278Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:30:03.645Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:30:04.129Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:30:09.165Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:41:44.339Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T06:41:44.348Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:41:55.102Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:01.142Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:04.113Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:07.194Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:08.574Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:13.654Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:13.875Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:14.462Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:15.533Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:24.783Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:52.264Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:57.204Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:42:58.523Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:43:01.952Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:43:02.036Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:43:03.064Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:43:06.514Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:43:09.724Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T06:58:38.587Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T09:32:20.665Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T09:32:20.675Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:32:30.361Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:32:48.561Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:33:02.853Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:38:11.497Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:38:16.955Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T09:38:28.828Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T09:38:28.834Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:38:30.264Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:38:38.284Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:43:07.754Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T09:43:11.403Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T11:11:29.124Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T11:11:29.131Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:11:56.615Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:12:20.125Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:22:45.378Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:23:05.998Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:23:16.319Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:23:35.723Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:27:21.428Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:27:52.731Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:36:53.990Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:43:44.761Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:43:58.427Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:44:13.646Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:44:27.587Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:44:48.969Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:47:17.333Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T11:59:57.461Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T12:00:06.202Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:03:52.110Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:03:52.117Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T12:04:01.050Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:07:47.514Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:07:47.523Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:12:50.556Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:12:52.846Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:12:53.894Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:12:53.906Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:12:53.927Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:12:53.933Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755429198955-917145981.png","timestamp":"2025-08-18T12:12:53.964Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755429190410-604192220.mp4","timestamp":"2025-08-18T12:12:54.001Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755429173291-429035821.m4a","timestamp":"2025-08-18T12:12:54.315Z"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755429198955-917145981.png","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-18T12:12:56.310Z","uploadId":"68a1b94e15c81a5ed2588a82"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-18T12:12:56.312Z","uploadId":"68a1b94e15c81a5ed2588a82","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755429190410-604192220.mp4","timestamp":"2025-08-18T12:12:56.637Z"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a0683d1ea099dd42148111","timestamp":"2025-08-18T12:12:57.376Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755429173291-429035821.m4a","timestamp":"2025-08-18T12:12:57.389Z"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755429190410-604192220.mp4","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-18T12:12:58.835Z","uploadId":"68a1b94615c81a5ed2588a80"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-18T12:12:58.836Z","uploadId":"68a1b94615c81a5ed2588a80","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:13:00.048Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:13:01.195Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:13:02.198Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:13:02.210Z","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755429173291-429035821.m4a","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-18T12:13:02.221Z","uploadId":"68a1b93515c81a5ed2588a7e"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-18T12:13:02.223Z","uploadId":"68a1b93515c81a5ed2588a7e","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:13:02.226Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:13:02.238Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:13:02.244Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:13:02.253Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:13:02.266Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:13:02.273Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:13:02.868Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:15:32.378Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:18:38.855Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:18:39.523Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:18:40.051Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:40.534Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:40.543Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:18:40.561Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:40.568Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:40.607Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:40.617Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:40.640Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:40.654Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:40.666Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:18:40.909Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:41.561Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:41.569Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:41.583Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:41.586Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:18:41.593Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:41.600Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:41.613Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:18:41.623Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User registered","timestamp":"2025-08-18T12:19:12.637Z","username":"841438581"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-18T12:19:35.494Z","username":"841438581"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:19:36.513Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:19:45.606Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:19:46.602Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:19:46.612Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:19:46.627Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:19:46.643Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:19:46.649Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:19:46.661Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:19:46.680Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:19:46.691Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:20:24.609Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:20:27.909Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T12:21:59.194Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-18T12:23:50.569Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:24:28.304Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:24:30.664Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:14.162Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:15.110Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:19.117Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:20.073Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:23.066Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:24.436Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:25.434Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:25.442Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:25.453Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:25.464Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:25.473Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:25.484Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:25.496Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:25.509Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:27.618Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:28.882Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:29.875Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:29.885Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:29.909Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:29.911Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-18T12:25:29.923Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:29.926Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:29.937Z","userId":"68a31a40970ab0112355ef33"}
+{"count":0,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-18T12:25:29.947Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:25:31.253Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:47:31.434Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:52:53.326Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T12:52:53.335Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:13.453Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:16.323Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:24.887Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:43.653Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:43.661Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:43.707Z","userId":"68a31a40970ab0112355ef33"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-18T13:25:45.226Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:46.260Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:47.459Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:25:50.167Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-18T13:26:40.703Z","userId":"68a065a91ea099dd42148100"}
+{"level":"info","message":"Server running on port 5002","timestamp":"2025-08-19T13:02:56.267Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-19T13:02:56.307Z"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-19T13:10:11.669Z","username":"jiayinz"}
+{"level":"info","message":"Server running on port 5002","timestamp":"2025-08-20T01:11:06.374Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-20T01:11:06.473Z"}
+{"error":"jwt expired","ip":"::1","level":"warn","message":"Invalid token","timestamp":"2025-08-20T01:11:46.975Z"}
+{"error":"jwt expired","ip":"::1","level":"warn","message":"Invalid token","timestamp":"2025-08-20T01:11:46.987Z"}
+{"error":"jwt expired","ip":"::1","level":"warn","message":"Invalid token","timestamp":"2025-08-20T01:11:46.999Z"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T01:11:49.841Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T01:11:50.996Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T01:11:55.507Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T01:11:56.540Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T01:11:56.558Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T01:11:56.572Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T01:11:56.612Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T01:11:56.618Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T01:11:57.144Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:00:02.704Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:00:02.713Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:00:02.720Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:01:33.385Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:01:34.457Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:01:35.526Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:11:31.347Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:11:31.355Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:11:31.387Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:11:32.695Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:11:33.723Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:11:34.438Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:12:09.981Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:12:09.988Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:12:10.007Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:12:12.616Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:12:13.642Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:12:14.524Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:32:28.469Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:32:28.478Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:32:28.525Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:32:29.669Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:32:30.691Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:32:31.206Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:37:18.779Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:37:19.024Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:37:19.030Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:37:19.064Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:37:20.330Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:37:21.355Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:37:21.882Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:50:06.158Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:50:29.118Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:50:49.919Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:51:05.370Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:51:28.009Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:51:38.482Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T02:51:50.153Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:56:06.626Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:56:06.635Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:56:06.666Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:56:07.760Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:56:08.783Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:56:09.374Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:59:04.954Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:59:04.962Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:59:05.002Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T02:59:06.055Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:59:07.086Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T02:59:07.699Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:00:26.542Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:00:31.730Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:00:31.739Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:00:31.771Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T03:00:32.772Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:00:33.796Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:00:34.507Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:00:58.281Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:01:03.976Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:01:03.984Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:01:04.011Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T03:01:05.108Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:01:06.133Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:01:07.121Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:01:15.569Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:05:01.200Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:05:01.211Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:05:01.247Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T03:05:02.477Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:05:03.502Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:05:04.434Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:05:17.197Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:07:17.398Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:07:17.407Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:07:17.441Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T03:07:18.279Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:07:19.303Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:07:20.361Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:07:28.045Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:19:58.213Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:22:05.967Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:22:22.242Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:22:23.685Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:22:55.361Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:39:44.342Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:39:44.351Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:39:44.381Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T03:39:45.679Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:39:46.703Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T03:39:47.306Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:43:53.321Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T03:47:47.907Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:10.512Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:10.520Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:10.556Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:15:11.635Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:12.657Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:13.358Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:15:34.119Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:53.856Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:53.874Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:53.931Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:15:58.277Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:15:59.309Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:16:00.344Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:16:17.631Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:18:39.477Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:18:39.486Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:18:39.538Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:18:55.560Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:18:56.626Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:18:57.615Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:19:14.541Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:19:34.944Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:22:03.352Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:22:03.367Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:22:03.426Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:22:04.600Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:22:05.645Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:22:06.906Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:22:24.244Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:23:05.862Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:23:05.873Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:23:05.949Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:23:07.934Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:23:08.997Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:23:09.810Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:23:33.523Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:23:58.712Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:26:37.988Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:26:37.997Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:26:38.059Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:26:41.077Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:26:42.132Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:26:43.170Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:27:02.307Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:29:01.914Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:29:01.926Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:29:01.986Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T04:29:03.427Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:29:04.493Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T04:29:05.615Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:29:20.367Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:31:20.699Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T04:31:31.862Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:32:10.914Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:32:10.927Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:32:10.975Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T05:32:12.324Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:32:13.352Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:32:14.027Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:38:22.146Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:38:36.163Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:43:45.260Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:43:45.269Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:43:45.306Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T05:43:46.528Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:43:47.570Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:17.769Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:35.025Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:35.036Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:35.082Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T05:45:36.277Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:37.304Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:45:38.150Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:49:32.752Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669004460-97060588.webp","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T05:50:04.495Z","uploadId":"68a5620caff034fd010c6aa9","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669004460-97060588.webp","timestamp":"2025-08-20T05:50:04.828Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:50:34.784Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:51:01.996Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:51:04.805Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:51:25.069Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:51:36.696Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:51:58.127Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669135042-377218301.png","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T05:52:15.060Z","uploadId":"68a5628faff034fd010c6aab","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669135042-377218301.png","timestamp":"2025-08-20T05:52:15.375Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:52:45.842Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669004460-97060588.webp","timestamp":"2025-08-20T05:52:50.202Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:52:51.349Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:52:58.093Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:54:35.862Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:54:35.872Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:54:35.913Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T05:54:37.045Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:54:38.068Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:54:38.727Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669287394-311868932.png","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T05:54:47.427Z","uploadId":"68a56327aff034fd010c6ad6","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669287394-311868932.png","timestamp":"2025-08-20T05:54:47.747Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:54:56.662Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:07.595Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:07.603Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:07.626Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T05:55:08.819Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:09.846Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:10.586Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669318978-572768061.png","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T05:55:18.999Z","uploadId":"68a56346aff034fd010c6b01","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669318978-572768061.png","timestamp":"2025-08-20T05:55:19.323Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:21.847Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:55:29.426Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:55:30.223Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669497590-906137971.webp","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T05:58:17.595Z","uploadId":"68a563f9aff034fd010c6b13","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669497590-906137971.webp","timestamp":"2025-08-20T05:58:17.616Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T05:58:19.016Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T05:58:31.651Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:05:28.535Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755669939776-518104427.jpg","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T06:05:39.822Z","uploadId":"68a565b3aff034fd010c6b25","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669939776-518104427.jpg","timestamp":"2025-08-20T06:05:40.138Z"}
+{"file":"1755669944686-144857439.png","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T06:05:44.694Z","uploadId":"68a565b8aff034fd010c6b27","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669944686-144857439.png","timestamp":"2025-08-20T06:05:44.704Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:05:48.567Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669944686-144857439.png","timestamp":"2025-08-20T06:05:48.868Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:06:06.406Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:06:09.009Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:08:21.241Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:08:21.247Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:08:21.283Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:08:22.445Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:08:23.470Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:08:24.141Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:09:17.988Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:09:17.997Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:09:18.009Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:11:16.454Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:11:17.470Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:12:46.589Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:12:46.596Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:12:46.628Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:12:47.787Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:12:48.814Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:12:49.364Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:13:48.981Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:13:48.988Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:13:49.003Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:14:48.117Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:14:49.132Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:14:49.761Z","userId":"68a065a91ea099dd42148100"}
+{"file":"1755670498920-694557674.webp","ip":"::1","level":"info","message":"File uploaded","timestamp":"2025-08-20T06:14:58.924Z","uploadId":"68a567e2aff034fd010c6bd5","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:14:59.245Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:15:11.108Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:15:21.405Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:15:23.018Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:15:25.352Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:15:49.204Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:16:03.141Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:16:11.311Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:16:13.823Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:21:05.905Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:21:09.006Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:21:13.508Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:21:14.843Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:21:17.136Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:21:26.522Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:21:54.013Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:21:54.310Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:22:03.124Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:22:05.723Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:23:02.735Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:23:11.505Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:17.124Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:40.683Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:52.615Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:52.627Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:52.686Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:27:53.946Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:54.980Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:55.759Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:27:56.336Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:27:59.984Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:27:59.994Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:28:11.909Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b87aff034fd010c6c70","timestamp":"2025-08-20T06:30:31.312Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b89aff034fd010c6c72","timestamp":"2025-08-20T06:30:33.926Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8baff034fd010c6c74","timestamp":"2025-08-20T06:30:35.229Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8caff034fd010c6c76","timestamp":"2025-08-20T06:30:36.353Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8caff034fd010c6c78","timestamp":"2025-08-20T06:30:36.527Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8caff034fd010c6c7a","timestamp":"2025-08-20T06:30:36.673Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8daff034fd010c6c7c","timestamp":"2025-08-20T06:30:37.370Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8daff034fd010c6c7e","timestamp":"2025-08-20T06:30:37.625Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8eaff034fd010c6c80","timestamp":"2025-08-20T06:30:38.487Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8eaff034fd010c6c82","timestamp":"2025-08-20T06:30:38.696Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8faff034fd010c6c84","timestamp":"2025-08-20T06:30:39.096Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b8faff034fd010c6c86","timestamp":"2025-08-20T06:30:39.296Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b90aff034fd010c6c88","timestamp":"2025-08-20T06:30:40.048Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b90aff034fd010c6c8a","timestamp":"2025-08-20T06:30:40.233Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b90aff034fd010c6c8c","timestamp":"2025-08-20T06:30:40.661Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b90aff034fd010c6c8e","timestamp":"2025-08-20T06:30:40.856Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b91aff034fd010c6c90","timestamp":"2025-08-20T06:30:41.548Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b92aff034fd010c6c92","timestamp":"2025-08-20T06:30:42.934Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b93aff034fd010c6c94","timestamp":"2025-08-20T06:30:43.149Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b93aff034fd010c6c96","timestamp":"2025-08-20T06:30:43.338Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b93aff034fd010c6c98","timestamp":"2025-08-20T06:30:43.782Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b93aff034fd010c6c9a","timestamp":"2025-08-20T06:30:43.978Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b94aff034fd010c6c9c","timestamp":"2025-08-20T06:30:44.506Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b94aff034fd010c6c9e","timestamp":"2025-08-20T06:30:44.666Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b95aff034fd010c6ca0","timestamp":"2025-08-20T06:30:45.082Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b95aff034fd010c6ca2","timestamp":"2025-08-20T06:30:45.249Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56b95aff034fd010c6ca4","timestamp":"2025-08-20T06:30:45.414Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:30:48.600Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:30:49.599Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:30:50.949Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:31:09.112Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:31:10.136Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:31:14.142Z","userId":"68a065a91ea099dd42148100"}
+{"count":27,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:31:15.172Z","userId":"68a065a91ea099dd42148100"}
+{"count":27,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:31:15.193Z","userId":"68a065a91ea099dd42148100"}
+{"count":9,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:31:15.215Z","userId":"68a065a91ea099dd42148100"}
+{"count":9,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:31:15.224Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669135042-377218301.png","timestamp":"2025-08-20T06:31:15.242Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669287394-311868932.png","timestamp":"2025-08-20T06:31:15.564Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669318978-572768061.png","timestamp":"2025-08-20T06:31:15.566Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669939776-518104427.jpg","timestamp":"2025-08-20T06:31:15.568Z"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755669944686-144857439.png","timestamp":"2025-08-20T06:31:15.568Z"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b89aff034fd010c6c72","timestamp":"2025-08-20T06:31:25.790Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8baff034fd010c6c74","timestamp":"2025-08-20T06:31:27.232Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8caff034fd010c6c76","timestamp":"2025-08-20T06:31:27.719Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8caff034fd010c6c78","timestamp":"2025-08-20T06:31:28.107Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8caff034fd010c6c7a","timestamp":"2025-08-20T06:31:28.519Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8daff034fd010c6c7c","timestamp":"2025-08-20T06:31:28.857Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8daff034fd010c6c7e","timestamp":"2025-08-20T06:31:29.242Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8eaff034fd010c6c80","timestamp":"2025-08-20T06:31:29.636Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8eaff034fd010c6c82","timestamp":"2025-08-20T06:31:29.896Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8faff034fd010c6c84","timestamp":"2025-08-20T06:31:30.051Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b8faff034fd010c6c86","timestamp":"2025-08-20T06:31:30.201Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b90aff034fd010c6c88","timestamp":"2025-08-20T06:31:30.357Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b90aff034fd010c6c8a","timestamp":"2025-08-20T06:31:30.509Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b90aff034fd010c6c8c","timestamp":"2025-08-20T06:31:30.826Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b90aff034fd010c6c8e","timestamp":"2025-08-20T06:31:30.976Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b93aff034fd010c6c96","timestamp":"2025-08-20T06:31:37.205Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b93aff034fd010c6c98","timestamp":"2025-08-20T06:31:37.357Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b93aff034fd010c6c9a","timestamp":"2025-08-20T06:31:37.501Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b94aff034fd010c6c9c","timestamp":"2025-08-20T06:31:37.644Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b94aff034fd010c6c9e","timestamp":"2025-08-20T06:31:37.784Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b95aff034fd010c6ca0","timestamp":"2025-08-20T06:31:37.926Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b95aff034fd010c6ca2","timestamp":"2025-08-20T06:31:38.071Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b95aff034fd010c6ca4","timestamp":"2025-08-20T06:31:38.221Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b87aff034fd010c6c70","timestamp":"2025-08-20T06:31:41.014Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b91aff034fd010c6c90","timestamp":"2025-08-20T06:31:41.867Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b92aff034fd010c6c92","timestamp":"2025-08-20T06:31:42.303Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56b93aff034fd010c6c94","timestamp":"2025-08-20T06:31:42.647Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755669135042-377218301.png","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-20T06:31:44.512Z","uploadId":"68a5628faff034fd010c6aab"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-20T06:31:44.513Z","uploadId":"68a5628faff034fd010c6aab","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755669287394-311868932.png","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-20T06:31:44.664Z","uploadId":"68a56327aff034fd010c6ad6"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-20T06:31:44.665Z","uploadId":"68a56327aff034fd010c6ad6","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755669318978-572768061.png","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-20T06:31:44.805Z","uploadId":"68a56346aff034fd010c6b01"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-20T06:31:44.806Z","uploadId":"68a56346aff034fd010c6b01","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755669939776-518104427.jpg","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-20T06:31:45.484Z","uploadId":"68a565b3aff034fd010c6b25"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-20T06:31:45.485Z","uploadId":"68a565b3aff034fd010c6b25","userId":"68a065a91ea099dd42148100"}
+{"filePath":"C:\\Users\\15571\\my-app\\lifetrace-backend\\Uploads\\1755669944686-144857439.png","ip":"::1","level":"info","message":"File deleted from disk","timestamp":"2025-08-20T06:31:46.333Z","uploadId":"68a565b8aff034fd010c6b27"}
+{"ip":"::1","level":"info","message":"Upload deleted","timestamp":"2025-08-20T06:31:46.334Z","uploadId":"68a565b8aff034fd010c6b27","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:31:47.007Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:31:47.873Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:31:59.267Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:31:59.567Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56be1aff034fd010c6d19","timestamp":"2025-08-20T06:32:01.843Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:32:04.029Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:32:05.019Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:32:05.906Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:32:07.736Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:32:50.770Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:32:51.787Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:14.215Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56c2faff034fd010c6d44","timestamp":"2025-08-20T06:33:19.016Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:19.705Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:20.556Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:33:21.562Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:33:21.570Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:33:21.584Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:33:21.590Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56be1aff034fd010c6d19","timestamp":"2025-08-20T06:33:26.561Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56c2faff034fd010c6d44","timestamp":"2025-08-20T06:33:27.619Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:28.556Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:29.424Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:31.685Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:33:31.689Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:35.531Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:33:38.370Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:33:54.890Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:33:58.738Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:33:59.044Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56c58aff034fd010c6d88","timestamp":"2025-08-20T06:34:00.598Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56c5aaff034fd010c6d8a","timestamp":"2025-08-20T06:34:02.600Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:04.202Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:04.996Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:05.808Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:34:07.135Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:12.404Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:13.366Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:34:14.332Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:34:14.339Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:34:14.354Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:34:14.359Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56c58aff034fd010c6d88","timestamp":"2025-08-20T06:34:17.926Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56c5aaff034fd010c6d8a","timestamp":"2025-08-20T06:34:18.847Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:19.912Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:20.654Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:32.080Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:33.125Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:36.594Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:34:36.900Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56c7faff034fd010c6de6","timestamp":"2025-08-20T06:34:39.734Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56c82aff034fd010c6de8","timestamp":"2025-08-20T06:34:42.155Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:43.409Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:44.734Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:45.435Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:34:45.713Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:53.973Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:34:55.016Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:08.549Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:09.559Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:10.559Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:10.568Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:10.584Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:10.589Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56c7faff034fd010c6de6","timestamp":"2025-08-20T06:36:16.735Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56c82aff034fd010c6de8","timestamp":"2025-08-20T06:36:17.394Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:18.209Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:19.221Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:21.624Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:36:21.626Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56ce7aff034fd010c6e52","timestamp":"2025-08-20T06:36:23.816Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56cebaff034fd010c6e54","timestamp":"2025-08-20T06:36:27.062Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:28.412Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:29.522Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:30.993Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:36:31.666Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:32.003Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:32.010Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:32.027Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:32.033Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:37.741Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:39.045Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:36:43.576Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:43.579Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56cfcaff034fd010c6e8e","timestamp":"2025-08-20T06:36:44.931Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:46.847Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:47.846Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:36:48.780Z","userId":"68a065a91ea099dd42148100"}
+{"count":3,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:49.780Z","userId":"68a065a91ea099dd42148100"}
+{"count":3,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:36:49.787Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:49.803Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:36:49.808Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:36:53.787Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56cebaff034fd010c6e54","timestamp":"2025-08-20T06:36:57.568Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56ce7aff034fd010c6e52","timestamp":"2025-08-20T06:36:59.179Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56cfcaff034fd010c6e8e","timestamp":"2025-08-20T06:36:59.934Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:02.703Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:03.441Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:06.274Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:07.195Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:52.339Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:37:52.643Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56d42aff034fd010c6edb","timestamp":"2025-08-20T06:37:54.017Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:55.322Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:56.478Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:57.270Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:37:58.271Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:37:58.279Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:37:58.293Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:37:58.299Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:37:58.840Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:37:59.951Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:00.801Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:04.484Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note retrieved","noteId":"68a56d42aff034fd010c6edb","timestamp":"2025-08-20T06:38:04.513Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note retrieved","noteId":"68a56d42aff034fd010c6edb","timestamp":"2025-08-20T06:38:04.520Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:38:04.522Z"}
+{"ip":"::1","level":"info","message":"Note retrieved","noteId":"68a56d42aff034fd010c6edb","timestamp":"2025-08-20T06:38:04.527Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:09.719Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:11.144Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:19.054Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:19.852Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:38:20.160Z"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a56d5daff034fd010c6f50","timestamp":"2025-08-20T06:38:21.706Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:23.465Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:24.538Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:38:25.451Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:38:26.455Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:38:26.463Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:38:26.477Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:38:26.484Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:38:30.332Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56d5daff034fd010c6f50","timestamp":"2025-08-20T06:38:32.774Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:46:39.940Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:46:45.395Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:46:53.357Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T06:46:53.664Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:46:55.195Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T06:47:06.296Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:48:46.616Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:48:46.623Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:48:46.643Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:49:05.210Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:49:05.220Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:49:07.910Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:49:07.919Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:50:23.398Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:24.532Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:24.778Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:24.784Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:24.800Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:50:26.126Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:27.139Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:40.082Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:50:41.092Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:50:41.099Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:50:41.123Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:50:41.130Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:50:44.400Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:04.718Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:51:05.721Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:51:05.729Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:51:05.743Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:51:05.747Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a56d42aff034fd010c6edb","timestamp":"2025-08-20T06:51:11.120Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:18.921Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:18.930Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:18.958Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:51:20.794Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:21.830Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:42.001Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:42.010Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:42.088Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:51:43.630Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:44.664Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:46.588Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:51:47.599Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T06:51:47.605Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:51:47.619Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T06:51:47.625Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:48.682Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:49.469Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:51.115Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:51.880Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:51:56.566Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:53:03.005Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:53:03.014Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:53:03.041Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:53:13.342Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:53:14.376Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:56:43.093Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:56:43.105Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:56:43.147Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T06:58:15.283Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T06:58:16.420Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:04:33.556Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:04:42.787Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:04:44.100Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:04:47.605Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:05:52.770Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:00.467Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:00.475Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:00.507Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T07:11:03.034Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:04.072Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:05.299Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:11:07.976Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T07:16:01.422Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:16:02.452Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:16:06.413Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:16:10.587Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T07:18:38.157Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:18:39.182Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T07:28:48.458Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:28:49.481Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:28:50.955Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:33:53.875Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:33:55.477Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:33:56.798Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:33:56.804Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:33:56.821Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:33:56.826Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:33:57.617Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:02.904Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:02.911Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:02.942Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T07:46:04.480Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:05.506Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:06.235Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:46:07.253Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:46:07.259Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:46:07.275Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:46:07.281Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:46:08.855Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:18.589Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:47:19.587Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:47:19.595Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:47:19.613Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:47:19.620Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:20.015Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:49.886Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:51.955Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:52.871Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:56.080Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:56.986Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:47:57.987Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T07:47:57.992Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:47:58.012Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T07:47:58.019Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:58.224Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T07:47:58.993Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T08:03:47.437Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:03:48.466Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T08:09:03.458Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:04.478Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:05.330Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:06.652Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:06.658Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:06.674Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:06.680Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:08.377Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:36.967Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:37.963Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:37.970Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:37.986Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:37.989Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:38.000Z","userId":"68a065a91ea099dd42148100"}
+{"count":0,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:09:38.003Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:38.018Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:09:38.032Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:38.511Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:39.539Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:41.454Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:42.175Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:09:44.962Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User logged in","timestamp":"2025-08-20T08:31:02.348Z","username":"fst123"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:03.363Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:04.529Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a587caaff034fd010c72b6","timestamp":"2025-08-20T08:31:06.942Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:08.074Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:09.026Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:31:10.043Z","userId":"68a065a91ea099dd42148100"}
+{"count":1,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:31:10.052Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:31:10.070Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:31:10.077Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:12.353Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:31:13.042Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:37:47.833Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:37:48.878Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a5895faff034fd010c72f2","timestamp":"2025-08-20T08:37:51.660Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:37:54.301Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T08:37:54.627Z"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:37:57.923Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:37:59.014Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:00.430Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T08:38:03.469Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:04.766Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:05.669Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:38:06.674Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:38:06.682Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:38:06.689Z","userId":"68a065a91ea099dd42148100"}
+{"count":2,"ip":"::1","level":"info","message":"Notes retrieved","timestamp":"2025-08-20T08:38:06.699Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:38:06.708Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:38:06.716Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:38:06.725Z","userId":"68a065a91ea099dd42148100"}
+{"count":4,"ip":"::1","level":"info","message":"Uploads retrieved","timestamp":"2025-08-20T08:38:06.734Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a5895faff034fd010c72f2","timestamp":"2025-08-20T08:38:10.150Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note deleted","noteId":"68a587caaff034fd010c72b6","timestamp":"2025-08-20T08:38:11.090Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:11.864Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:12.675Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:14.384Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Serving static file","path":"/1755670498920-694557674.webp","timestamp":"2025-08-20T08:38:14.387Z"}
+{"ip":"::1","level":"info","message":"Spark API request successful","timestamp":"2025-08-20T08:38:22.662Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note created","noteId":"68a5897faff034fd010c734e","timestamp":"2025-08-20T08:38:23.647Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"Note updated","noteId":"68a5897faff034fd010c734e","timestamp":"2025-08-20T08:38:24.782Z","type":"Biography","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:26.530Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:27.694Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:38:28.665Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:42:04.458Z","userId":"68a065a91ea099dd42148100"}
+{"ip":"::1","level":"info","message":"User info retrieved","timestamp":"2025-08-20T08:42:04.471Z","userId":"68a065a91ea099dd42148100"}
+{"level":"info","message":"Server running on port 5002","timestamp":"2025-08-20T08:42:11.216Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-20T08:42:11.253Z"}
+{"ip":"::1","level":"info","message":"Report submitted","noteId":"68a5897faff034fd010c734e","timestamp":"2025-08-20T08:42:17.844Z","userId":"68a065a91ea099dd42148100"}
