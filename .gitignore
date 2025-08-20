@@ -1,0 +1,21 @@
+# Node
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+npm-debug.log*
+
+# Env
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Uploads (如需忽略本地上传文件)
+lifetrace-backend/Uploads/
