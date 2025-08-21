@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
       <header className="bg-blue-600 text-white p-3 sm:p-4">
         <div className="container mx-auto px-3 sm:px-4 relative flex items-center">
           <h1 className="text-2xl sm:text-3xl font-bold mx-auto">{lang === 'zh' ? '永念' : 'LifeTrace'}</h1>
-          <div className="absolute right-3 top-2 hidden sm:flex items-center gap-2">
+          <div className="absolute right-3 top-2 flex items-center gap-2">
               <select
                 className="text-black rounded px-2 py-1"
                 value={lang}
@@ -31,24 +31,9 @@ const Layout = ({ children }) => {
                 <option value="en">English</option>
               </select>
               {isLoggedIn && (
-                <button className="btn" onClick={handleLogout}>{lang === 'zh' ? '登出' : 'Logout'}</button>
+                <button className="btn hidden sm:inline-flex" onClick={handleLogout}>{lang === 'zh' ? '登出' : 'Logout'}</button>
               )}
             </div>
-        </div>
-        {/* Mobile language/logout bar */}
-        <div className="container mx-auto px-3 sm:px-4 mt-2 sm:hidden flex justify-center gap-2">
-          <select
-            className="text-black rounded px-2 py-1"
-            value={lang}
-            onChange={(e) => setLang(e.target.value)}
-            title="Language"
-          >
-            <option value="zh">中文</option>
-            <option value="en">English</option>
-          </select>
-          {isLoggedIn && (
-            <button className="btn px-3 py-1" onClick={handleLogout}>{lang === 'zh' ? '登出' : 'Logout'}</button>
-          )}
         </div>
       </header>
       <main className="container mx-auto px-3 sm:px-4 py-4">{children}</main>

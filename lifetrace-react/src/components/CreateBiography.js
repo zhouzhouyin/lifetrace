@@ -1183,11 +1183,11 @@ const CreateBiography = () => {
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
                 <div className={`border rounded p-3 sm:p-4 ring-2 ring-blue-400`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <div className="font-medium">{getSectionLabelByIndex(currentSectionIndex)}</div>
-                    <div className="flex gap-2">
-                      <button type="button" className="btn px-3 py-1 text-sm sm:text-base" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-                      <button type="button" className="btn px-3 py-1 text-sm sm:text-base" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
+                    <div className="font-medium text-base sm:text-lg truncate max-w-[60%]">{getSectionLabelByIndex(currentSectionIndex)}</div>
+                    <div className="flex gap-2 shrink-0">
+                      <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
+                      <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
                     </div>
                   </div>
                   <input
