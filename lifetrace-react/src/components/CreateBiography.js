@@ -61,6 +61,7 @@ const CreateBiography = () => {
   const processorRef = useRef(null);
   const iatSnMapRef = useRef(new Map());
   const iatFullTextRef = useRef('');
+  const answerBasePrefixRef = useRef('');
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
   const stageFeedbacks = [
@@ -584,6 +585,16 @@ const CreateBiography = () => {
   const handleSectionSpeech = () => {
     // Prefer iFLYTEK streaming via signed ws; fallback to browser SpeechRecognition
     if (!isIatRecording) {
+      // 将输入焦点定位到回答输入框，并把光标放到末尾
+      if (answerInputRef.current) {
+        try {
+          const el = answerInputRef.current;
+          el.focus();
+          const len = (el.value || '').length;
+          if (typeof el.setSelectionRange === 'function') el.setSelectionRange(len, len);
+          setTimeout(() => { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }, 0);
+        } catch (_) {}
+      }
       startIatRecording().catch((e) => {
         console.error('IAT start error:', e);
         setMessage('科大讯飞不可用，已切换为浏览器语音输入');
@@ -603,16 +614,24 @@ const CreateBiography = () => {
       return;
     }
     try {
+      // 聚焦并定位光标
+      if (answerInputRef.current) {
+        try {
+          const el = answerInputRef.current;
+          el.focus();
+          const len = (el.value || '').length;
+          if (typeof el.setSelectionRange === 'function') el.setSelectionRange(len, len);
+        } catch (_) {}
+      }
+      // 记录当前前缀，避免清空后再次录音残留
+      answerBasePrefixRef.current = (answerInputRef.current ? answerInputRef.current.value : answerInput) || '';
       const recognition = new SpeechRec();
       recognition.lang = 'zh-CN';
       recognition.onresult = (event) => {
         const text = sanitizeInput(event.results[0][0].transcript);
-        setAnswerInput(prev => (prev ? prev + ' ' + text : text));
-        if (answerInputRef.current) {
-          const merged = (answerInputRef.current.value || '');
-          answerInputRef.current.value = (merged ? merged + ' ' : '') + text;
-          autoResizeAnswer(answerInputRef.current);
-        }
+        const next = (answerBasePrefixRef.current ? answerBasePrefixRef.current + ' ' : '') + text;
+        if (answerInputRef.current) { answerInputRef.current.value = next; autoResizeAnswer(answerInputRef.current); }
+        setAnswerInput(next);
       };
       recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
       recognition.start();
@@ -626,6 +645,12 @@ const CreateBiography = () => {
     if (isIatRecording) return;
     const token = localStorage.getItem('token');
     if (!token) { setMessage('请先登录'); return; }
+    // 新会话：清空增量缓存，并记录当前前缀
+    try {
+      iatSnMapRef.current = new Map();
+      iatFullTextRef.current = '';
+      answerBasePrefixRef.current = (answerInputRef.current ? answerInputRef.current.value : answerInput) || '';
+    } catch (_) {}
     // 1) get signed ws url and appId
     const sign = await axios.get('/api/asr/sign', { headers: { Authorization: `Bearer ${token}` }});
     const { url, appId } = sign.data || {};
@@ -693,12 +718,13 @@ const CreateBiography = () => {
         }
         const ordered = Array.from(iatSnMapRef.current.entries()).sort((a,b) => a[0]-b[0]).map(([,v]) => v).join('');
         iatFullTextRef.current = ordered;
+        const nextValue = (answerBasePrefixRef.current || '') + (ordered || '');
         if (answerInputRef.current) {
-          answerInputRef.current.value = ordered;
-          setAnswerInput(ordered);
+          answerInputRef.current.value = nextValue;
+          setAnswerInput(nextValue);
           autoResizeAnswer(answerInputRef.current);
         } else {
-          setAnswerInput(ordered);
+          setAnswerInput(nextValue);
         }
         if (status === 2) {
           // final
