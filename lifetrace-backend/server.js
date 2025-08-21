@@ -1,8 +1,7 @@
 require('dotenv').config();
-console.log('MONGO_URI:', process.env.MONGO_URI);
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not set');
-console.log('PORT:', process.env.PORT);
-console.log('SPARK_API_PASSWORD:', process.env.SPARK_API_PASSWORD ? 'Set' : 'Not set'); // 调试用
+console.log('PORT:', process.env.PORT || 5002);
+console.log('SPARK_API_PASSWORD:', process.env.SPARK_API_PASSWORD ? 'Set' : 'Not set');
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -62,9 +61,13 @@ app.use(morgan('tiny'));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
+// Render default health check path alias
+app.get('/healthz', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 // Serve static files with explicit CORS headers
 app.use('/Uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -74,7 +77,7 @@ app.use('/Uploads', (req, res, next) => {
 
 // case-insensitive alias
 app.use('/uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -83,7 +86,8 @@ app.use('/uploads', (req, res, next) => {
 });
 
 // MongoDB connection
-mongoose.connect('mongodb://lifetraceUser:lifetrace123@localhost:27017/lifetrace?authSource=lifetrace', {
+const mongoUri = process.env.MONGO_URI || 'mongodb://lifetraceUser:lifetrace123@localhost:27017/lifetrace?authSource=lifetrace';
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })

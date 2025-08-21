@@ -4,6 +4,34 @@
 **/build/
 **/.cache/
 npm-debug.log*
+yarn-error.log*
+
+# Env / Secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Local uploads (do not commit user files)
+lifetrace-backend/Uploads/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Node
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+npm-debug.log*
 
 # Env
 .env

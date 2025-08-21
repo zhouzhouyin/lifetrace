@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const AppContext = createContext();
 
-axios.defaults.baseURL = 'http://localhost:5002';
+axios.defaults.baseURL = 'https://lifetrace-backend.onrender.com';
 axios.defaults.withCredentials = true;
 axios.defaults.timeout = 8000; // 避免请求挂起导致 authLoading 一直为 true
 
