@@ -811,6 +811,7 @@ const CreateBiography = () => {
       const maxHeight = lineHeight * 3;
       const next = Math.min(el.scrollHeight, maxHeight);
       el.style.height = next + 'px';
+      // 移动端平滑滚动（不强制显示滚动条）
       el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
       el.style.WebkitOverflowScrolling = 'touch';
     } catch (_) {}
@@ -1458,7 +1459,7 @@ const CreateBiography = () => {
                         value={answerInput}
                         onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                         ref={answerInputRef}
-                        disabled={isAsking || isSaving || isUploading}
+                        disabled={isSaving || isUploading}
                         rows={1}
                         style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
                       />
