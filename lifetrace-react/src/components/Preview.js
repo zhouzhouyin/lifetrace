@@ -153,7 +153,7 @@ const Preview = () => {
               const res = await axios.post(`/api/note/${noteId}/share`, { action: 'create' }, { headers: { Authorization: `Bearer ${token}` }});
               const tokenStr = res?.data?.shareToken || '';
               if (tokenStr) {
-                const base = (process.env.REACT_APP_PUBLIC_BASE || window.location.origin).replace(/\/$/, '');
+                const base = (axios.defaults.baseURL || window.location.origin).replace(/\/$/, '');
                 const url = `${base}/share/${tokenStr}`;
                 setShareUrl(url);
                 try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制，可发微信/QQ/微博'); } catch(_) { window.prompt('复制此链接', url); }
