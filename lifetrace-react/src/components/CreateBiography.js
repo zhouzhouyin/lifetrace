@@ -53,6 +53,7 @@ const CreateBiography = () => {
   const [chatMessages, setChatMessages] = useState([]); // {role:'assistant'|'user', content:string}[]
   const [answerInput, setAnswerInput] = useState('');
   const [isInterviewing, setIsInterviewing] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
   const [stageIndex, setStageIndex] = useState(0);
@@ -78,6 +79,16 @@ const CreateBiography = () => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
     return `${base}篇`;
   };
+
+  // 检测语音输入支持
+  useEffect(() => {
+    try {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      setSpeechSupported(!!SR);
+    } catch (_) {
+      setSpeechSupported(false);
+    }
+  }, []);
   // 图文并茂篇章（每篇章：title + text + media[]）——固定为各阶段一一对应
   const [sections, setSections] = useState(Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] })));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // 用户主动选择的当前篇章
@@ -1172,9 +1183,12 @@ const CreateBiography = () => {
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
                 <div className={`border rounded p-3 sm:p-4 ring-2 ring-blue-400`}>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div className="font-medium">{getSectionLabelByIndex(currentSectionIndex)}</div>
-                    {/* 固定阶段篇章：不允许删除 */}
+                    <div className="flex gap-2">
+                      <button type="button" className="btn px-3 py-1 text-sm sm:text-base" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
+                      <button type="button" className="btn px-3 py-1 text-sm sm:text-base" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                    </div>
                   </div>
                   <input
                     type="text"
@@ -1197,7 +1211,13 @@ const CreateBiography = () => {
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
-                    <div className="flex-1 flex gap-2">
+                    {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
+                    {speechSupported ? (
+                      <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
+                    ) : (
+                      <p className="text-xs text-gray-500 sm:hidden">提示：当前浏览器不支持语音输入，可使用系统键盘的麦克风进行语音输入</p>
+                    )}
+                    <div className="flex-1 flex gap-2 items-stretch">
                       <input
                         className="input flex-1 min-h-[44px]"
                         placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
@@ -1206,14 +1226,15 @@ const CreateBiography = () => {
                         ref={answerInputRef}
                         disabled={isAsking || isSaving || isUploading}
                       />
-                      <button className="btn w-full sm:w-auto" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
-                      <button className="btn w-full sm:w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
+                      {/* 桌面端：与输入框并排显示语音输入 */}
+                      {speechSupported && (
+                        <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
+                      )}
+                      <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
                   </div>
-                  {/* 上一/下一篇 与 生成回忆/添加媒体 并列一行显示（可换行） */}
+                  {/* 生成回忆/添加媒体 行 */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <button type="button" className="btn w-full sm:w-auto" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-                    <button type="button" className="btn w-full sm:w-auto" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
                     <button
                       type="button"
                       className="btn w-full sm:w-auto"

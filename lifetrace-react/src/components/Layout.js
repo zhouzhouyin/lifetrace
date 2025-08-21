@@ -35,6 +35,21 @@ const Layout = ({ children }) => {
               )}
             </div>
         </div>
+        {/* Mobile language/logout bar */}
+        <div className="container mx-auto px-3 sm:px-4 mt-2 sm:hidden flex justify-center gap-2">
+          <select
+            className="text-black rounded px-2 py-1"
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            title="Language"
+          >
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+          {isLoggedIn && (
+            <button className="btn px-3 py-1" onClick={handleLogout}>{lang === 'zh' ? '登出' : 'Logout'}</button>
+          )}
+        </div>
       </header>
       <main className="container mx-auto px-3 sm:px-4 py-4">{children}</main>
       <footer className="bg-gray-800 text-white p-4 text-center">
