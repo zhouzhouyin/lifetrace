@@ -64,7 +64,7 @@ export const AppContextProvider = ({ children }) => {
       summaryPlaceholder: '简介（可选）',
       answerPlaceholder: '请输入您的回答...',
       chapterTitlePlaceholder: '篇章标题（可选）',
-      chapterTextPlaceholder: '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。',
+      chapterTextPlaceholder: '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。点击“生成本篇回忆”，即可获得基于问答生成的这一阶段的专属回忆。',
       fullTextPlaceholder: '在此编辑整篇传记正文...'
     },
     en: {
@@ -88,7 +88,7 @@ export const AppContextProvider = ({ children }) => {
       summaryPlaceholder: 'Summary (optional)',
       answerPlaceholder: 'Enter your answer...',
       chapterTitlePlaceholder: 'Chapter Title (optional)',
-      chapterTextPlaceholder: 'Write chapter content here. After answering, continue writing and add media below.',
+      chapterTextPlaceholder: 'Write chapter content here. After answering, continue writing and add media below. Then click “Generate This Chapter” to get a stage-specific memory based on your Q&A.',
       fullTextPlaceholder: 'Edit the full biography text here...'
     },
     ko: {
