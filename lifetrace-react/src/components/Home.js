@@ -4,8 +4,17 @@ import { Helmet } from 'react-helmet';
 import { AppContext } from '../context/AppContext';
 
 const Home = () => {
-  const { isLoggedIn, t, lang, role } = useContext(AppContext);
+  const { isLoggedIn, t, lang, role, setIsLoggedIn } = useContext(AppContext);
   const navigate = useNavigate();
+
+  const handleMobileLogout = () => {
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+    } catch (_) {}
+    setIsLoggedIn(false);
+    navigate('/login');
+  };
 
   return (
     <div className="text-center container mx-auto px-3 sm:px-4">
@@ -23,6 +32,11 @@ const Home = () => {
         {/** 聊天交友功能已移除 */}
         <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/family' : '/login')}>{lang === 'zh' ? '家族传记' : 'Family Biographies'}</button>
         <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/my' : '/login')}>{lang === 'zh' ? '我的' : 'My'}</button>
+        {isLoggedIn && (
+          <button className="btn w-full sm:hidden" onClick={handleMobileLogout}>
+            {lang === 'zh' ? '登出' : 'Logout'}
+          </button>
+        )}
         {isLoggedIn && role === 'admin' && (
           <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/reports')}>{lang === 'zh' ? '举报管理' : 'Report Management'}</button>
         )}
