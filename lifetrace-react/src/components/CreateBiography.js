@@ -56,6 +56,15 @@ const CreateBiography = () => {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
+  const stageFeedbacks = [
+    '恭喜您，童年的一页被温柔地翻开。那些最初的光，已被珍藏。',
+    '恭喜您，又一段少年的热望被记录。愿勇气与纯真常在心间。',
+    '恭喜您，青年的选择与相遇已被写下。这一路的热爱，值得回望。',
+    '恭喜您，成年的责任与成就被铭记。您的坚持，让爱与生活更有方向。',
+    '恭喜您，中年的沉淀化为精神财富。您的经验，会照亮家族的道路。',
+    '恭喜您，此刻的思绪已被好好托付。当下的珍贵，会连接过去与未来。',
+    '恭喜您，未来的心愿被郑重保留。愿期盼有回响，生命有延续。',
+  ];
   const [stageIndex, setStageIndex] = useState(0);
   const [autoSpeakAssistant, setAutoSpeakAssistant] = useState(false);
   const [stageTurns, setStageTurns] = useState(Array(7).fill(0));
@@ -1233,8 +1242,12 @@ const CreateBiography = () => {
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
                   </div>
-                  {/* 生成回忆/添加媒体 行 */}
+                  {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <label className="btn w-full sm:w-auto">
+                      {t ? t('addMedia') : '添加图片/视频/音频'}
+                      <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadMediaToSection(currentSectionIndex, e.target.files[0])} disabled={isSaving || isUploading} />
+                    </label>
                     <button
                       type="button"
                       className="btn w-full sm:w-auto"
@@ -1257,7 +1270,8 @@ const CreateBiography = () => {
                           const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
-                            setMessage(`当前阶段篇章已润色`);
+                            const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
+                            setMessage(fb);
                           }
                         } catch (e) {
                           console.error('Polish current section error:', e);
@@ -1269,10 +1283,6 @@ const CreateBiography = () => {
                     >
                       {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
                     </button>
-                    <label className="btn w-full sm:w-auto">
-                      {t ? t('addMedia') : '添加图片/视频/音频'}
-                      <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadMediaToSection(currentSectionIndex, e.target.files[0])} disabled={isSaving || isUploading} />
-                    </label>
                   </div>
                   <p className="text-sm text-gray-500">当前字数: {sections[currentSectionIndex]?.text?.length || 0} / 5000</p>
                   {(sections[currentSectionIndex]?.media?.length > 0) && (
@@ -1325,8 +1335,8 @@ const CreateBiography = () => {
           {/* 去掉"分享到家族传记"勾选区 */}
           <div className="flex gap-4 flex-wrap">
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
-            <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>生成传记并预览</button>
-            <button type="button" className="btn bg-blue-600 hover:bg-blue-700" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
+            <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>记录此生</button>
+            <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"

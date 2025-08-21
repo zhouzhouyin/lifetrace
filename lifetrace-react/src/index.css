@@ -8,6 +8,7 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   font-size: 18px; /* 适老化：基础字号提升 */
   line-height: 1.7; /* 适老化：行高增大，提升可读性 */
+  background-color: #FAF3E0; /* 米黄色背景 */
 }
 
 .btn {

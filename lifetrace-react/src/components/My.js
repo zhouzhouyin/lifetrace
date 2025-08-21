@@ -352,7 +352,7 @@ const My = () => {
                     </p>
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn bg-blue-600 hover:bg-blue-700"
+                        className="btn"
                         onClick={() => handleViewNote(item.id, item.type)}
                         disabled={isLoading}
                       >
@@ -429,7 +429,7 @@ const My = () => {
                         </button>
                       )}
                       <button
-                        className="btn bg-green-600 hover:bg-green-700"
+                        className="btn"
                         onClick={() => handleEditNote(item.id, item.type)}
                         disabled={isLoading}
                       >
@@ -458,7 +458,7 @@ const My = () => {
                     <p className="text-gray-700 whitespace-pre-wrap">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
                     <p className="text-sm text-gray-500">{item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')}</p>
                     <div className="flex gap-2 mt-2">
-                      <button className="btn bg-blue-600 hover:bg-blue-700" onClick={() => handleViewNote(item.id, 'Biography')} disabled={isLoading}>查看</button>
+                      <button className="btn" onClick={() => handleViewNote(item.id, 'Biography')} disabled={isLoading}>查看</button>
                     </div>
                   </div>
                 ))
@@ -493,7 +493,7 @@ const My = () => {
                     />
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn bg-blue-600 hover:bg-blue-700"
+                        className="btn"
                         onClick={() => handleViewFile(file.id)}
                         disabled={isLoading}
                       >
@@ -538,7 +538,7 @@ const My = () => {
                     />
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn bg-blue-600 hover:bg-blue-700"
+                        className="btn"
                         onClick={() => handleViewFile(file.id)}
                         disabled={isLoading}
                       >
@@ -605,7 +605,7 @@ const My = () => {
             </div>
             <div className="flex gap-4">
               <button
-                className="btn bg-blue-600 hover:bg-blue-700"
+                className="btn"
                 onClick={handleGenerateMark}
                 disabled={isLoading}
               >

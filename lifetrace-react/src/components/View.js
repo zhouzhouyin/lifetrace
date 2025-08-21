@@ -244,7 +244,7 @@ const View = () => {
               />
               <div className="flex gap-2">
                 {!readOnly ? (
-                  <button className="btn bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isSaving}>{isSaving ? '保存中...' : '保存'}</button>
+                  <button className="btn" onClick={handleSave} disabled={isSaving}>{isSaving ? '保存中...' : '保存'}</button>
                 ) : (
                   <>
                     <button className="btn" onClick={() => setReadOnly(false)}>编辑</button>

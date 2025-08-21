@@ -31,7 +31,7 @@ const ErrorBoundary = ({ children }) => {
           <p className="text-gray-700 mb-6">抱歉，页面出现错误，请尝试刷新或返回首页。</p>
           <div className="flex gap-4 justify-center">
             <button
-              className="btn bg-blue-600 hover:bg-blue-700"
+              className="btn"
               onClick={() => window.location.reload()}
             >
               刷新页面

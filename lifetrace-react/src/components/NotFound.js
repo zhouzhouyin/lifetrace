@@ -14,7 +14,7 @@ const NotFound = () => {
         <h2 className="text-2xl font-bold text-red-500 mb-4">404 - 页面不存在</h2>
         <p className="text-gray-700 mb-6">抱歉，您访问的页面不存在，请检查 URL 或返回首页。</p>
         <button
-          className="btn bg-blue-600 hover:bg-blue-700"
+className="btn"
           onClick={() => navigate('/')}
         >
           返回首页
