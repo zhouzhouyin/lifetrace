@@ -584,10 +584,13 @@ const CreateBiography = () => {
     if (!isIatRecording) {
       startIatRecording().catch((e) => {
         console.error('IAT start error:', e);
+        setMessage('科大讯飞不可用，已切换为浏览器语音输入');
         fallbackBrowserSpeech();
       });
     } else {
-      stopIatRecording().catch((e) => console.error('IAT stop error:', e));
+      stopIatRecording()
+        .then(() => setMessage('录音已停止'))
+        .catch((e) => console.error('IAT stop error:', e));
     }
   };
 
@@ -629,6 +632,7 @@ const CreateBiography = () => {
     asrWsRef.current = ws;
     ws.onopen = async () => {
       try {
+        setMessage('正在录音，讲话后文字会自动出现…');
         // 3) send first frame
         const first = {
           common: { app_id: appId },
@@ -660,7 +664,9 @@ const CreateBiography = () => {
       } catch (e) {
         console.error('IAT init error:', e);
         cleanupIat();
-        throw e;
+        setMessage('麦克风不可用，已切换为浏览器语音输入');
+        fallbackBrowserSpeech();
+        return;
       }
     };
     ws.onmessage = (evt) => {
@@ -682,8 +688,9 @@ const CreateBiography = () => {
       } catch (_) {}
     };
     ws.onerror = () => {
-      setMessage('科大讯飞连接失败');
+      setMessage('科大讯飞连接失败，已尝试切换为浏览器语音输入');
       cleanupIat();
+      try { fallbackBrowserSpeech(); } catch (_) {}
     };
     ws.onclose = () => {
       cleanupIat();
@@ -1377,11 +1384,7 @@ const CreateBiography = () => {
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
-                    {speechSupported ? (
-                      <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
-                    ) : (
-                      <p className="text-xs text-gray-500 sm:hidden">提示：当前浏览器不支持语音输入，可使用系统键盘的麦克风进行语音输入</p>
-                    )}
+                    <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
                     <div className="flex-1 flex gap-2 items-stretch">
                       <input
                         className="input flex-1 min-h-[44px]"
@@ -1392,9 +1395,7 @@ const CreateBiography = () => {
                         disabled={isAsking || isSaving || isUploading}
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
-                      {speechSupported && (
-                        <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
-                      )}
+                      <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
                   </div>
