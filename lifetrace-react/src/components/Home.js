@@ -69,7 +69,10 @@ const Home = () => {
           </button>
         )}
         {isLoggedIn && role === 'admin' && (
-          <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/reports')}>{lang === 'zh' ? '举报管理' : 'Report Management'}</button>
+          <>
+            <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/reports')}>{lang === 'zh' ? '举报管理' : 'Report Management'}</button>
+            <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/stats')}>{lang === 'zh' ? '后台统计' : 'Admin Stats'}</button>
+          </>
         )}
         
       </div>

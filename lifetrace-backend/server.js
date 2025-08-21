@@ -113,8 +113,13 @@ const userSchema = new mongoose.Schema({
   email: { type: String },
   uid: { type: String, required: true, unique: true }, // 唯一 ID，注册生成
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  firstLoginAt: { type: Date },
+  lastLoginAt: { type: Date },
+  loginCount: { type: Number, default: 0 }
 });
+userSchema.index({ createdAt: 1 });
+userSchema.index({ lastLoginAt: 1 });
 const User = mongoose.model('User', userSchema);
 // Family schemas
 const familyRequestSchema = new mongoose.Schema({
@@ -173,7 +178,12 @@ const noteSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   url: { type: String },
   sharedWithFamily: { type: Boolean, default: false },
+  shareToken: { type: String },
+  sharedAt: { type: Date },
 });
+noteSchema.index({ userId: 1 });
+noteSchema.index({ type: 1, isPublic: 1, timestamp: -1 });
+noteSchema.index({ shareToken: 1 }, { unique: true, sparse: true });
 const Note = mongoose.model('Note', noteSchema);
 
 // Upload schema
@@ -363,6 +373,28 @@ app.get('/api/public/biographies', async (req, res) => {
   }
 });
 
+// Public biography by id (no auth)
+app.get('/api/public/biography/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) return res.status(400).json({ message: '无效的传记 ID' });
+  try {
+    const n = await Note.findOne({ _id: id, type: 'Biography', isPublic: true, cloudStatus: 'Uploaded' }).populate('userId', 'username uid').lean();
+    if (!n) return res.status(404).json({ message: '传记不存在或未公开' });
+    res.json({
+      id: n._id.toString(),
+      title: n.title,
+      content: n.content,
+      sections: n.sections || [],
+      timestamp: n.timestamp,
+      username: n.userId?.username || 'unknown',
+      uid: n.userId?.uid || ''
+    });
+  } catch (err) {
+    logger.error('Get public biography error', { error: err.message, id, ip: req.ip });
+    res.status(500).json({ message: '获取公开传记失败：' + err.message });
+  }
+});
+
 // Public notes
 app.get('/api/public/notes', async (req, res) => {
   try {
@@ -432,6 +464,13 @@ app.post('/api/login', authLimiter, async (req, res) => {
       return res.status(400).json({ message: '密码错误' });
     }
     const token = jwt.sign({ userId: user._id, username, role: user.role || 'user' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // update login stats
+    try {
+      const now = new Date();
+      const updates = { lastLoginAt: now, $inc: { loginCount: 1 } };
+      if (!user.firstLoginAt) updates.firstLoginAt = now;
+      await User.updateOne({ _id: user._id }, updates);
+    } catch(_) {}
     logger.info('User logged in', { username, ip: req.ip });
     res.json({ token, username, uid: user.uid, userId: user._id.toString(), role: user.role || 'user' });
   } catch (err) {
@@ -588,6 +627,30 @@ app.get('/api/notes', authenticateToken, async (req, res) => {
   }
 });
 
+// Admin stats (auth admin)
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+  try {
+    if ((req.user?.role || 'user') !== 'admin') return res.status(403).json({ message: '仅管理员可访问' });
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 24*60*60*1000);
+    const weekAgo = new Date(now.getTime() - 7*24*60*60*1000);
+    const monthAgo = new Date(now.getTime() - 30*24*60*60*1000);
+    const [totalUsers, newUsers7d, logins7d, dau, wau, totalBio, publicBio] = await Promise.all([
+      User.countDocuments({}),
+      User.countDocuments({ createdAt: { $gte: weekAgo } }),
+      User.countDocuments({ lastLoginAt: { $gte: weekAgo } }),
+      User.countDocuments({ lastLoginAt: { $gte: dayAgo } }),
+      User.countDocuments({ lastLoginAt: { $gte: weekAgo } }),
+      Note.countDocuments({ type: 'Biography' }),
+      Note.countDocuments({ type: 'Biography', isPublic: true, cloudStatus: 'Uploaded' })
+    ]);
+    res.json({ totalUsers, newUsers7d, logins7d, dau, wau, totalBio, publicBio });
+  } catch (err) {
+    logger.error('Admin stats error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取统计失败：' + err.message });
+  }
+});
+
 // Get single note
 app.get('/api/note/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
@@ -682,6 +745,48 @@ app.put('/api/note/:id/public', authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error('Toggle public error', { error: err.message, noteId: id, ip: req.ip });
     res.status(500).json({ message: '更新公开状态失败：' + err.message });
+  }
+});
+
+// Create or revoke share token for a biography (no need to set isPublic)
+app.post('/api/note/:id/share', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body || {}; // 'create' | 'revoke'
+  if (!isValidObjectId(id)) return res.status(400).json({ message: '无效的笔记 ID' });
+  try {
+    const note = await Note.findOne({ _id: id, userId: req.user.userId, type: 'Biography' });
+    if (!note) return res.status(404).json({ message: '传记不存在' });
+    if (action === 'revoke') {
+      note.shareToken = undefined;
+      note.sharedAt = undefined;
+      await note.save();
+      return res.json({ id: note._id.toString(), shareToken: '' });
+    }
+    // create
+    const token = crypto.randomBytes(12).toString('hex');
+    note.shareToken = token;
+    note.sharedAt = new Date();
+    await note.save();
+    return res.json({ id: note._id.toString(), shareToken: token });
+  } catch (err) {
+    logger.error('Share token error', { error: err.message, noteId: id, ip: req.ip });
+    res.status(500).json({ message: '生成分享链接失败：' + err.message });
+  }
+});
+
+// Public view by share token (HTML for easy social share preview)
+app.get('/share/:token', async (req, res) => {
+  const { token } = req.params;
+  try {
+    const n = await Note.findOne({ shareToken: token, type: 'Biography' }).lean();
+    if (!n) return res.status(404).send('Not found');
+    const safeTitle = (n.title || '无标题').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeContent = (n.content || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;').split('\n').slice(0, 8).join('<br/>');
+    const html = `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${safeTitle}</title></head><body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#f7f7f7; padding:16px;"><div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #eee;border-radius:8px;padding:16px;"><h1 style="font-size:22px;margin:0 0 12px;">${safeTitle}</h1><div style="color:#444;line-height:1.7;">${safeContent}</div></div></body></html>`;
+    res.status(200).send(html);
+  } catch (err) {
+    logger.error('Share view error', { error: err.message, token, ip: req.ip });
+    res.status(500).send('Server error');
   }
 });
 

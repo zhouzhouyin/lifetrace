@@ -22,6 +22,7 @@ const Preview = () => {
   );
 
   const [noteId, setNoteId] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   const handleUpload = async (visibility) => {
     const token = localStorage.getItem('token');
@@ -146,6 +147,24 @@ const Preview = () => {
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('public')} disabled={isSaving || !noteId}>{t ? t('shareSquare') : '分享到广场'}</button>
+          <button className="btn w-full sm:w-auto" type="button" disabled={!noteId} onClick={async ()=>{
+            try {
+              const token = localStorage.getItem('token');
+              const res = await axios.post(`/api/note/${noteId}/share`, { action: 'create' }, { headers: { Authorization: `Bearer ${token}` }});
+              const tokenStr = res?.data?.shareToken || '';
+              if (tokenStr) {
+                const base = (process.env.REACT_APP_PUBLIC_BASE || window.location.origin).replace(/\/$/, '');
+                const url = `${base}/share/${tokenStr}`;
+                setShareUrl(url);
+                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制，可发微信/QQ/微博'); } catch(_) { window.prompt('复制此链接', url); }
+              } else {
+                setMessage('分享失败');
+              }
+            } catch (e) {
+              setMessage('生成分享链接失败：' + (e?.response?.data?.message || e?.message));
+            }
+          }}>生成分享链接</button>
+          {shareUrl ? <div className="w-full text-sm text-gray-600 break-all">{shareUrl}</div> : null}
         </div>
       </div>
     </div>

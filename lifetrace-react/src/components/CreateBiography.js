@@ -62,6 +62,17 @@ const CreateBiography = () => {
   const iatSnMapRef = useRef(new Map());
   const iatFullTextRef = useRef('');
   const answerBasePrefixRef = useRef('');
+  // 语音设置
+  const [voiceSettingsOpen, setVoiceSettingsOpen] = useState(false);
+  const [autoPunc, setAutoPunc] = useState(true);
+  const [accent, setAccent] = useState('mandarin'); // 'mandarin' | 'cantonese'
+  const [silenceMs, setSilenceMs] = useState(800);
+  const [maxDurationSec, setMaxDurationSec] = useState(60);
+  const [confirmBeforeWrite, setConfirmBeforeWrite] = useState(false);
+  const [pendingTranscript, setPendingTranscript] = useState('');
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [vuLevel, setVuLevel] = useState(0);
+  const timerRef = useRef(null);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
   const stageFeedbacks = [
@@ -572,7 +583,7 @@ const CreateBiography = () => {
       return;
     }
     const recognition = new window.webkitSpeechRecognition();
-    recognition.lang = 'zh-CN';
+    recognition.lang = accent === 'cantonese' ? 'zh-HK' : 'zh-CN';
     recognition.onresult = (event) => {
       const text = sanitizeInput(event.results[0][0].transcript);
       setAnswerInput(prev => (prev ? prev + ' ' + text : text));
@@ -626,7 +637,7 @@ const CreateBiography = () => {
       // 记录当前前缀，避免清空后再次录音残留
       answerBasePrefixRef.current = (answerInputRef.current ? answerInputRef.current.value : answerInput) || '';
       const recognition = new SpeechRec();
-      recognition.lang = 'zh-CN';
+      recognition.lang = accent === 'cantonese' ? 'zh-HK' : 'zh-CN';
       recognition.onresult = (event) => {
         const text = sanitizeInput(event.results[0][0].transcript);
         const next = (answerBasePrefixRef.current ? answerBasePrefixRef.current + ' ' : '') + text;
@@ -664,7 +675,7 @@ const CreateBiography = () => {
         // 3) send first frame
         const first = {
           common: { app_id: appId },
-          business: { language: 'zh_cn', domain: 'iat', accent: 'mandarin', vad_eos: 800, dwa: 'wpgs', ptt: 1 },
+          business: { language: 'zh_cn', domain: 'iat', accent: accent === 'cantonese' ? 'cantonese' : 'mandarin', vad_eos: silenceMs, dwa: 'wpgs', ptt: autoPunc ? 1 : 0 },
           data: { status: 0, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' }
         };
         ws.send(JSON.stringify(first));
@@ -680,6 +691,13 @@ const CreateBiography = () => {
         processor.onaudioprocess = (e) => {
           if (ws.readyState !== WebSocket.OPEN) return;
           const input = e.inputBuffer.getChannelData(0);
+          // 简易 VU 电平
+          try {
+            let sum = 0;
+            for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
+            const rms = Math.sqrt(sum / input.length);
+            setVuLevel(Math.min(1, rms * 2));
+          } catch (_) {}
           const pcm16k = floatTo16kPCM(input, ctx.sampleRate);
           if (!pcm16k || pcm16k.length === 0) return;
           const audioB64 = arrayBufferToBase64(pcm16k.buffer);
@@ -689,6 +707,13 @@ const CreateBiography = () => {
         source.connect(processor);
         processor.connect(ctx.destination);
         setIsIatRecording(true);
+        // 计时器与超时自动停止
+        try { if (timerRef.current) clearInterval(timerRef.current); } catch(_) {}
+        setElapsedSec(0);
+        timerRef.current = setInterval(() => setElapsedSec(prev => prev + 1), 1000);
+        if (maxDurationSec > 0) {
+          setTimeout(() => { try { stopIatRecording(); } catch(_) {} }, maxDurationSec * 1000);
+        }
       } catch (e) {
         console.error('IAT init error:', e);
         cleanupIat();
@@ -719,12 +744,16 @@ const CreateBiography = () => {
         const ordered = Array.from(iatSnMapRef.current.entries()).sort((a,b) => a[0]-b[0]).map(([,v]) => v).join('');
         iatFullTextRef.current = ordered;
         const nextValue = (answerBasePrefixRef.current || '') + (ordered || '');
-        if (answerInputRef.current) {
-          answerInputRef.current.value = nextValue;
-          setAnswerInput(nextValue);
-          autoResizeAnswer(answerInputRef.current);
+        if (confirmBeforeWrite) {
+          setPendingTranscript(nextValue);
         } else {
-          setAnswerInput(nextValue);
+          if (answerInputRef.current) {
+            answerInputRef.current.value = nextValue;
+            setAnswerInput(nextValue);
+            autoResizeAnswer(answerInputRef.current);
+          } else {
+            setAnswerInput(nextValue);
+          }
         }
         if (status === 2) {
           // final
@@ -1451,7 +1480,10 @@ const CreateBiography = () => {
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
-                    <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
+                    <div className="flex gap-2 w-full sm:hidden">
+                      <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
+                      <button className="btn" type="button" onClick={() => setVoiceSettingsOpen(v => !v)}>{t ? t('voiceSettings') : '语音设置'}</button>
+                    </div>
                     <div className="flex-1 flex gap-2 items-stretch">
                       <textarea
                         className="input flex-1 min-h-[44px] resize-none"
@@ -1465,8 +1497,42 @@ const CreateBiography = () => {
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
+                      <button className="btn hidden sm:inline-flex" type="button" onClick={() => setVoiceSettingsOpen(v => !v)}>{t ? t('voiceSettings') : '语音设置'}</button>
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
+                    {voiceSettingsOpen && (
+                      <div className="w-full mt-2 p-2 border rounded bg-gray-50 flex flex-col gap-2">
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autoPunc} onChange={(e)=>setAutoPunc(e.target.checked)} />{t ? t('autoPunctuation') : '自动标点'}</label>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span>{t ? t('accent') : '口音'}</span>
+                          <select className="input py-1" value={accent} onChange={(e)=>setAccent(e.target.value)}>
+                            <option value="mandarin">{t ? t('accentMandarin') : '普通话'}</option>
+                            <option value="cantonese">{t ? t('accentCantonese') : '粤语'}</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <label className="flex items-center gap-2">{t ? t('silenceMs') : '静音判停(ms)'}<input className="input py-1" type="number" min={200} max={3000} value={silenceMs} onChange={(e)=>setSilenceMs(Number(e.target.value)||800)} /></label>
+                          <label className="flex items-center gap-2">{t ? t('maxDurationSec') : '最长录音(s)'}<input className="input py-1" type="number" min={5} max={300} value={maxDurationSec} onChange={(e)=>setMaxDurationSec(Number(e.target.value)||60)} /></label>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmBeforeWrite} onChange={(e)=>setConfirmBeforeWrite(e.target.checked)} />{t ? t('confirmBeforeWrite') : '识别后确认再写入'}</label>
+                        {isIatRecording && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <span>{t ? t('recording') : '录音中'}</span>
+                            <span>{t ? t('elapsed') : '已用时'}: {elapsedSec}s</span>
+                            <div className="flex items-center gap-1">
+                              <span>{t ? t('vuLevel') : '音量'}:</span>
+                              <div className="w-24 h-2 bg-gray-300 rounded"><div className="h-2 bg-green-500 rounded" style={{ width: `${Math.round(vuLevel*100)}%` }} /></div>
+                            </div>
+                          </div>
+                        )}
+                        {confirmBeforeWrite && pendingTranscript && (
+                          <div className="flex gap-2">
+                            <button className="btn" type="button" onClick={() => { if (answerInputRef.current) { answerInputRef.current.value = pendingTranscript; autoResizeAnswer(answerInputRef.current); } setAnswerInput(pendingTranscript); setPendingTranscript(''); }}>{t ? t('confirmWrite') : '确认写入'}</button>
+                            <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={() => setPendingTranscript('')}>{t ? t('clear') : '清空'}</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -1564,6 +1630,17 @@ const CreateBiography = () => {
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
             <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
             <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
+            {/* 生成分享链接（无需公开） */}
+            <button type="button" className="btn" onClick={async ()=>{
+              try {
+                const token = localStorage.getItem('token');
+                if (!token) { setMessage('请先登录'); return; }
+                // 需要 noteId 才能分享，这里引导用户到预览页保存上传后再分享
+                setMessage('请先在“查看此生”页保存并上传后再生成分享链接');
+              } catch (e) {
+                setMessage('生成分享链接失败');
+              }
+            }}>生成分享链接</button>
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"
