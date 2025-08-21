@@ -1140,15 +1140,15 @@ const CreateBiography = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6">
-      <div className="card max-w-4xl mx-auto w-full p-6">
+    <div className="min-h-screen bg-gray-100 py-4 sm:py-6">
+      <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
         </Helmet>
         <div className="mb-4">
           <input
             type="text"
-            className="input text-center text-3xl font-bold"
+            className="input text-center text-2xl sm:text-3xl font-bold"
             placeholder={t ? t('titlePlaceholder') : '请输入传记主标题（例如：我的一生）'}
             value={bioTitle}
             onChange={(e) => setBioTitle(sanitizeInput(e.target.value))}
@@ -1171,7 +1171,7 @@ const CreateBiography = () => {
             {/* 顶部标题与导航移除，导航按钮移动到输入框下方 */}
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
-                <div className={`border rounded p-3 ring-2 ring-blue-400`}>
+                <div className={`border rounded p-3 sm:p-4 ring-2 ring-blue-400`}>
                   <div className="flex justify-between items-center mb-2">
                     <div className="font-medium">{getSectionLabelByIndex(currentSectionIndex)}</div>
                     {/* 固定阶段篇章：不允许删除 */}
@@ -1185,38 +1185,38 @@ const CreateBiography = () => {
                     maxLength={200}
                     disabled={isSaving || isUploading}
                   />
-            <textarea
-                    className="input h-60 w-full resize-y"
+                  <textarea
+                    className="input w-full resize-y h-[40vh] sm:h-60"
                     placeholder={t ? t('chapterTextPlaceholder') : '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。'}
                     value={sections[currentSectionIndex]?.text || ''}
                     onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
                     maxLength={5000}
-              disabled={isSaving || isUploading}
+                    disabled={isSaving || isUploading}
                     ref={sectionTextareaRef}
                   />
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
-                  <div className="mt-2 flex gap-2 flex-wrap">
-                    <button className="btn" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
+                  <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
+                    <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
                     <div className="flex-1 flex gap-2">
                       <input
-                        className="input flex-1"
+                        className="input flex-1 min-h-[44px]"
                         placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
                         value={answerInput}
                         onChange={(e) => setAnswerInput(sanitizeInput(e.target.value))}
                         ref={answerInputRef}
                         disabled={isAsking || isSaving || isUploading}
                       />
-                      <button className="btn" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
-                      <button className="btn" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
+                      <button className="btn w-full sm:w-auto" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{t ? t('voiceInput') : '语音输入'}</button>
+                      <button className="btn w-full sm:w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
                   </div>
                   {/* 上一/下一篇 与 生成回忆/添加媒体 并列一行显示（可换行） */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <button type="button" className="btn" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-                    <button type="button" className="btn" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                    <button type="button" className="btn w-full sm:w-auto" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
+                    <button type="button" className="btn w-full sm:w-auto" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
                     <button
                       type="button"
-                      className="btn"
+                      className="btn w-full sm:w-auto"
                       disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
                       onClick={async () => {
                         const section = sections[currentSectionIndex] || {};
@@ -1248,7 +1248,7 @@ const CreateBiography = () => {
                     >
                       {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
                     </button>
-                    <label className="btn">
+                    <label className="btn w-full sm:w-auto">
                       {t ? t('addMedia') : '添加图片/视频/音频'}
                       <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadMediaToSection(currentSectionIndex, e.target.files[0])} disabled={isSaving || isUploading} />
                     </label>

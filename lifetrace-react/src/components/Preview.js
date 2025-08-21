@@ -62,23 +62,23 @@ const Preview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6">
-      <div className="card max-w-4xl mx-auto w-full p-6">
+    <div className="min-h-screen bg-gray-100 py-4 sm:py-6">
+      <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 gap-2">
           {isEditing ? (
             <input
-              className="input text-2xl font-bold flex-1"
+              className="input text-xl sm:text-2xl font-bold flex-1"
               placeholder={t ? t('noTitle') : '无标题'}
               value={title}
               onChange={(e)=> setTitle(e.target.value)}
               maxLength={200}
             />
           ) : (
-            <h2 className="text-2xl font-bold flex-1">{(title || '').trim() ? title : (t ? t('noTitle') : '无标题')}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold flex-1">{(title || '').trim() ? title : (t ? t('noTitle') : '无标题')}</h2>
           )}
-          <div className="flex gap-2">
-            <button className="btn" onClick={() => setIsEditing(!isEditing)}>{isEditing ? (t ? t('doneEdit') : '完成编辑') : (t ? t('edit') : '编辑')}</button>
-            <button className="btn" onClick={() => {
+          <div className="flex gap-2 flex-col sm:flex-row">
+            <button className="btn w-full sm:w-auto" onClick={() => setIsEditing(!isEditing)}>{isEditing ? (t ? t('doneEdit') : '完成编辑') : (t ? t('edit') : '编辑')}</button>
+            <button className="btn w-full sm:w-auto" onClick={() => {
               if (isEditing) {
                 // 回写到草稿，CreateBiography 会自动恢复
                 try {
@@ -104,7 +104,7 @@ const Preview = () => {
         </div>
         {isEditing ? (
           <textarea
-            className="input w-full h-20 mb-4"
+            className="input w-full h-24 sm:h-20 mb-4"
             placeholder={t ? t('summaryPlaceholder') : '简介（可选）'}
             value={summary}
             onChange={(e)=> setSummary(e.target.value.slice(0, 500))}
@@ -118,7 +118,7 @@ const Preview = () => {
         {message && <div className="mb-3 text-sm text-gray-700">{message}</div>}
         {isEditing ? (
           <textarea
-            className="input w-full h-[60vh] whitespace-pre-wrap"
+            className="input w-full h-[40vh] sm:h-[60vh] whitespace-pre-wrap"
             placeholder={t ? t('fullTextPlaceholder') : '在此编辑整篇传记正文...'}
             value={fullText}
             onChange={(e)=> setFullText(e.target.value)}
@@ -143,9 +143,9 @@ const Preview = () => {
           </div>
         )}
         <div className="mt-6 flex gap-2 flex-wrap">
-          <button className="btn" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
-          <button className="btn" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
-          <button className="btn" onClick={() => handleUpload('public')} disabled={isSaving || !noteId}>{t ? t('shareSquare') : '分享到广场'}</button>
+          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
+          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
+          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('public')} disabled={isSaving || !noteId}>{t ? t('shareSquare') : '分享到广场'}</button>
         </div>
       </div>
     </div>

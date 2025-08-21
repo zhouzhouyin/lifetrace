@@ -99,15 +99,15 @@ const Square = () => {
   };
 
   return (
-    <div>
+    <div className="container mx-auto px-3 sm:px-4">
       <Helmet>
         <title>{lang === 'zh' ? '广场 - 永念' : 'Square - LifeTrace'}</title>
       </Helmet>
-      <h2 className="text-2xl font-bold mb-4">{lang === 'zh' ? '广场' : 'Square'}</h2>
-      <div className="space-y-4">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">{lang === 'zh' ? '广场' : 'Square'}</h2>
+      <div className="space-y-3 sm:space-y-4">
         {posts.length > 0 ? (
           posts.map((post) => (
-            <div key={post.id} className="card">
+            <div key={post.id} className="card p-3 sm:p-4">
               <h3 className="font-bold">
                 {post.username} ({post.type})
               </h3>
@@ -126,21 +126,21 @@ const Square = () => {
               <p className="text-sm text-gray-500">
                 {new Date(post.timestamp).toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US')}
               </p>
-              <div className="flex gap-4">
-                <button className="btn" onClick={() => handleLike(post.id, post.type)}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <button className="btn w-full sm:w-auto" onClick={() => handleLike(post.id, post.type)}>
                   {lang === 'zh' ? '点赞' : 'Like'}
                 </button>
                 {post.type === 'Biography' && (
                   <button
-                    className="btn"
+                    className="btn w-full sm:w-auto"
                     onClick={() => toggleFavorite(post.id, post.type, false)}
                   >
                     {lang === 'zh' ? '收藏' : 'Favorite'}
                   </button>
                 )}
-                <button className="btn" onClick={() => navigate(`/view/${post.id}`)}>{lang === 'zh' ? '查看' : 'View'}</button>
+                <button className="btn w-full sm:w-auto" onClick={() => navigate(`/view/${post.id}`)}>{lang === 'zh' ? '查看' : 'View'}</button>
                 {post.type === 'Biography' && (
-                  <button className="btn bg-red-600 hover:bg-red-700" onClick={() => reportPost(post.id)}>
+                  <button className="btn bg-red-600 hover:bg-red-700 w-full sm:w-auto" onClick={() => reportPost(post.id)}>
                     {lang === 'zh' ? '举报' : 'Report'}
                   </button>
                 )}
