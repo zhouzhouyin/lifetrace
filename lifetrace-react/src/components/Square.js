@@ -101,9 +101,9 @@ const Square = () => {
   return (
     <div className="container mx-auto px-3 sm:px-4">
       <Helmet>
-        <title>{lang === 'zh' ? '大家的故事 - 永念' : 'Community - LifeTrace'}</title>
+        <title>{lang === 'zh' ? '广场 - 永念' : 'Square - LifeTrace'}</title>
       </Helmet>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4">{lang === 'zh' ? '大家的故事' : 'Community'}</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">{lang === 'zh' ? '广场' : 'Square'}</h2>
       <div className="space-y-3 sm:space-y-4">
         {posts.length > 0 ? (
           posts.map((post) => (

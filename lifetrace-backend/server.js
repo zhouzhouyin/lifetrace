@@ -16,6 +16,7 @@ const fs = require('fs');
 const axios = require('axios');
 const compression = require('compression');
 const morgan = require('morgan');
+const crypto = require('crypto');
 const { authLimiter, aiLimiter } = require('./middlewares/rateLimiters');
 
 const app = express();
@@ -69,6 +70,31 @@ app.get('/health', (req, res) => {
 // Render default health check path alias
 app.get('/healthz', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// iFLYTEK IAT sign endpoint (returns a signed wss url; secrets stay on server)
+app.get('/api/asr/sign', authenticateToken, (req, res) => {
+  try {
+    const appId = process.env.XF_IAT_APPID || '';
+    const apiKey = process.env.XF_IAT_APIKEY || '';
+    const apiSecret = process.env.XF_IAT_APISECRET || '';
+    const wsUrl = (process.env.XF_IAT_URL || 'wss://iat-api.xfyun.cn/v2/iat');
+    if (!appId || !apiKey || !apiSecret) {
+      return res.status(500).json({ message: 'ASR 未配置：缺少 APPID/APIKEY/APISECRET' });
+    }
+    const host = new URL(wsUrl).host;
+    const date = new Date().toUTCString();
+    const requestLine = 'GET /v2/iat HTTP/1.1';
+    const signatureOrigin = `host: ${host}\ndate: ${date}\n${requestLine}`;
+    const signatureSha = crypto.createHmac('sha256', apiSecret).update(signatureOrigin).digest('base64');
+    const authorizationOrigin = `api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signatureSha}"`;
+    const authorization = Buffer.from(authorizationOrigin).toString('base64');
+    const signedUrl = `${wsUrl}?authorization=${encodeURIComponent(authorization)}&date=${encodeURIComponent(date)}&host=${host}`;
+    res.json({ url: signedUrl, appId });
+  } catch (err) {
+    logger.error('ASR sign error', { error: err.message });
+    res.status(500).json({ message: '签名失败：' + err.message });
+  }
 });
 // Serve static files with explicit CORS headers
 app.use('/Uploads', (req, res, next) => {

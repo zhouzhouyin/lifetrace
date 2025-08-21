@@ -56,10 +56,10 @@ const Home = () => {
         {slogans[sloganIndex] || ''}
       </h2>
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center">
-        <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/create' : '/login')}>{t ? t('generatePreview') : (lang === 'zh' ? '创建传记' : 'Create Biography')}</button>
+        <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/create' : '/login')}>{lang === 'zh' ? '记录此生' : 'Record Life'}</button>
         {/** 独立上传入口已移除。上传媒体请在“创建传记”的篇章内添加。 */}
         {/** 写随笔功能已移除 */}
-        <button className="btn w-full sm:w-auto" onClick={() => navigate('/square')}>{lang === 'zh' ? '大家的故事' : 'Community'}</button>
+        <button className="btn w-full sm:w-auto" onClick={() => navigate('/square')}>{lang === 'zh' ? '查看广场' : 'View Square'}</button>
         {/** 聊天交友功能已移除 */}
         <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/family' : '/login')}>{lang === 'zh' ? '家族传记' : 'Family Biographies'}</button>
         <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/my' : '/login')}>{lang === 'zh' ? '我的' : 'My'}</button>

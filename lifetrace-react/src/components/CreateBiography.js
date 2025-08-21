@@ -54,6 +54,11 @@ const CreateBiography = () => {
   const [answerInput, setAnswerInput] = useState('');
   const [isInterviewing, setIsInterviewing] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [isIatRecording, setIsIatRecording] = useState(false);
+  const asrWsRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const processorRef = useRef(null);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
   const stageFeedbacks = [
@@ -575,23 +580,174 @@ const CreateBiography = () => {
 
   // 语音输入：把识别内容写入“回答输入框”而非篇章正文
   const handleSectionSpeech = () => {
+    // Prefer iFLYTEK streaming via signed ws; fallback to browser SpeechRecognition
+    if (!isIatRecording) {
+      startIatRecording().catch((e) => {
+        console.error('IAT start error:', e);
+        fallbackBrowserSpeech();
+      });
+    } else {
+      stopIatRecording().catch((e) => console.error('IAT stop error:', e));
+    }
+  };
+
+  const fallbackBrowserSpeech = () => {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
       setMessage('当前浏览器不支持语音输入，请使用 Chrome 或 Edge 最新版');
       return;
     }
-    const recognition = new SpeechRec();
-    recognition.lang = 'zh-CN';
-    recognition.onresult = (event) => {
-      const text = sanitizeInput(event.results[0][0].transcript);
-      setAnswerInput(prev => (prev ? prev + ' ' + text : text));
-      if (answerInputRef.current) {
-        const merged = (answerInputRef.current.value || '');
-        answerInputRef.current.value = (merged ? merged + ' ' : '') + text;
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = 'zh-CN';
+      recognition.onresult = (event) => {
+        const text = sanitizeInput(event.results[0][0].transcript);
+        setAnswerInput(prev => (prev ? prev + ' ' + text : text));
+        if (answerInputRef.current) {
+          const merged = (answerInputRef.current.value || '');
+          answerInputRef.current.value = (merged ? merged + ' ' : '') + text;
+        }
+      };
+      recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
+      recognition.start();
+    } catch (e) {
+      setMessage('语音识别失败，请检查麦克风或重试');
+    }
+  };
+
+  // iFLYTEK IAT streaming
+  const startIatRecording = async () => {
+    if (isIatRecording) return;
+    const token = localStorage.getItem('token');
+    if (!token) { setMessage('请先登录'); return; }
+    // 1) get signed ws url and appId
+    const sign = await axios.get('/api/asr/sign', { headers: { Authorization: `Bearer ${token}` }});
+    const { url, appId } = sign.data || {};
+    if (!url || !appId) throw new Error('签名失败');
+    // 2) open ws
+    const ws = new WebSocket(url);
+    asrWsRef.current = ws;
+    ws.onopen = async () => {
+      try {
+        // 3) send first frame
+        const first = {
+          common: { app_id: appId },
+          business: { language: 'zh_cn', domain: 'iat', accent: 'mandarin', vad_eos: 800, dwa: 'wpgs' },
+          data: { status: 0, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' }
+        };
+        ws.send(JSON.stringify(first));
+        // 4) init audio capture
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+        const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContextCtor();
+        audioCtxRef.current = ctx;
+        const source = ctx.createMediaStreamSource(stream);
+        const processor = ctx.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
+        processor.onaudioprocess = (e) => {
+          if (ws.readyState !== WebSocket.OPEN) return;
+          const input = e.inputBuffer.getChannelData(0);
+          const pcm16k = floatTo16kPCM(input, ctx.sampleRate);
+          if (!pcm16k || pcm16k.length === 0) return;
+          const audioB64 = arrayBufferToBase64(pcm16k.buffer);
+          const frame = { data: { status: 1, format: 'audio/L16;rate=16000', encoding: 'raw', audio: audioB64 } };
+          ws.send(JSON.stringify(frame));
+        };
+        source.connect(processor);
+        processor.connect(ctx.destination);
+        setIsIatRecording(true);
+      } catch (e) {
+        console.error('IAT init error:', e);
+        cleanupIat();
+        throw e;
       }
     };
-    recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
-    recognition.start();
+    ws.onmessage = (evt) => {
+      try {
+        const resp = JSON.parse(evt.data);
+        if (resp && resp.code === 0 && resp.data && resp.data.result) {
+          const text = decodeIatResult(resp.data.result);
+          if (text) {
+            if (answerInputRef.current) {
+              const merged = (answerInputRef.current.value || '');
+              const next = merged ? merged + text : text;
+              answerInputRef.current.value = next;
+              setAnswerInput(next);
+            } else {
+              setAnswerInput(prev => (prev ? prev + text : text));
+            }
+          }
+        }
+      } catch (_) {}
+    };
+    ws.onerror = () => {
+      setMessage('科大讯飞连接失败');
+      cleanupIat();
+    };
+    ws.onclose = () => {
+      cleanupIat();
+    };
+  };
+
+  const stopIatRecording = async () => {
+    // send last frame with status 2, then close
+    try {
+      if (asrWsRef.current && asrWsRef.current.readyState === WebSocket.OPEN) {
+        const last = { data: { status: 2, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' } };
+        asrWsRef.current.send(JSON.stringify(last));
+      }
+    } catch (_) {}
+    cleanupIat();
+  };
+
+  const cleanupIat = () => {
+    setIsIatRecording(false);
+    try { if (processorRef.current) { processorRef.current.disconnect(); processorRef.current.onaudioprocess = null; } } catch (_) {}
+    try { if (audioCtxRef.current) { audioCtxRef.current.close(); } } catch (_) {}
+    try { if (mediaStreamRef.current) { mediaStreamRef.current.getTracks().forEach(t => t.stop()); } } catch (_) {}
+    try { if (asrWsRef.current && asrWsRef.current.readyState === WebSocket.OPEN) { asrWsRef.current.close(); } } catch (_) {}
+    asrWsRef.current = null; audioCtxRef.current = null; mediaStreamRef.current = null; processorRef.current = null;
+  };
+
+  const floatTo16kPCM = (float32Array, inputSampleRate) => {
+    if (!float32Array) return new Int16Array();
+    const ratio = inputSampleRate / 16000;
+    const newLength = Math.floor(float32Array.length / ratio);
+    const result = new Int16Array(newLength);
+    let offsetResult = 0;
+    let offsetBuffer = 0;
+    while (offsetResult < result.length) {
+      const nextOffsetBuffer = Math.floor((offsetResult + 1) * ratio);
+      let accum = 0, count = 0;
+      for (let i = offsetBuffer; i < nextOffsetBuffer && i < float32Array.length; i++) {
+        accum += float32Array[i];
+        count++;
+      }
+      const value = Math.max(-1, Math.min(1, accum / count));
+      result[offsetResult] = value < 0 ? value * 0x8000 : value * 0x7FFF;
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+    return result;
+  };
+
+  const arrayBufferToBase64 = (buffer) => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  };
+
+  const decodeIatResult = (result) => {
+    // result.ws[].cw[].w 拼接
+    try {
+      const ws = result.ws || [];
+      return ws.map(w => (w.cw && w.cw[0] && w.cw[0].w) || '').join('');
+    } catch (_) { return ''; }
   };
 
   // 分段编辑：文本与媒体（固定阶段篇章，不允许新增/删除）
@@ -1197,7 +1353,7 @@ const CreateBiography = () => {
                     <div className="flex gap-2 shrink-0">
                       <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
                       <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
-                    </div>
+                  </div>
                   </div>
                   <input
                     type="text"
@@ -1208,13 +1364,13 @@ const CreateBiography = () => {
                     maxLength={200}
                     disabled={isSaving || isUploading}
                   />
-                  <textarea
+            <textarea
                     className="input w-full resize-y h-[40vh] sm:h-60"
                     placeholder={t ? t('chapterTextPlaceholder') : '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。'}
                     value={sections[currentSectionIndex]?.text || ''}
                     onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
                     maxLength={5000}
-                    disabled={isSaving || isUploading}
+              disabled={isSaving || isUploading}
                     ref={sectionTextareaRef}
                   />
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
@@ -1272,6 +1428,7 @@ const CreateBiography = () => {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                             const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
                             setMessage(fb);
+                            setTimeout(() => setMessage(''), 1000);
                           }
                         } catch (e) {
                           console.error('Polish current section error:', e);
@@ -1335,7 +1492,7 @@ const CreateBiography = () => {
           {/* 去掉"分享到家族传记"勾选区 */}
           <div className="flex gap-4 flex-wrap">
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
-            <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>记录此生</button>
+            <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
             <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
