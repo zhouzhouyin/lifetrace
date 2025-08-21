@@ -59,6 +59,8 @@ const CreateBiography = () => {
   const audioCtxRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const processorRef = useRef(null);
+  const iatSnMapRef = useRef(new Map());
+  const iatFullTextRef = useRef('');
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
   const stageFeedbacks = [
@@ -609,6 +611,7 @@ const CreateBiography = () => {
         if (answerInputRef.current) {
           const merged = (answerInputRef.current.value || '');
           answerInputRef.current.value = (merged ? merged + ' ' : '') + text;
+          autoResizeAnswer(answerInputRef.current);
         }
       };
       recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
@@ -636,7 +639,7 @@ const CreateBiography = () => {
         // 3) send first frame
         const first = {
           common: { app_id: appId },
-          business: { language: 'zh_cn', domain: 'iat', accent: 'mandarin', vad_eos: 800, dwa: 'wpgs' },
+          business: { language: 'zh_cn', domain: 'iat', accent: 'mandarin', vad_eos: 800, dwa: 'wpgs', ptt: 1 },
           data: { status: 0, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' }
         };
         ws.send(JSON.stringify(first));
@@ -672,18 +675,34 @@ const CreateBiography = () => {
     ws.onmessage = (evt) => {
       try {
         const resp = JSON.parse(evt.data);
-        if (resp && resp.code === 0 && resp.data && resp.data.result) {
-          const text = decodeIatResult(resp.data.result);
-          if (text) {
-            if (answerInputRef.current) {
-              const merged = (answerInputRef.current.value || '');
-              const next = merged ? merged + text : text;
-              answerInputRef.current.value = next;
-              setAnswerInput(next);
-            } else {
-              setAnswerInput(prev => (prev ? prev + text : text));
-            }
+        if (!(resp && resp.code === 0 && resp.data)) return;
+        const { result, status } = resp.data;
+        if (!result) return;
+        const segText = decodeIatResult(result);
+        const sn = Number(result.sn);
+        const pgs = result.pgs; // 'apd' or 'rpl'
+        const rg = result.rg; // [start, end]
+        if (pgs === 'rpl' && Array.isArray(rg) && rg.length === 2) {
+          for (let k of Array.from(iatSnMapRef.current.keys())) {
+            const kn = Number(k);
+            if (kn >= rg[0] && kn <= rg[1]) iatSnMapRef.current.delete(kn);
           }
+        }
+        if (Number.isFinite(sn)) {
+          iatSnMapRef.current.set(sn, segText || '');
+        }
+        const ordered = Array.from(iatSnMapRef.current.entries()).sort((a,b) => a[0]-b[0]).map(([,v]) => v).join('');
+        iatFullTextRef.current = ordered;
+        if (answerInputRef.current) {
+          answerInputRef.current.value = ordered;
+          setAnswerInput(ordered);
+          autoResizeAnswer(answerInputRef.current);
+        } else {
+          setAnswerInput(ordered);
+        }
+        if (status === 2) {
+          // final
+          setMessage('识别完成');
         }
       } catch (_) {}
     };
@@ -755,6 +774,20 @@ const CreateBiography = () => {
       const ws = result.ws || [];
       return ws.map(w => (w.cw && w.cw[0] && w.cw[0].w) || '').join('');
     } catch (_) { return ''; }
+  };
+
+  // 回答输入框自动增高，最多到3行
+  const autoResizeAnswer = (el) => {
+    if (!el) return;
+    try {
+      el.style.height = 'auto';
+      const lineHeight = parseFloat(window.getComputedStyle(el).lineHeight || '24');
+      const maxHeight = lineHeight * 3;
+      const next = Math.min(el.scrollHeight, maxHeight);
+      el.style.height = next + 'px';
+      el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+      el.style.WebkitOverflowScrolling = 'touch';
+    } catch (_) {}
   };
 
   // 分段编辑：文本与媒体（固定阶段篇章，不允许新增/删除）
@@ -905,6 +938,13 @@ const CreateBiography = () => {
       } catch (_) {}
     }
   }, [chatMessages]);
+
+  // 回答输入内容变化时，确保自适应高度（包括程序性更新）
+  useEffect(() => {
+    if (answerInputRef.current) {
+      autoResizeAnswer(answerInputRef.current);
+    }
+  }, [answerInput]);
 
   // 语音输入（语音转文字）：优先标准 SpeechRecognition，其次 webkit 前缀
   const handleSpeech = (targetId) => {
@@ -1386,13 +1426,15 @@ const CreateBiography = () => {
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
                     <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
                     <div className="flex-1 flex gap-2 items-stretch">
-                      <input
-                        className="input flex-1 min-h-[44px]"
+                      <textarea
+                        className="input flex-1 min-h-[44px] resize-none"
                         placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
                         value={answerInput}
-                        onChange={(e) => setAnswerInput(sanitizeInput(e.target.value))}
+                        onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                         ref={answerInputRef}
                         disabled={isAsking || isSaving || isUploading}
+                        rows={1}
+                        style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
