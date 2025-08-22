@@ -123,6 +123,18 @@ const CreateBiography = () => {
       setSpeechSupported(false);
     }
   }, []);
+  // 若未查看隐私/条款，强制清除同意并弹窗
+  useEffect(() => {
+    try {
+      const vp = localStorage.getItem('viewed_privacy') === '1';
+      const vt = localStorage.getItem('viewed_terms') === '1';
+      if (!(vp && vt)) {
+        try { localStorage.removeItem('agree_policies'); } catch(_){}
+        setAgreePolicies(false);
+        setPolicyModalOpen(true);
+      }
+    } catch (_) {}
+  }, []);
   // 图文并茂篇章（每篇章：title + text + media[]）——固定为各阶段一一对应
   const [sections, setSections] = useState(Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] })));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // 用户主动选择的当前篇章
@@ -1472,15 +1484,17 @@ const CreateBiography = () => {
                 <a href="/privacy" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>《隐私政策》</a>
                 <span className="mx-2">和</span>
                 <a href="/terms" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>《服务条款》</a>
-            </div>
-              <label className="flex items-center gap-2 mb-3 text-sm">
-                <input type="checkbox" onChange={(e)=>{
-                  const v=e.target.checked; if (v) { try{ localStorage.setItem('agree_policies','1'); }catch(_){}; setAgreePolicies(true); setPolicyModalOpen(false);} else { try{ localStorage.removeItem('agree_policies'); }catch(_){}; setAgreePolicies(false);} }} />
-                我已阅读并同意上述条款（请先点击查看两个页面）
-              </label>
-                  </div>
               </div>
-            )}
+              <div className="text-xs text-gray-600 mb-2">请先点击打开上述两个页面，查看后再勾选同意。</div>
+              <label className="flex items-center gap-2 mb-3 text-sm">
+                <input type="checkbox" disabled={!((localStorage.getItem('viewed_privacy')==='1') && (localStorage.getItem('viewed_terms')==='1'))} onChange={(e)=>{
+                  const v=e.target.checked;
+                  if (v) { try{ localStorage.setItem('agree_policies','1'); }catch(_){}; setAgreePolicies(true); setPolicyModalOpen(false);} else { try{ localStorage.removeItem('agree_policies'); }catch(_){}; setAgreePolicies(false);} }} />
+                我已阅读并同意上述条款（需先查看两个页面）
+              </label>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col gap-6">
           {/* 永恒计划引导：仅在用户点击“查看此生”后于预览页展示；此处不再弹出 */}
           
