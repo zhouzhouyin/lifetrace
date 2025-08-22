@@ -1645,17 +1645,7 @@ const CreateBiography = () => {
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
             <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
             <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
-            {/* 生成分享链接（无需公开） */}
-            <button type="button" className="btn" onClick={async ()=>{
-                  try {
-                    const token = localStorage.getItem('token');
-                if (!token) { setMessage('请先登录'); return; }
-                // 需要 noteId 才能分享，这里引导用户到预览页保存上传后再分享
-                setMessage('请先在“查看此生”页保存并上传后再生成分享链接');
-                  } catch (e) {
-                setMessage('生成分享链接失败');
-              }
-            }}>生成分享链接</button>
+            {/* 去掉“生成分享链接”按钮，分享统一在预览页完成 */}
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"
