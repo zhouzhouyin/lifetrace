@@ -20,6 +20,8 @@ const crypto = require('crypto');
 const { authLimiter, aiLimiter } = require('./middlewares/rateLimiters');
 
 const app = express();
+// Behind Render/other proxies; trust X-Forwarded-* for correct client IPs
+app.set('trust proxy', 1);
 
 // Ensure Uploads directory exists
 const uploadDir = path.join(__dirname, 'Uploads');

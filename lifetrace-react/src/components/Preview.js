@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
@@ -30,6 +30,16 @@ const Preview = () => {
   const [serverEternalGuard, setServerEternalGuard] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
   const [toast, setToast] = useState('');
+  const toastTimerRef = useRef(null);
+
+  const showToast = (msg) => {
+    try {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      setToast(String(msg || ''));
+      try { if (navigator.vibrate) navigator.vibrate(10); } catch(_){}
+      toastTimerRef.current = setTimeout(() => setToast(''), 1800);
+    } catch (_) {}
+  };
 
   useEffect(() => {
     setShowEternalCard(true);
@@ -50,8 +60,9 @@ const Preview = () => {
 
   const handleUpload = async (visibility) => {
     const token = localStorage.getItem('token');
-    if (!token) { setMessage('请先登录'); return; }
+    if (!token) { setMessage('请先登录'); showToast('请先登录'); return; }
     setIsSaving(true);
+    showToast('保存中…');
     try {
       let finalId = noteId;
       const isPublic = visibility === 'public';
@@ -79,18 +90,35 @@ const Preview = () => {
           const base = (window.location.origin).replace(/\/$/, '');
           const url = `${base}/b/${finalId || ''}`;
           setShareUrl(url);
-          await navigator.clipboard.writeText(url);
-          setMessage('分享链接已复制到剪贴板');
+          const shareData = { title: (title || '我的传记'), text: '与您分享我的传记', url };
+          if (navigator.share) {
+            try {
+              await navigator.share(shareData);
+              setMessage('已调起系统分享');
+              showToast('已调起系统分享');
+            } catch (err) {
+              try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); showToast('已复制链接'); }
+              catch { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); showToast('请手动复制链接'); }
+            }
+          } else {
+            try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); showToast('已复制链接'); }
+            catch { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); showToast('请手动复制链接'); }
+          }
         } catch (_) {
           setMessage('已分享到广场');
+          showToast('已分享到广场');
         }
       } else if (visibility === 'family') {
         setMessage('已分享到家族');
+        showToast('已分享到家族');
       } else {
         setMessage('已保存');
+        showToast('已保存');
       }
     } catch (e) {
-      setMessage('保存失败：' + (e?.response?.data?.message || e?.message));
+      const errMsg = '保存失败：' + (e?.response?.data?.message || e?.message);
+      setMessage(errMsg);
+      showToast(errMsg);
     } finally {
       setIsSaving(false);
     }
@@ -112,10 +140,9 @@ const Preview = () => {
             <h2 className="text-xl sm:text-2xl font-bold flex-1">{(title || '').trim() ? title : (t ? t('noTitle') : '无标题')}</h2>
           )}
           <div className="flex gap-2 flex-col sm:flex-row">
-            <button className="btn w-full sm:w-auto" onClick={() => setIsEditing(!isEditing)}>{isEditing ? (t ? t('doneEdit') : '完成编辑') : (t ? t('edit') : '编辑')}</button>
+            <button className="btn w-full sm:w-auto" onClick={() => { setIsEditing(!isEditing); showToast(isEditing ? '已完成编辑' : '进入编辑'); }}>{isEditing ? (t ? t('doneEdit') : '完成编辑') : (t ? t('edit') : '编辑')}</button>
             <button className="btn w-full sm:w-auto" onClick={() => {
               if (isEditing) {
-                // 回写到草稿，CreateBiography 会自动恢复
                 try {
                   const mergedSections = Array.isArray(chapters) ? chapters.map((s, i) => ({
                     title: s.title || '',
@@ -131,6 +158,7 @@ const Preview = () => {
                   localStorage.setItem('createDraft', JSON.stringify(draft));
                 } catch (_) {}
                 setIsEditing(false);
+                showToast('已保存到草稿');
                 return;
               }
               navigate(-1);
@@ -177,10 +205,9 @@ const Preview = () => {
             )}
           </div>
         )}
-        {/* 将收费卡片放到页面底部、按钮区域上方；包含永恒守护开关与联系人；未付费显示，可关闭；点击稍后，同时隐藏 */}
         {!isEditing && showEternalCard && !serverEternalGuard && (
           <div className="relative p-4 border rounded bg-white mt-4">
-            <button type="button" aria-label="关闭" className="absolute right-2 top-2 text-gray-500 hover:text-gray-700" onClick={()=>setShowEternalCard(false)}>×</button>
+            <button type="button" aria-label="关闭" className="absolute right-2 top-2 text-gray-500 hover:text-gray-700" onClick={()=>{ setShowEternalCard(false); showToast('已隐藏'); }}>×</button>
             <h3 className="text-xl font-bold mb-2">永恒计划：为爱与记忆，留下不朽的印记。</h3>
             <p className="text-gray-800 mb-2">“第三次死亡，是最后一个记得你的人也忘了你。”</p>
             <p className="text-gray-700 mb-2">为了对抗遗忘，我们承诺：</p>
@@ -190,10 +217,9 @@ const Preview = () => {
               <li>你的故事，从此交由永恒守护。</li>
             </ul>
             <div className="font-semibold">费用：500元</div>
-            {/* 永恒守护开关 + 联系人表单（必填） */}
             <div className="mt-3 p-3 border rounded bg-gray-50">
               <label className="flex items-center gap-2 mb-2">
-                <input type="checkbox" checked={eternal} onChange={(e)=> setEternal(e.target.checked)} />
+                <input type="checkbox" checked={eternal} onChange={(e)=> { setEternal(e.target.checked); showToast(e.target.checked ? '已开启永恒守护' : '已关闭永恒守护'); }} />
                 <span>开启“永恒守护”（一次性 500 元）：承诺保存20年，并在创作完成后生成永恒实体印记交给家人</span>
               </label>
               <div className="text-sm text-gray-600 mb-2">请填写家族联系人（至少一位，需姓名与电话）：</div>
@@ -214,35 +240,37 @@ const Preview = () => {
                 </div>
               ))}
               <div className="flex gap-2">
-                <button className="btn" type="button" onClick={()=> setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev))}>新增联系人</button>
-                <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> setContacts(prev => prev.length>1?prev.slice(0,-1):prev)}>删除最后一个</button>
+                <button className="btn" type="button" onClick={()=> { setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev)); showToast('已新增联系人'); }}>新增联系人</button>
+                <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> { setContacts(prev => prev.length>1?prev.slice(0,-1):prev); showToast('已删除最后一个'); }}>删除最后一个</button>
               </div>
             </div>
             <div className="mt-3">
               <button type="button" className="btn" disabled={isOrdering} onClick={async ()=>{
                 try {
-                  if (!noteId) { setMessage('请先保存并上传后再发起支付'); try{ alert('请先保存并上传后再发起支付'); }catch(_){}; return; }
+                  if (!noteId) { const msg='请先保存并上传后再发起支付'; setMessage(msg); showToast(msg); return; }
                   const valid = (contacts || []).some(c => (c.name||'').trim() && (c.phone||'').trim() && (c.address||'').trim());
-                  if (!valid || !eternal) { setMessage('请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'); try{ alert('请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'); }catch(_){}; return; }
+                  if (!valid || !eternal) { const msg='请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'; setMessage(msg); showToast(msg); return; }
                   setIsOrdering(true);
                   const token = localStorage.getItem('token');
-                  try { setToast('正在创建订单…'); } catch(_){}
+                  showToast('正在创建订单…');
                   const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 });
                   const url = r?.data?.payUrl;
                   if (url) {
-                    try { setToast('正在跳转到收银台…'); } catch(_){}
+                    showToast('正在跳转到收银台…');
                     window.location.href = url;
                   } else {
-                    setMessage('下单失败'); try{ alert('下单失败'); }catch(_){}
+                    const msg='下单失败'; setMessage(msg); showToast(msg);
                   }
                 } catch (e) {
                   const msg = '下单失败：' + (e?.response?.data?.message || e?.message || '网络错误');
-                  setMessage(msg); try{ alert(msg); }catch(_){}
+                  setMessage(msg); showToast(msg);
                 } finally {
                   setIsOrdering(false);
                 }
-              }}>{isOrdering ? '请求中…' : '加入永恒计划'}</button>
-              <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>{ setShowEternalCard(false); }}>稍后</button>
+              }}>
+                {isOrdering ? '请求中…' : '加入永恒计划'}
+              </button>
+              <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>{ setShowEternalCard(false); showToast('已隐藏'); }}>稍后</button>
             </div>
           </div>
         )}
@@ -253,6 +281,7 @@ const Preview = () => {
           <button className="btn w-full sm:w-auto" type="button" disabled={!noteId || isSharing} onClick={async ()=>{
             try {
               setIsSharing(true);
+              showToast('生成中…');
               const token = localStorage.getItem('token');
               const res = await axios.post(`/api/note/${noteId}/share`, { action: 'create' }, { headers: { Authorization: `Bearer ${token}` }});
               const tokenStr = res?.data?.shareToken || '';
@@ -260,13 +289,23 @@ const Preview = () => {
                 const base = (axios.defaults.baseURL || window.location.origin).replace(/\/$/, '');
                 const url = `${base}/share/${tokenStr}`;
                 setShareUrl(url);
-                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); }
-                catch(_) { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); }
+                const shareData = { title: (title || '我的传记'), text: '与您分享我的传记', url };
+                if (navigator.share) {
+                  try { await navigator.share(shareData); setMessage('已调起系统分享'); showToast('已调起系统分享'); }
+                  catch { try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); showToast('已复制链接'); }
+                          catch { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); showToast('请手动复制链接'); } }
+                } else {
+                  try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); showToast('已复制链接'); }
+                  catch { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); showToast('请手动复制链接'); }
+                }
               } else {
                 setMessage('分享失败');
+                showToast('分享失败');
               }
             } catch (e) {
-              setMessage('生成分享链接失败：' + (e?.response?.data?.message || e?.message));
+              const msg = '生成分享链接失败：' + (e?.response?.data?.message || e?.message);
+              setMessage(msg);
+              showToast(msg);
             } finally {
               setIsSharing(false);
             }
