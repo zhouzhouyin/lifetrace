@@ -160,6 +160,10 @@ const Login = () => {
             {lang === 'zh' ? '去注册' : 'Go to Register'}
           </button>
         </form>
+        <div className="mt-3 text-sm text-gray-600 text-center">
+          忘记密码？请联系管理员：
+          <a href="mailto:1056829015@qq.com" className="text-blue-600 underline">1056829015@qq.com</a>
+        </div>
       </div>
     </div>
   );

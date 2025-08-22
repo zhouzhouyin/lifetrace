@@ -23,6 +23,7 @@ const Preview = () => {
 
   const [noteId, setNoteId] = useState('');
   const [shareUrl, setShareUrl] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
 
   const handleUpload = async (visibility) => {
     const token = localStorage.getItem('token');
@@ -156,8 +157,9 @@ const Preview = () => {
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('public')} disabled={isSaving || !noteId}>{t ? t('shareSquare') : '分享到广场'}</button>
-          <button className="btn w-full sm:w-auto" type="button" disabled={!noteId} onClick={async ()=>{
+          <button className="btn w-full sm:w-auto" type="button" disabled={!noteId || isSharing} onClick={async ()=>{
             try {
+              setIsSharing(true);
               const token = localStorage.getItem('token');
               const res = await axios.post(`/api/note/${noteId}/share`, { action: 'create' }, { headers: { Authorization: `Bearer ${token}` }});
               const tokenStr = res?.data?.shareToken || '';
@@ -165,14 +167,17 @@ const Preview = () => {
                 const base = (axios.defaults.baseURL || window.location.origin).replace(/\/$/, '');
                 const url = `${base}/share/${tokenStr}`;
                 setShareUrl(url);
-                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); } catch(_) { window.prompt('复制此链接', url); }
+                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); }
+                catch(_) { window.prompt('复制此链接', url); setMessage('已生成分享链接（已在弹窗中显示）'); }
               } else {
                 setMessage('分享失败');
               }
             } catch (e) {
               setMessage('生成分享链接失败：' + (e?.response?.data?.message || e?.message));
+            } finally {
+              setIsSharing(false);
             }
-          }}>生成分享链接</button>
+          }}>{isSharing ? '生成中...' : '生成分享链接'}</button>
           {shareUrl ? <div className="w-full text-sm text-gray-600 break-all">{shareUrl}</div> : null}
         </div>
       </div>
