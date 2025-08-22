@@ -1285,7 +1285,7 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     };
     const signStr = Object.keys(param).sort().map(k => `${k}=${param[k]}`).join('&') + `&key=${appsecret}`;
     const sign = md5(signStr).toUpperCase();
-    const payload = { ...param, sign };
+    let payload = { ...param, sign };
     // Use form-encoded to improve compatibility with gateway
     const body = querystring.stringify(payload);
     const r = await axios.post(
@@ -1305,7 +1305,12 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
       }
     } catch (_) {}
     logger.error('Create eternal order error', { error: detail, ip: req.ip });
-    res.status(500).json({ message: '创建订单失败：' + err.message });
+    try {
+      // Fallback: let client submit a form directly to gateway
+      return res.json({ clientPost: true, postUrl: process.env.XUNHU_GATEWAY || 'https://api.xunhupay.com/payment/do.html', fields: payload || {} });
+    } catch (_) {
+      return res.status(500).json({ message: '创建订单失败：' + err.message });
+    }
   }
 });
 
