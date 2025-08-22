@@ -245,6 +245,28 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => { try { localStorage.setItem('lang', lang); } catch (_) {} }, [lang]);
 
   useEffect(() => {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const getUserWithRetry = async (storedToken) => {
+      const timeouts = [12000, 18000, 25000];
+      let lastErr;
+      for (let i = 0; i < timeouts.length; i++) {
+        try {
+          return await axios.get('/api/user', {
+            headers: { Authorization: `Bearer ${storedToken}` },
+            timeout: timeouts[i],
+          });
+        } catch (err) {
+          lastErr = err;
+          if (!err.response || err.code === 'ECONNABORTED') {
+            await sleep(500 * (i + 1));
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw lastErr;
+    };
+
     const verifyToken = async () => {
       setAuthLoading(true);
       const storedToken = localStorage.getItem('token');
@@ -254,10 +276,7 @@ export const AppContextProvider = ({ children }) => {
         setIsLoggedIn(true);
         setToken(storedToken);
         try {
-          const response = await axios.get('/api/user', {
-            headers: { Authorization: `Bearer ${storedToken}` },
-            timeout: 8000,
-          });
+          const response = await getUserWithRetry(storedToken);
           console.log('AppContext: Token verification successful:', response.data);
           setUsername(response.data.username || localStorage.getItem('username') || '');
           if (response.data.role) {

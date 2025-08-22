@@ -1455,6 +1455,28 @@ const CreateBiography = () => {
     await handleUpload();
   };
 
+  // 若未同意且弹窗开启，优先渲染强制同意界面，屏蔽其它功能
+  if (policyModalOpen && !agreePolicies) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100">
+        <div className="bg-white w-full max-w-lg rounded p-4 shadow">
+          <h3 className="text-lg font-semibold mb-2">继续前，请先阅读并同意</h3>
+          <div className="text-sm text-gray-700 mb-3">
+            <a href="/privacy" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>《隐私政策》</a>
+            <span className="mx-2">和</span>
+            <a href="/terms" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>《服务条款》</a>
+          </div>
+          <div className="text-xs text-gray-600 mb-2">请先点击打开上述两个页面，查看后再勾选同意。</div>
+          <label className="flex items-center gap-2 mb-3 text-sm">
+            <input type="checkbox" onChange={(e)=>{
+              const v=e.target.checked; if (v) { try{ localStorage.setItem('agree_policies','1'); }catch(_){}; setAgreePolicies(true); setPolicyModalOpen(false);} else { try{ localStorage.removeItem('agree_policies'); }catch(_){}; setAgreePolicies(false);} }} />
+            我已阅读并同意上述条款（需先查看两个页面）
+          </label>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 py-4 sm:py-6">
       <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
