@@ -149,37 +149,6 @@ const Preview = () => {
           ) : null
         )}
         {message && <div className="mb-3 text-sm text-gray-700">{message}</div>}
-        {/* 永恒守护与家族联系人 */}
-        <div className="mb-4 p-3 border rounded bg-gray-50">
-          <label className="flex items-center gap-2 mb-2">
-            <input type="checkbox" checked={eternal} onChange={(e)=>setEternal(e.target.checked)} />
-            <span>开启“永恒守护”（一次性 500 元）：承诺保存20年，并在创作完成后生成永恒实体印记交给家人</span>
-          </label>
-          <div className="text-sm text-gray-600 mb-2">请填写家族联系人（用于交付实体印记）：</div>
-          {contacts.map((c, idx) => (
-            <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2">
-              <input className="input" placeholder="联系人姓名" value={c.name} onChange={(e)=>{
-                const arr=[...contacts]; arr[idx]={...arr[idx], name:e.target.value}; setContacts(arr);
-              }} />
-              <input className="input" placeholder="联系方式（电话）" value={c.phone} onChange={(e)=>{
-                const arr=[...contacts]; arr[idx]={...arr[idx], phone:e.target.value}; setContacts(arr);
-              }} />
-              <input className="input" placeholder="联系地址" value={c.address} onChange={(e)=>{
-                const arr=[...contacts]; arr[idx]={...arr[idx], address:e.target.value}; setContacts(arr);
-              }} />
-              <input className="input" placeholder="与作者关系（父亲/女儿等）" value={c.relation} onChange={(e)=>{
-                const arr=[...contacts]; arr[idx]={...arr[idx], relation:e.target.value}; setContacts(arr);
-              }} />
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <button className="btn" type="button" onClick={()=> setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev))}>新增联系人</button>
-            <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> setContacts(prev => prev.length>1?prev.slice(0,-1):prev)}>删除最后一个</button>
-          </div>
-          <div className="mt-2 p-2 bg-white rounded border text-sm">
-            普通用户默认保存10年（到期若未升级，将删除照片与视频，仅保留文字，且不生成永恒印记）。
-          </div>
-        </div>
         {isEditing ? (
           <textarea
             className="input w-full h-[40vh] sm:h-[60vh] whitespace-pre-wrap"
@@ -206,7 +175,7 @@ const Preview = () => {
             )}
           </div>
         )}
-        {/* 将收费卡片放到页面底部、按钮区域上方，仅在未付费时显示，可关闭 */}
+        {/* 将收费卡片放到页面底部、按钮区域上方；包含永恒守护开关与联系人；未付费显示，可关闭；点击稍后，同时隐藏 */}
         {!isEditing && showEternalCard && !serverEternalGuard && (
           <div className="relative p-4 border rounded bg-white mt-4">
             <button type="button" aria-label="关闭" className="absolute right-2 top-2 text-gray-500 hover:text-gray-700" onClick={()=>setShowEternalCard(false)}>×</button>
@@ -219,9 +188,53 @@ const Preview = () => {
               <li>你的故事，从此交由永恒守护。</li>
             </ul>
             <div className="font-semibold">费用：500元</div>
+            {/* 永恒守护开关 + 联系人表单（必填） */}
+            <div className="mt-3 p-3 border rounded bg-gray-50">
+              <label className="flex items-center gap-2 mb-2">
+                <input type="checkbox" checked={eternal} onChange={(e)=> setEternal(e.target.checked)} />
+                <span>开启“永恒守护”（一次性 500 元）：承诺保存20年，并在创作完成后生成永恒实体印记交给家人</span>
+              </label>
+              <div className="text-sm text-gray-600 mb-2">请填写家族联系人（至少一位，需姓名与电话）：</div>
+              {contacts.map((c, idx) => (
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2">
+                  <input className="input" placeholder="联系人姓名" value={c.name} onChange={(e)=>{
+                    const arr=[...contacts]; arr[idx]={...arr[idx], name:e.target.value}; setContacts(arr);
+                  }} />
+                  <input className="input" placeholder="联系方式（电话）" value={c.phone} onChange={(e)=>{
+                    const arr=[...contacts]; arr[idx]={...arr[idx], phone:e.target.value}; setContacts(arr);
+                  }} />
+                  <input className="input" placeholder="联系地址" value={c.address} onChange={(e)=>{
+                    const arr=[...contacts]; arr[idx]={...arr[idx], address:e.target.value}; setContacts(arr);
+                  }} />
+                  <input className="input" placeholder="与作者关系（父亲/女儿等）" value={c.relation} onChange={(e)=>{
+                    const arr=[...contacts]; arr[idx]={...arr[idx], relation:e.target.value}; setContacts(arr);
+                  }} />
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <button className="btn" type="button" onClick={()=> setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev))}>新增联系人</button>
+                <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> setContacts(prev => prev.length>1?prev.slice(0,-1):prev)}>删除最后一个</button>
+              </div>
+            </div>
             <div className="mt-3">
-              <button type="button" className="btn" onClick={()=>{ /* 待接虎皮椒支付 */ setShowEternalCard(false); }}>加入永恒计划</button>
-              <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>setShowEternalCard(false)}>稍后</button>
+              <button type="button" className="btn" onClick={async ()=>{
+                if (!noteId) { setMessage('请先保存并上传后再发起支付'); return; }
+                const valid = (contacts || []).some(c => (c.name||'').trim() && (c.phone||'').trim());
+                if (!valid || !eternal) { setMessage('请勾选开启永恒守护并填写至少一位联系人（姓名与电话）'); return; }
+                try {
+                  const token = localStorage.getItem('token');
+                  const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` } });
+                  const url = r?.data?.payUrl;
+                  if (url) {
+                    window.location.href = url;
+                  } else {
+                    setMessage('下单失败');
+                  }
+                } catch (e) {
+                  setMessage('下单失败：' + (e?.response?.data?.message || e?.message));
+                }
+              }}>加入永恒计划</button>
+              <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>{ setShowEternalCard(false); }}>稍后</button>
             </div>
           </div>
         )}
