@@ -436,6 +436,28 @@ const My = () => {
                         编辑
                       </button>
                       <button
+                        className="btn"
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await axios.post(`/api/note/${item.id}/share`, { action: 'create' }, { headers: { Authorization: `Bearer ${token}` } });
+                            const tokenStr = res?.data?.shareToken || '';
+                            if (tokenStr) {
+                              const base = (axios.defaults.baseURL || window.location.origin).replace(/\/$/, '');
+                              const url = `${base}/share/${tokenStr}`;
+                              try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制，可发微信/QQ/微博'); } catch (_) { window.prompt('复制此链接', url); }
+                            } else {
+                              setMessage('生成分享链接失败');
+                            }
+                          } catch (e) {
+                            setMessage('生成分享链接失败：' + (e?.response?.data?.message || e?.message));
+                          }
+                        }}
+                        disabled={isLoading}
+                      >
+                        生成分享链接
+                      </button>
+                      <button
                         className="btn bg-red-600 hover:bg-red-700"
                         onClick={() => handleDeleteNote(item.id)}
                         disabled={isLoading}

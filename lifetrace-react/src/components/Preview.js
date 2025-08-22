@@ -29,6 +29,7 @@ const Preview = () => {
     if (!token) { setMessage('请先登录'); return; }
     setIsSaving(true);
     try {
+      let finalId = noteId;
       const isPublic = visibility === 'public';
       const sharedWithFamily = visibility === 'family';
       const payload = {
@@ -44,12 +45,20 @@ const Preview = () => {
       if (!noteId) {
         const res = await axios.post('/api/note', payload, { headers: { Authorization: `Bearer ${token}` } });
         const createdId = res?.data?.id || res?.data?._id || '';
-        if (createdId) setNoteId(createdId);
+        if (createdId) { setNoteId(createdId); finalId = createdId; }
       } else {
         await axios.put(`/api/note/${noteId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       }
       if (visibility === 'public') {
-        setMessage('已分享到广场');
+        try {
+          const base = (window.location.origin).replace(/\/$/, '');
+          const url = `${base}/b/${finalId || ''}`;
+          setShareUrl(url);
+          await navigator.clipboard.writeText(url);
+          setMessage('分享链接已复制到剪贴板');
+        } catch (_) {
+          setMessage('已分享到广场');
+        }
       } else if (visibility === 'family') {
         setMessage('已分享到家族');
       } else {
@@ -156,7 +165,7 @@ const Preview = () => {
                 const base = (axios.defaults.baseURL || window.location.origin).replace(/\/$/, '');
                 const url = `${base}/share/${tokenStr}`;
                 setShareUrl(url);
-                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制，可发微信/QQ/微博'); } catch(_) { window.prompt('复制此链接', url); }
+                try { await navigator.clipboard.writeText(url); setMessage('分享链接已复制到剪贴板'); } catch(_) { window.prompt('复制此链接', url); }
               } else {
                 setMessage('分享失败');
               }

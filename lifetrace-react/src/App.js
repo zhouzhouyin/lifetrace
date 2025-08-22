@@ -23,6 +23,7 @@ const View = lazy(() => import('./components/View')); // 笔记查看
 const ViewFile = lazy(() => import('./components/ViewFile')); // 文件查看
 const Preview = lazy(() => import('./components/Preview'));
 const AdminReports = lazy(() => import('./components/AdminReports'));
+const PublicBiography = lazy(() => import('./components/PublicBiography'));
 const AdminStats = lazy(() => import('./components/AdminStats'));
 // const Privacy = lazy(() => import('./components/Privacy'));
 // const Terms = lazy(() => import('./components/Terms'));
@@ -58,6 +59,7 @@ const App = () => {
                   <Route path="/view-file/:fileId" element={<ProtectedRoute><ViewFile /></ProtectedRoute>} />
                   <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
                   <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+                  <Route path="/b/:id" element={<PublicBiography />} />
                   <Route path="/admin/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
                   {/** MVP 不暴露隐私/协议页面 */}
                   <Route path="*" element={<NotFound />} />

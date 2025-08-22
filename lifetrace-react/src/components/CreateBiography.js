@@ -636,16 +636,16 @@ const CreateBiography = () => {
       }
       // 记录当前前缀，避免清空后再次录音残留
       answerBasePrefixRef.current = (answerInputRef.current ? answerInputRef.current.value : answerInput) || '';
-      const recognition = new SpeechRec();
+    const recognition = new SpeechRec();
       recognition.lang = accent === 'cantonese' ? 'zh-HK' : 'zh-CN';
-      recognition.onresult = (event) => {
-        const text = sanitizeInput(event.results[0][0].transcript);
+    recognition.onresult = (event) => {
+      const text = sanitizeInput(event.results[0][0].transcript);
         const next = (answerBasePrefixRef.current ? answerBasePrefixRef.current + ' ' : '') + text;
         if (answerInputRef.current) { answerInputRef.current.value = next; autoResizeAnswer(answerInputRef.current); }
         setAnswerInput(next);
-      };
-      recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
-      recognition.start();
+    };
+    recognition.onerror = () => setMessage('语音识别失败，请检查麦克风或重试');
+    recognition.start();
     } catch (e) {
       setMessage('语音识别失败，请检查麦克风或重试');
     }
@@ -1491,7 +1491,7 @@ const CreateBiography = () => {
                         value={answerInput}
                         onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                         ref={answerInputRef}
-                        disabled={isSaving || isUploading}
+                      disabled={isSaving || isUploading}
                         rows={1}
                         style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
                       />
@@ -1632,12 +1632,12 @@ const CreateBiography = () => {
             <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
             {/* 生成分享链接（无需公开） */}
             <button type="button" className="btn" onClick={async ()=>{
-              try {
-                const token = localStorage.getItem('token');
+                  try {
+                    const token = localStorage.getItem('token');
                 if (!token) { setMessage('请先登录'); return; }
                 // 需要 noteId 才能分享，这里引导用户到预览页保存上传后再分享
                 setMessage('请先在“查看此生”页保存并上传后再生成分享链接');
-              } catch (e) {
+                  } catch (e) {
                 setMessage('生成分享链接失败');
               }
             }}>生成分享链接</button>
