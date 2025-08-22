@@ -28,6 +28,8 @@ const Preview = () => {
   const [isSharing, setIsSharing] = useState(false);
   const [showEternalCard, setShowEternalCard] = useState(false);
   const [serverEternalGuard, setServerEternalGuard] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     setShowEternalCard(true);
@@ -217,23 +219,29 @@ const Preview = () => {
               </div>
             </div>
             <div className="mt-3">
-              <button type="button" className="btn" onClick={async ()=>{
-                if (!noteId) { setMessage('请先保存并上传后再发起支付'); return; }
-                const valid = (contacts || []).some(c => (c.name||'').trim() && (c.phone||'').trim());
-                if (!valid || !eternal) { setMessage('请勾选开启永恒守护并填写至少一位联系人（姓名与电话）'); return; }
+              <button type="button" className="btn" disabled={isOrdering} onClick={async ()=>{
                 try {
+                  if (!noteId) { setMessage('请先保存并上传后再发起支付'); try{ alert('请先保存并上传后再发起支付'); }catch(_){}; return; }
+                  const valid = (contacts || []).some(c => (c.name||'').trim() && (c.phone||'').trim() && (c.address||'').trim());
+                  if (!valid || !eternal) { setMessage('请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'); try{ alert('请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'); }catch(_){}; return; }
+                  setIsOrdering(true);
                   const token = localStorage.getItem('token');
-                  const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` } });
+                  try { setToast('正在创建订单…'); } catch(_){}
+                  const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 });
                   const url = r?.data?.payUrl;
                   if (url) {
+                    try { setToast('正在跳转到收银台…'); } catch(_){}
                     window.location.href = url;
                   } else {
-                    setMessage('下单失败');
+                    setMessage('下单失败'); try{ alert('下单失败'); }catch(_){}
                   }
                 } catch (e) {
-                  setMessage('下单失败：' + (e?.response?.data?.message || e?.message));
+                  const msg = '下单失败：' + (e?.response?.data?.message || e?.message || '网络错误');
+                  setMessage(msg); try{ alert(msg); }catch(_){}
+                } finally {
+                  setIsOrdering(false);
                 }
-              }}>加入永恒计划</button>
+              }}>{isOrdering ? '请求中…' : '加入永恒计划'}</button>
               <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>{ setShowEternalCard(false); }}>稍后</button>
             </div>
           </div>
@@ -267,6 +275,9 @@ const Preview = () => {
         </div>
       </div>
     </div>
+    {toast && (
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-4 bg-black text-white text-sm px-3 py-2 rounded shadow z-50" role="status">{toast}</div>
+    )}
   );
 };
 

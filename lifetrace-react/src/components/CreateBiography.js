@@ -51,6 +51,10 @@ const CreateBiography = () => {
   const [isUploading, setIsUploading] = useState(false);
   // 永恒计划引导
   const [showEternalPrompt, setShowEternalPrompt] = useState(false);
+  const [policyModalOpen, setPolicyModalOpen] = useState(false);
+  const [agreePolicies, setAgreePolicies] = useState(() => {
+    try { return localStorage.getItem('agree_policies') === '1'; } catch (_) { return false; }
+  });
   // 情感陪伴师访谈
   const [chatMessages, setChatMessages] = useState([]); // {role:'assistant'|'user', content:string}[]
   const [answerInput, setAnswerInput] = useState('');
@@ -179,6 +183,10 @@ const CreateBiography = () => {
     } catch (_) {}
     draftRestoreRef.current = true;
   }, []);
+  // 首次进入强制同意隐私与条款
+  useEffect(() => {
+    try { if (!agreePolicies) setPolicyModalOpen(true); } catch(_){}
+  }, [agreePolicies]);
   useEffect(() => {
     const tid = setTimeout(() => {
       try {
@@ -1451,6 +1459,23 @@ const CreateBiography = () => {
         {message && (
           <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-500' : 'bg-green-500'}`}>
             {message}
+          </div>
+        )}
+        {policyModalOpen && !agreePolicies && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-lg rounded p-4">
+              <h3 className="text-lg font-semibold mb-2">继续前，请先阅读并同意</h3>
+              <div className="text-sm text-gray-700 mb-3">
+                <a href="/privacy" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>《隐私政策》</a>
+                <span className="mx-2">和</span>
+                <a href="/terms" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>《服务条款》</a>
+              </div>
+              <label className="flex items-center gap-2 mb-3 text-sm">
+                <input type="checkbox" onChange={(e)=>{
+                  const v=e.target.checked; if (v) { try{ localStorage.setItem('agree_policies','1'); }catch(_){}; setAgreePolicies(true); setPolicyModalOpen(false);} else { try{ localStorage.removeItem('agree_policies'); }catch(_){}; setAgreePolicies(false);} }} />
+                我已阅读并同意上述条款（请先点击查看两个页面）
+              </label>
+            </div>
           </div>
         )}
         <div className="flex flex-col gap-6">
