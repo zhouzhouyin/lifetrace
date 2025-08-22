@@ -68,7 +68,13 @@ const CreateBiography = () => {
   const iatSnMapRef = useRef(new Map());
   const iatFullTextRef = useRef('');
   const answerBasePrefixRef = useRef('');
-  // 语音设置（已移除 UI）
+  // 语音设置（UI已移除，仅保留默认参数以兼容逻辑）
+  const autoPunc = true;
+  const accent = 'mandarin';
+  const silenceMs = 800;
+  const maxDurationSec = 60;
+  const confirmBeforeWrite = false;
+  const pendingTranscript = '';
   const timerRef = useRef(null);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];

@@ -125,6 +125,7 @@ const Preview = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gray-100 py-4 sm:py-6">
       <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 gap-2">
@@ -317,6 +318,7 @@ const Preview = () => {
     {toast && (
       <div className="fixed left-1/2 -translate-x-1/2 bottom-4 bg-black text-white text-sm px-3 py-2 rounded shadow z-50" role="status">{toast}</div>
     )}
+    </>
   );
 };
 
