@@ -41,6 +41,9 @@ const logger = winston.createLogger({
     new winston.transports.Console({ format: winston.format.simple() })
   ]
 });
+// Helper: md5
+const md5 = (str) => crypto.createHash('md5').update(str, 'utf8').digest('hex');
+
 
 // Middleware
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
@@ -56,6 +59,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginEmbedderPolicy: false,
@@ -1239,6 +1243,81 @@ app.post('/api/note/upload', authenticateToken, async (req, res) => {
   }
 });
 
+// Create order for Eternal Guard (Hupijiao/XunhuPay unified order)
+app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
+  try {
+    const { noteId } = req.body || {};
+    if (!isValidObjectId(noteId)) return res.status(400).json({ message: '无效的传记 ID' });
+    const note = await Note.findOne({ _id: noteId, userId: req.user.userId, type: 'Biography' });
+    if (!note) return res.status(404).json({ message: '传记不存在' });
+
+    const appid = process.env.XUNHU_APPID || '';
+    const appsecret = process.env.XUNHU_SECRET || '';
+    const gateway = process.env.XUNHU_GATEWAY || 'https://api.xunhupay.com/payment/do.html';
+    if (!appid || !appsecret) return res.status(500).json({ message: '支付未配置：缺少 APPID/SECRET' });
+
+    const out_trade_no = `${Date.now()}_${Math.floor(Math.random()*1e6)}`;
+    const publicBackend = (process.env.PUBLIC_BACKEND || process.env.PUBLIC_BASE || '').replace(/\/$/,'');
+    const publicFrontend = (process.env.PUBLIC_FRONTEND || process.env.PUBLIC_BASE || '').replace(/\/$/,'');
+    const notify_url = publicBackend ? `${publicBackend}/api/pay/eternal-notify` : '';
+    const return_url = publicFrontend ? `${publicFrontend}/preview` : '';
+    const amount = parseFloat(process.env.XUNHU_PRICE || '500');
+    const name = `永恒守护-传记(${note.title || '无标题'})`;
+    const param = {
+      appid,
+      version: '1.1',
+      trade_order_id: out_trade_no,
+      total_fee: amount,
+      title: name,
+      time: Math.floor(Date.now()/1000),
+      notify_url,
+      return_url,
+      nonce_str: Math.random().toString(36).slice(2),
+      type: 'WAP',
+      // attach 可带上 noteId 用于回调识别
+      attach: JSON.stringify({ noteId: note._id.toString(), userId: req.user.userId })
+    };
+    const signStr = Object.keys(param).sort().map(k => `${k}=${param[k]}`).join('&') + `&key=${appsecret}`;
+    const sign = md5(signStr).toUpperCase();
+    const payload = { ...param, sign };
+    const r = await axios.post(gateway, payload, { headers: { 'Content-Type': 'application/json' }});
+    if (r.data && (r.data.url || r.data.pay_url)) {
+      return res.json({ payUrl: r.data.url || r.data.pay_url, orderId: out_trade_no });
+    }
+    return res.status(500).json({ message: r.data?.errMsg || '下单失败' });
+  } catch (err) {
+    logger.error('Create eternal order error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '创建订单失败：' + err.message });
+  }
+});
+
+// Payment notify (XunhuPay)
+app.post('/api/pay/eternal-notify', async (req, res) => {
+  try {
+    const appsecret = process.env.XUNHU_SECRET || '';
+    const data = req.body || {};
+    // 验签
+    const sign = data.sign;
+    const copy = { ...data };
+    delete copy.sign;
+    const signStr = Object.keys(copy).sort().map(k => `${k}=${copy[k]}`).join('&') + `&key=${appsecret}`;
+    const mySign = md5(signStr).toUpperCase();
+    if (mySign !== sign) {
+      logger.warn('Notify invalid sign', { ip: req.ip });
+      return res.status(400).send('sign error');
+    }
+    // 业务处理
+    const attach = JSON.parse(data.attach || '{}');
+    const noteId = attach.noteId;
+    if (isValidObjectId(noteId)) {
+      await Note.updateOne({ _id: noteId }, { $set: { eternalGuard: true, retentionYears: 20 } });
+    }
+    res.send('success');
+  } catch (err) {
+    logger.error('Eternal notify error', { error: err.message, ip: req.ip });
+    res.status(500).send('error');
+  }
+});
 // WebSocket server
 const server = app.listen(process.env.PORT || 5002, () => {
   logger.info(`Server running on port ${process.env.PORT || 5002}`);
