@@ -68,16 +68,7 @@ const CreateBiography = () => {
   const iatSnMapRef = useRef(new Map());
   const iatFullTextRef = useRef('');
   const answerBasePrefixRef = useRef('');
-  // 语音设置
-  const [voiceSettingsOpen, setVoiceSettingsOpen] = useState(false);
-  const [autoPunc, setAutoPunc] = useState(true);
-  const [accent, setAccent] = useState('mandarin'); // 'mandarin' | 'cantonese'
-  const [silenceMs, setSilenceMs] = useState(800);
-  const [maxDurationSec, setMaxDurationSec] = useState(60);
-  const [confirmBeforeWrite, setConfirmBeforeWrite] = useState(false);
-  const [pendingTranscript, setPendingTranscript] = useState('');
-  const [elapsedSec, setElapsedSec] = useState(0);
-  const [vuLevel, setVuLevel] = useState(0);
+  // 语音设置（已移除 UI）
   const timerRef = useRef(null);
   const [isAsking, setIsAsking] = useState(false);
   const lifeStages = ['童年', '少年', '青年', '成年', '中年', '当下', '未来愿望'];
@@ -1561,7 +1552,6 @@ const CreateBiography = () => {
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
                     <div className="flex gap-2 w-full sm:hidden">
                       <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
-                      <button className="btn" type="button" onClick={() => setVoiceSettingsOpen(v => !v)}>{t ? t('voiceSettings') : '语音设置'}</button>
                     </div>
                     <div className="flex-1 flex gap-2 items-stretch">
                       <textarea
@@ -1576,42 +1566,9 @@ const CreateBiography = () => {
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
-                      <button className="btn hidden sm:inline-flex" type="button" onClick={() => setVoiceSettingsOpen(v => !v)}>{t ? t('voiceSettings') : '语音设置'}</button>
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
-                    {voiceSettingsOpen && (
-                      <div className="w-full mt-2 p-2 border rounded bg-gray-50 flex flex-col gap-2">
-                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autoPunc} onChange={(e)=>setAutoPunc(e.target.checked)} />{t ? t('autoPunctuation') : '自动标点'}</label>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span>{t ? t('accent') : '口音'}</span>
-                          <select className="input py-1" value={accent} onChange={(e)=>setAccent(e.target.value)}>
-                            <option value="mandarin">{t ? t('accentMandarin') : '普通话'}</option>
-                            <option value="cantonese">{t ? t('accentCantonese') : '粤语'}</option>
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <label className="flex items-center gap-2">{t ? t('silenceMs') : '静音判停(ms)'}<input className="input py-1" type="number" min={200} max={3000} value={silenceMs} onChange={(e)=>setSilenceMs(Number(e.target.value)||800)} /></label>
-                          <label className="flex items-center gap-2">{t ? t('maxDurationSec') : '最长录音(s)'}<input className="input py-1" type="number" min={5} max={300} value={maxDurationSec} onChange={(e)=>setMaxDurationSec(Number(e.target.value)||60)} /></label>
-                        </div>
-                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmBeforeWrite} onChange={(e)=>setConfirmBeforeWrite(e.target.checked)} />{t ? t('confirmBeforeWrite') : '识别后确认再写入'}</label>
-                        {isIatRecording && (
-                          <div className="flex items-center gap-3 text-sm">
-                            <span>{t ? t('recording') : '录音中'}</span>
-                            <span>{t ? t('elapsed') : '已用时'}: {elapsedSec}s</span>
-                            <div className="flex items-center gap-1">
-                              <span>{t ? t('vuLevel') : '音量'}:</span>
-                              <div className="w-24 h-2 bg-gray-300 rounded"><div className="h-2 bg-green-500 rounded" style={{ width: `${Math.round(vuLevel*100)}%` }} /></div>
-                            </div>
-                          </div>
-                        )}
-                        {confirmBeforeWrite && pendingTranscript && (
-                          <div className="flex gap-2">
-                            <button className="btn" type="button" onClick={() => { if (answerInputRef.current) { answerInputRef.current.value = pendingTranscript; autoResizeAnswer(answerInputRef.current); } setAnswerInput(pendingTranscript); setPendingTranscript(''); }}>{t ? t('confirmWrite') : '确认写入'}</button>
-                            <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={() => setPendingTranscript('')}>{t ? t('clear') : '清空'}</button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* 语音设置面板已移除 */}
                   </div>
                   {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
