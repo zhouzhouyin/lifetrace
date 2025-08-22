@@ -14,6 +14,7 @@ const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
+const querystring = require('querystring');
 const compression = require('compression');
 const morgan = require('morgan');
 const crypto = require('crypto');
@@ -1282,13 +1283,25 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     const signStr = Object.keys(param).sort().map(k => `${k}=${param[k]}`).join('&') + `&key=${appsecret}`;
     const sign = md5(signStr).toUpperCase();
     const payload = { ...param, sign };
-    const r = await axios.post(gateway, payload, { headers: { 'Content-Type': 'application/json' }});
-    if (r.data && (r.data.url || r.data.pay_url)) {
+    // Use form-encoded to improve compatibility with gateway
+    const body = querystring.stringify(payload);
+    const r = await axios.post(
+      gateway,
+      body,
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json, text/plain, */*' }, timeout: 25000 }
+    );
+    if (r && r.data && (r.data.url || r.data.pay_url)) {
       return res.json({ payUrl: r.data.url || r.data.pay_url, orderId: out_trade_no });
     }
-    return res.status(500).json({ message: r.data?.errMsg || '下单失败' });
+    return res.status(500).json({ message: r?.data?.errMsg || r?.data?.message || '下单失败' });
   } catch (err) {
-    logger.error('Create eternal order error', { error: err.message, ip: req.ip });
+    let detail = err?.message;
+    try {
+      if (err?.response) {
+        detail = `status=${err.response.status} data=${typeof err.response.data === 'string' ? err.response.data.slice(0,200) : JSON.stringify(err.response.data).slice(0,200)}`;
+      }
+    } catch (_) {}
+    logger.error('Create eternal order error', { error: detail, ip: req.ip });
     res.status(500).json({ message: '创建订单失败：' + err.message });
   }
 });
