@@ -196,6 +196,7 @@ const noteSchema = new mongoose.Schema({
 noteSchema.index({ userId: 1 });
 noteSchema.index({ type: 1, isPublic: 1, timestamp: -1 });
 noteSchema.index({ shareToken: 1 }, { unique: true, sparse: true });
+noteSchema.index({ eternalGuard: 1 });
 const Note = mongoose.model('Note', noteSchema);
 
 // Upload schema
@@ -1255,6 +1256,9 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     if (!isValidObjectId(noteId)) return res.status(400).json({ message: '无效的传记 ID' });
     const note = await Note.findOne({ _id: noteId, userId: req.user.userId, type: 'Biography' });
     if (!note) return res.status(404).json({ message: '传记不存在' });
+    if (note.eternalGuard === true) {
+      return res.status(409).json({ message: '已加入永恒计划，无需重复支付' });
+    }
 
     const appid = process.env.XUNHU_APPID || '';
     const appsecret = process.env.XUNHU_SECRET || '';
@@ -1335,9 +1339,12 @@ app.post('/api/pay/eternal-notify', async (req, res) => {
     if (isValidObjectId(noteId)) {
       await Note.updateOne({ _id: noteId }, { $set: { eternalGuard: true, retentionYears: 20 } });
     }
+    // 返回纯文本 success 给网关
+    res.set('Content-Type', 'text/plain; charset=utf-8');
     res.send('success');
   } catch (err) {
     logger.error('Eternal notify error', { error: err.message, ip: req.ip });
+    res.set('Content-Type', 'text/plain; charset=utf-8');
     res.status(500).send('error');
   }
 });

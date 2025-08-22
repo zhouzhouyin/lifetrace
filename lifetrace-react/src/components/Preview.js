@@ -255,10 +255,32 @@ const Preview = () => {
                   const token = localStorage.getItem('token');
                   showToast('正在创建订单…');
                   const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 });
-                  const url = r?.data?.payUrl;
+                  const data = r?.data || {};
+                  const url = data?.payUrl;
                   if (url) {
                     showToast('正在跳转到收银台…');
                     window.location.href = url;
+                  } else if (data?.clientPost && data?.postUrl) {
+                    try {
+                      const form = document.createElement('form');
+                      form.method = 'POST';
+                      form.action = data.postUrl;
+                      form.style.display = 'none';
+                      const fields = data.fields || {};
+                      Object.keys(fields).forEach((k) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = k;
+                        input.value = String(fields[k] ?? '');
+                        form.appendChild(input);
+                      });
+                      document.body.appendChild(form);
+                      showToast('正在跳转到收银台…');
+                      form.submit();
+                    } catch (e2) {
+                      const msg = '下单失败：无法发起表单跳转';
+                      setMessage(msg); showToast(msg);
+                    }
                   } else {
                     const msg='下单失败'; setMessage(msg); showToast(msg);
                   }
