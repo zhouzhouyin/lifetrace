@@ -180,6 +180,9 @@ const noteSchema = new mongoose.Schema({
   sharedWithFamily: { type: Boolean, default: false },
   shareToken: { type: String },
   sharedAt: { type: Date },
+  contacts: { type: [{ name: String, phone: String, address: String, relation: String }], default: [] },
+  retentionYears: { type: Number, default: 10 },
+  eternalGuard: { type: Boolean, default: false },
 });
 noteSchema.index({ userId: 1 });
 noteSchema.index({ type: 1, isPublic: 1, timestamp: -1 });
@@ -810,7 +813,7 @@ app.put('/api/note/:id/family-share', authenticateToken, async (req, res) => {
 
 // Create note
 app.post('/api/note', authenticateToken, async (req, res) => {
-  const { title, content, isPublic, cloudStatus, type, sharedWithFamily, sections } = req.body;
+  const { title, content, isPublic, cloudStatus, type, sharedWithFamily, sections, contacts, retentionYears, eternalGuard } = req.body;
   if (!content) {
     logger.warn('Missing note content', { userId: req.user.userId, ip: req.ip });
     return res.status(400).json({ message: '笔记内容为必填项' });
@@ -825,6 +828,9 @@ app.post('/api/note', authenticateToken, async (req, res) => {
       cloudStatus: cloudStatus || 'Not Uploaded',
       type: type || 'Note',
       sharedWithFamily: !!sharedWithFamily,
+      contacts: Array.isArray(contacts) ? contacts.slice(0, 10) : [],
+      retentionYears: Number.isFinite(retentionYears) ? Math.max(1, Math.min(50, retentionYears)) : 10,
+      eternalGuard: !!eternalGuard,
       timestamp: new Date()
     });
     await note.save();
@@ -918,7 +924,7 @@ app.put('/api/report/:id', authenticateToken, async (req, res) => {
 // Update note
 app.put('/api/note/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { title, content, isPublic, cloudStatus, type, sharedWithFamily, sections } = req.body;
+  const { title, content, isPublic, cloudStatus, type, sharedWithFamily, sections, contacts, retentionYears, eternalGuard } = req.body;
   if (!isValidObjectId(id)) {
     logger.warn('Invalid note ID', { noteId: id, userId: req.user.userId, ip: req.ip });
     return res.status(400).json({ message: '无效的笔记 ID' });
@@ -930,7 +936,7 @@ app.put('/api/note/:id', authenticateToken, async (req, res) => {
   try {
     const note = await Note.findOneAndUpdate(
       { _id: id, userId: req.user.userId },
-      { title, content, sections: Array.isArray(sections) ? sections : [], isPublic, cloudStatus, type, sharedWithFamily: !!sharedWithFamily, timestamp: new Date() },
+      { title, content, sections: Array.isArray(sections) ? sections : [], isPublic, cloudStatus, type, sharedWithFamily: !!sharedWithFamily, contacts: Array.isArray(contacts) ? contacts.slice(0, 10) : [], retentionYears: Number.isFinite(retentionYears) ? Math.max(1, Math.min(50, retentionYears)) : 10, eternalGuard: !!eternalGuard, timestamp: new Date() },
       { new: true }
     );
     if (!note) {

@@ -148,7 +148,11 @@ const Login = () => {
               </button>
             </div>
           </div>
-          <button type="submit" className="btn w-full" disabled={isLoading}>
+          <div className="mt-1 text-sm text-center">
+            <span className="text-gray-600">忘记密码？</span>
+            <a href="mailto:1056829015@qq.com" className="text-blue-600 underline ml-1">联系管理员 1056829015@qq.com</a>
+          </div>
+          <button type="submit" className="btn w-full mt-2" disabled={isLoading}>
             {isLoading ? (lang === 'zh' ? '登录中...' : 'Logging in...') : (lang === 'zh' ? '登录' : 'Login')}
           </button>
           <button
@@ -160,10 +164,6 @@ const Login = () => {
             {lang === 'zh' ? '去注册' : 'Go to Register'}
           </button>
         </form>
-        <div className="mt-3 text-sm text-gray-600 text-center">
-          忘记密码？请联系管理员：
-          <a href="mailto:1056829015@qq.com" className="text-blue-600 underline">1056829015@qq.com</a>
-        </div>
       </div>
     </div>
   );

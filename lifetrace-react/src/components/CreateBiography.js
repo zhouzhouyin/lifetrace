@@ -49,6 +49,8 @@ const CreateBiography = () => {
   const [message, setMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // 永恒计划引导
+  const [showEternalPrompt, setShowEternalPrompt] = useState(false);
   // 情感陪伴师访谈
   const [chatMessages, setChatMessages] = useState([]); // {role:'assistant'|'user', content:string}[]
   const [answerInput, setAnswerInput] = useState('');
@@ -364,6 +366,18 @@ const CreateBiography = () => {
       }, 0);
     } catch (_) {}
   }, [currentSectionIndex, sections]);
+
+  // 完成首篇或上传一定数量媒体后，引导“永恒计划”
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('eternal_prompt_shown') === '1') return;
+      const nonEmpty = (sections || []).filter(s => (s.text || '').trim().length > 0).length;
+      const mediaCount = (sections || []).reduce((acc, s) => acc + ((s.media || []).length), 0);
+      if (nonEmpty >= 1 || mediaCount >= 3) {
+        setShowEternalPrompt(true);
+      }
+    } catch (_) {}
+  }, [sections]);
 
   // 访谈：阶段开场
   const askStageKickoff = async (targetIndex, resetTurns = false) => {
@@ -1440,6 +1454,7 @@ const CreateBiography = () => {
           </div>
         )}
         <div className="flex flex-col gap-6">
+          {/* 永恒计划引导：仅在用户点击“查看此生”后于预览页展示；此处不再弹出 */}
           
           {/* 情感陪伴师访谈（一体化：隐藏单独区域，所有问答只在篇章正文中体现） */}
           <div className="hidden" aria-hidden>

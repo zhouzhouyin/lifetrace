@@ -11,6 +11,8 @@ const Preview = () => {
   const [title, setTitle] = useState(bioTitle || '');
   const [summary, setSummary] = useState(bioSummary || '');
   const [chapters] = useState(Array.isArray(sections) ? sections : []);
+  const [contacts, setContacts] = useState([{ name: '', phone: '', address: '', relation: '' }]);
+  const [eternal, setEternal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +44,9 @@ const Preview = () => {
         cloudStatus: 'Uploaded',
         type: 'Biography',
         summary: (summary || '').trim() || '',
+        contacts: (contacts || []).filter(c => (c.name||c.phone||c.address)).slice(0,10),
+        retentionYears: eternal ? 20 : 10,
+        eternalGuard: !!eternal,
       };
       if (!noteId) {
         const res = await axios.post('/api/note', payload, { headers: { Authorization: `Bearer ${token}` } });
@@ -127,6 +132,37 @@ const Preview = () => {
           ) : null
         )}
         {message && <div className="mb-3 text-sm text-gray-700">{message}</div>}
+        {/* 永恒守护与家族联系人 */}
+        <div className="mb-4 p-3 border rounded bg-gray-50">
+          <label className="flex items-center gap-2 mb-2">
+            <input type="checkbox" checked={eternal} onChange={(e)=>setEternal(e.target.checked)} />
+            <span>开启“永恒守护”（一次性 500 元）：承诺保存20年，并在创作完成后生成永恒实体印记交给家人</span>
+          </label>
+          <div className="text-sm text-gray-600 mb-2">请填写家族联系人（用于交付实体印记）：</div>
+          {contacts.map((c, idx) => (
+            <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2">
+              <input className="input" placeholder="联系人姓名" value={c.name} onChange={(e)=>{
+                const arr=[...contacts]; arr[idx]={...arr[idx], name:e.target.value}; setContacts(arr);
+              }} />
+              <input className="input" placeholder="联系方式（电话）" value={c.phone} onChange={(e)=>{
+                const arr=[...contacts]; arr[idx]={...arr[idx], phone:e.target.value}; setContacts(arr);
+              }} />
+              <input className="input" placeholder="联系地址" value={c.address} onChange={(e)=>{
+                const arr=[...contacts]; arr[idx]={...arr[idx], address:e.target.value}; setContacts(arr);
+              }} />
+              <input className="input" placeholder="与作者关系（父亲/女儿等）" value={c.relation} onChange={(e)=>{
+                const arr=[...contacts]; arr[idx]={...arr[idx], relation:e.target.value}; setContacts(arr);
+              }} />
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <button className="btn" type="button" onClick={()=> setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev))}>新增联系人</button>
+            <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> setContacts(prev => prev.length>1?prev.slice(0,-1):prev)}>删除最后一个</button>
+          </div>
+          <div className="mt-2 p-2 bg-white rounded border text-sm">
+            普通用户默认保存10年（到期若未升级，将删除照片与视频，仅保留文字，且不生成永恒印记）。
+          </div>
+        </div>
         {isEditing ? (
           <textarea
             className="input w-full h-[40vh] sm:h-[60vh] whitespace-pre-wrap"
@@ -137,6 +173,18 @@ const Preview = () => {
           />
         ) : (
           <div className="space-y-4">
+            {/* 永恒计划付费文案区（展示） */}
+            <div className="p-4 border rounded bg-white">
+              <h3 className="text-xl font-bold mb-2">永恒计划：为爱与记忆，留下不朽的印记。</h3>
+              <p className="text-gray-800 mb-2">“第三次死亡，是最后一个记得你的人也忘了你。”</p>
+              <p className="text-gray-700 mb-2">为了对抗遗忘，我们承诺：</p>
+              <ul className="list-disc pl-5 text-gray-700 space-y-1 mb-2">
+                <li>您的数字资料将获得长期保存（承诺保存20年，并在此之后继续维护至技术无法支持为止）。</li>
+                <li>我们将生成一份永恒实体印记（加密记忆体），交给您的家人，作为精神遗产的实体见证。</li>
+                <li>你的故事，从此交由永恒守护。</li>
+              </ul>
+              <div className="font-semibold">费用：500元</div>
+            </div>
             {(fullText || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
               <p key={i} className="text-gray-800 whitespace-pre-wrap">{para}</p>
             ))}
