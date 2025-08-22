@@ -14,7 +14,9 @@ const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
+const https = require('https');
 const querystring = require('querystring');
+const httpsAgent = new https.Agent({ keepAlive: false });
 const compression = require('compression');
 const morgan = require('morgan');
 const crypto = require('crypto');
@@ -1264,7 +1266,8 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     const publicFrontend = (process.env.PUBLIC_FRONTEND || process.env.PUBLIC_BASE || '').replace(/\/$/,'');
     const notify_url = publicBackend ? `${publicBackend}/api/pay/eternal-notify` : '';
     const return_url = publicFrontend ? `${publicFrontend}/preview` : '';
-    const amount = parseFloat(process.env.XUNHU_PRICE || '500');
+    // 金额以字符串提交，避免浮点精度问题
+    const amount = (process.env.XUNHU_PRICE || '500');
     const name = `永恒守护-传记(${note.title || '无标题'})`;
     const param = {
       appid,
@@ -1288,7 +1291,7 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     const r = await axios.post(
       gateway,
       body,
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json, text/plain, */*' }, timeout: 25000 }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json, text/plain, */*', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', 'Connection': 'close' }, timeout: 25000, httpsAgent }
     );
     if (r && r.data && (r.data.url || r.data.pay_url)) {
       return res.json({ payUrl: r.data.url || r.data.pay_url, orderId: out_trade_no });
