@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
@@ -26,6 +26,25 @@ const Preview = () => {
   const [noteId, setNoteId] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [isSharing, setIsSharing] = useState(false);
+  const [showEternalCard, setShowEternalCard] = useState(false);
+  const [serverEternalGuard, setServerEternalGuard] = useState(false);
+
+  useEffect(() => {
+    setShowEternalCard(true);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!noteId || !token) return;
+    (async () => {
+      try {
+        const res = await axios.get(`/api/note/${noteId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const flag = !!res?.data?.eternalGuard;
+        setServerEternalGuard(flag);
+        if (flag) setShowEternalCard(false);
+      } catch (_) {}
+    })();
+  }, [noteId]);
 
   const handleUpload = async (visibility) => {
     const token = localStorage.getItem('token');
@@ -44,9 +63,7 @@ const Preview = () => {
         cloudStatus: 'Uploaded',
         type: 'Biography',
         summary: (summary || '').trim() || '',
-        contacts: (contacts || []).filter(c => (c.name||c.phone||c.address)).slice(0,10),
-        retentionYears: eternal ? 20 : 10,
-        eternalGuard: !!eternal,
+        contacts: (contacts || []).filter(c => (c.name||c.phone||c.address)).slice(0,10)
       };
       if (!noteId) {
         const res = await axios.post('/api/note', payload, { headers: { Authorization: `Bearer ${token}` } });
@@ -173,18 +190,24 @@ const Preview = () => {
           />
         ) : (
           <div className="space-y-4">
-            {/* 永恒计划付费文案区（展示） */}
-            <div className="p-4 border rounded bg-white">
-              <h3 className="text-xl font-bold mb-2">永恒计划：为爱与记忆，留下不朽的印记。</h3>
-              <p className="text-gray-800 mb-2">“第三次死亡，是最后一个记得你的人也忘了你。”</p>
-              <p className="text-gray-700 mb-2">为了对抗遗忘，我们承诺：</p>
-              <ul className="list-disc pl-5 text-gray-700 space-y-1 mb-2">
-                <li>您的数字资料将获得长期保存（承诺保存20年，并在此之后继续维护至技术无法支持为止）。</li>
-                <li>我们将生成一份永恒实体印记（加密记忆体），交给您的家人，作为精神遗产的实体见证。</li>
-                <li>你的故事，从此交由永恒守护。</li>
-              </ul>
-              <div className="font-semibold">费用：500元</div>
-            </div>
+            {showEternalCard && !serverEternalGuard && (
+              <div className="relative p-4 border rounded bg-white">
+                <button type="button" aria-label="关闭" className="absolute right-2 top-2 text-gray-500 hover:text-gray-700" onClick={()=>setShowEternalCard(false)}>×</button>
+                <h3 className="text-xl font-bold mb-2">永恒计划：为爱与记忆，留下不朽的印记。</h3>
+                <p className="text-gray-800 mb-2">“第三次死亡，是最后一个记得你的人也忘了你。”</p>
+                <p className="text-gray-700 mb-2">为了对抗遗忘，我们承诺：</p>
+                <ul className="list-disc pl-5 text-gray-700 space-y-1 mb-2">
+                  <li>您的数字资料将获得长期保存（承诺保存20年，并在此之后继续维护至技术无法支持为止）。</li>
+                  <li>我们将生成一份永恒实体印记（加密记忆体），交给您的家人，作为精神遗产的实体见证。</li>
+                  <li>你的故事，从此交由永恒守护。</li>
+                </ul>
+                <div className="font-semibold">费用：500元</div>
+                <div className="mt-3">
+                  <button type="button" className="btn" onClick={()=>{ /* 待接虎皮椒支付 */ setShowEternalCard(false); }}>加入永恒计划</button>
+                  <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>setShowEternalCard(false)}>稍后</button>
+                </div>
+              </div>
+            )}
             {(fullText || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
               <p key={i} className="text-gray-800 whitespace-pre-wrap">{para}</p>
             ))}
