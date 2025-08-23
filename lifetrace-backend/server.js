@@ -229,6 +229,16 @@ const reportSchema = new mongoose.Schema({
 reportSchema.index({ reporterId: 1, noteId: 1 }, { unique: true });
 const Report = mongoose.model('Report', reportSchema);
 
+// PaymentFailure schema: 记录支付失败
+const paymentFailureSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' },
+  message: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+paymentFailureSchema.index({ createdAt: -1 });
+const PaymentFailure = mongoose.model('PaymentFailure', paymentFailureSchema);
+
 // Validate ObjectId
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -1310,11 +1320,29 @@ app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
     } catch (_) {}
     logger.error('Create eternal order error', { error: detail, ip: req.ip });
     try {
+      await PaymentFailure.create({ userId: req.user.userId, noteId: req.body?.noteId, message: String(detail || err.message || 'error') });
+    } catch (_) {}
+    try {
       // Fallback: let client submit a form directly to gateway
       return res.json({ clientPost: true, postUrl: process.env.XUNHU_GATEWAY || 'https://api.xunhupay.com/payment/do.html', fields: payload || {} });
     } catch (_) {
       return res.status(500).json({ message: '创建订单失败：' + err.message });
     }
+  }
+});
+
+// Admin: list payment failures (requires admin)
+app.get('/api/admin/payment-failures', authenticateToken, async (req, res) => {
+  try {
+    if ((req.user?.role || 'user') !== 'admin') return res.status(403).json({ message: '仅管理员可访问' });
+    const items = await PaymentFailure.find({}).sort({ createdAt: -1 }).limit(200).populate('userId','username uid').populate('noteId','title').lean();
+    res.json(items.map(i => ({
+      id: i._id.toString(), user: { id: i.userId?._id?.toString?.() || '', username: i.userId?.username || '', uid: i.userId?.uid || '' },
+      note: { id: i.noteId?._id?.toString?.() || '', title: i.noteId?.title || '' }, message: i.message, createdAt: i.createdAt,
+    })));
+  } catch (err) {
+    logger.error('List payment failures error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取支付失败记录失败：' + err.message });
   }
 });
 

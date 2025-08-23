@@ -11,8 +11,7 @@ const Preview = () => {
   const [title, setTitle] = useState(bioTitle || '');
   const [summary, setSummary] = useState(bioSummary || '');
   const [chapters] = useState(Array.isArray(sections) ? sections : []);
-  const [contacts, setContacts] = useState([{ name: '', phone: '', address: '', relation: '' }]);
-  const [eternal, setEternal] = useState(false);
+  // 支付功能暂时下线：移除联系人与永恒守护状态
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -26,9 +25,7 @@ const Preview = () => {
   const [noteId, setNoteId] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [isSharing, setIsSharing] = useState(false);
-  const [showEternalCard, setShowEternalCard] = useState(false);
-  const [serverEternalGuard, setServerEternalGuard] = useState(false);
-  const [isOrdering, setIsOrdering] = useState(false);
+  // 支付相关 UI 暂停
   const [toast, setToast] = useState('');
   const toastTimerRef = useRef(null);
 
@@ -41,22 +38,7 @@ const Preview = () => {
     } catch (_) {}
   };
 
-  useEffect(() => {
-    setShowEternalCard(true);
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!noteId || !token) return;
-    (async () => {
-      try {
-        const res = await axios.get(`/api/note/${noteId}`, { headers: { Authorization: `Bearer ${token}` } });
-        const flag = !!res?.data?.eternalGuard;
-        setServerEternalGuard(flag);
-        if (flag) setShowEternalCard(false);
-      } catch (_) {}
-    })();
-  }, [noteId]);
+  // 支付相关 effect 暂停
 
   const handleUpload = async (visibility) => {
     const token = localStorage.getItem('token');
@@ -206,97 +188,7 @@ const Preview = () => {
             )}
           </div>
         )}
-        {!isEditing && showEternalCard && !serverEternalGuard && (
-          <div className="relative p-4 border rounded bg-white mt-4">
-            <button type="button" aria-label="关闭" className="absolute right-2 top-2 text-gray-500 hover:text-gray-700" onClick={()=>{ setShowEternalCard(false); showToast('已隐藏'); }}>×</button>
-            <h3 className="text-xl font-bold mb-2">永恒计划：为爱与记忆，留下不朽的印记。</h3>
-            <p className="text-gray-800 mb-2">“第三次死亡，是最后一个记得你的人也忘了你。”</p>
-            <p className="text-gray-700 mb-2">为了对抗遗忘，我们承诺：</p>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1 mb-2">
-              <li>您的数字资料将获得长期保存（承诺保存20年，并在此之后继续维护至技术无法支持为止）。</li>
-              <li>我们将生成一份永恒实体印记（加密记忆体），交给您的家人，作为精神遗产的实体见证。</li>
-              <li>你的故事，从此交由永恒守护。</li>
-            </ul>
-            <div className="font-semibold">费用：500元</div>
-            <div className="mt-3 p-3 border rounded bg-gray-50">
-              <label className="flex items-center gap-2 mb-2">
-                <input type="checkbox" checked={eternal} onChange={(e)=> { setEternal(e.target.checked); showToast(e.target.checked ? '已开启永恒守护' : '已关闭永恒守护'); }} />
-                <span>开启“永恒守护”（一次性 500 元）：承诺保存20年，并在创作完成后生成永恒实体印记交给家人</span>
-              </label>
-              <div className="text-sm text-gray-600 mb-2">请填写家族联系人（至少一位，需姓名与电话）：</div>
-              {contacts.map((c, idx) => (
-                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2">
-                  <input className="input" placeholder="联系人姓名" value={c.name} onChange={(e)=>{
-                    const arr=[...contacts]; arr[idx]={...arr[idx], name:e.target.value}; setContacts(arr);
-                  }} />
-                  <input className="input" placeholder="联系方式（电话）" value={c.phone} onChange={(e)=>{
-                    const arr=[...contacts]; arr[idx]={...arr[idx], phone:e.target.value}; setContacts(arr);
-                  }} />
-                  <input className="input" placeholder="联系地址" value={c.address} onChange={(e)=>{
-                    const arr=[...contacts]; arr[idx]={...arr[idx], address:e.target.value}; setContacts(arr);
-                  }} />
-                  <input className="input" placeholder="与作者关系（父亲/女儿等）" value={c.relation} onChange={(e)=>{
-                    const arr=[...contacts]; arr[idx]={...arr[idx], relation:e.target.value}; setContacts(arr);
-                  }} />
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <button className="btn" type="button" onClick={()=> { setContacts(prev => (prev.length<10?[...prev, {name:'',phone:'',address:'',relation:''}]:prev)); showToast('已新增联系人'); }}>新增联系人</button>
-                <button className="btn bg-gray-500 hover:bg-gray-600" type="button" onClick={()=> { setContacts(prev => prev.length>1?prev.slice(0,-1):prev); showToast('已删除最后一个'); }}>删除最后一个</button>
-              </div>
-            </div>
-            <div className="mt-3">
-              <button type="button" className="btn" disabled={isOrdering} onClick={async ()=>{
-                try {
-                  if (!noteId) { const msg='请先保存并上传后再发起支付'; setMessage(msg); showToast(msg); return; }
-                  const valid = (contacts || []).some(c => (c.name||'').trim() && (c.phone||'').trim() && (c.address||'').trim());
-                  if (!valid || !eternal) { const msg='请勾选开启永恒守护并填写至少一位联系人（姓名、电话、地址）'; setMessage(msg); showToast(msg); return; }
-                  setIsOrdering(true);
-                  const token = localStorage.getItem('token');
-                  showToast('正在创建订单…');
-                  const r = await axios.post('/api/pay/eternal-order', { noteId }, { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 });
-                  const data = r?.data || {};
-                  const url = data?.payUrl;
-                  if (url) {
-                    showToast('正在跳转到收银台…');
-                    window.location.href = url;
-                  } else if (data?.clientPost && data?.postUrl) {
-                    try {
-                      const form = document.createElement('form');
-                      form.method = 'POST';
-                      form.action = data.postUrl;
-                      form.style.display = 'none';
-                      const fields = data.fields || {};
-                      Object.keys(fields).forEach((k) => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = k;
-                        input.value = String(fields[k] ?? '');
-                        form.appendChild(input);
-                      });
-                      document.body.appendChild(form);
-                      showToast('正在跳转到收银台…');
-                      form.submit();
-                    } catch (e2) {
-                      const msg = '下单失败：无法发起表单跳转';
-                      setMessage(msg); showToast(msg);
-                    }
-                  } else {
-                    const msg='下单失败'; setMessage(msg); showToast(msg);
-                  }
-                } catch (e) {
-                  const msg = '下单失败：' + (e?.response?.data?.message || e?.message || '网络错误');
-                  setMessage(msg); showToast(msg);
-                } finally {
-                  setIsOrdering(false);
-                }
-              }}>
-                {isOrdering ? '请求中…' : '加入永恒计划'}
-              </button>
-              <button type="button" className="btn bg-gray-500 hover:bg-gray-600 ml-2" onClick={()=>{ setShowEternalCard(false); showToast('已隐藏'); }}>稍后</button>
-            </div>
-          </div>
-        )}
+        {/* 支付卡片已下线 */}
         <div className="mt-6 flex gap-2 flex-wrap">
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
