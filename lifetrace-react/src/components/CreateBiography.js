@@ -572,9 +572,11 @@ const CreateBiography = () => {
       const v = trimmed.replace(/\s/g,'');
       if (v === 'A' || v === 'a' || /自己|本人|为我/.test(trimmed)) {
         setAuthorMode('self'); try{ localStorage.setItem('author_mode','self'); }catch(_){ }
-        const tip = '好的，这次我们为您本人记录。我会用适合“您”的称谓继续访谈。先从基础资料写起：姓名、性别、年龄、祖籍、家庭与教育经历。';
+        const tip = '我已记下：这次记录是为您本人。接下来，我将陪伴您一起整理人生故事。为了更完整地呈现，请先补充一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。';
         setChatMessages(prev => [...prev, { role: 'assistant', content: tip }]);
         appendLineToSection(currentSectionIndex, `陪伴师：${tip}`);
+        // 清空输入框
+        setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
         return;
       }
       if (v === 'B' || v === 'b' || /他人|父母|亲人|为他/.test(trimmed)) {
@@ -582,19 +584,22 @@ const CreateBiography = () => {
         const askRel = '请问与您记录的这位之间的关系是什么？例如：父亲/母亲/爷爷/奶奶/外公/外婆/妻子/丈夫/朋友等。';
         setChatMessages(prev => [...prev, { role: 'assistant', content: askRel }]);
         appendLineToSection(currentSectionIndex, `陪伴师：${askRel}`);
+        setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
         return;
       }
       const reprompt = '没关系，我们重新来一遍：请选择 A. 为我自己 B. 为他人（如父母/亲人）。';
       setChatMessages(prev => [...prev, { role: 'assistant', content: reprompt }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${reprompt}`);
+      setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
       return;
     }
     if (authorMode === 'other' && !authorRelation) {
       setAuthorRelation(trimmed);
       try{ localStorage.setItem('author_relation', trimmed); }catch(_){ }
-      const tip2 = `已记录：与您的关系为“${trimmed}”。接下来我会以第三人称来协助整理${trimmed}的生命故事。为更完整地呈现他/她，请先补充基础资料：姓名、性别、年龄、祖籍、家庭与教育经历。`;
+      const tip2 = `我已记下：您所记录的人是您的“${trimmed}”。接下来，我将陪伴您一起整理他/她的生命故事。为了更完整地展现他/她的一生，请您先提供一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。`;
       setChatMessages(prev => [...prev, { role: 'assistant', content: tip2 }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${tip2}`);
+      setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
       return;
     }
 
@@ -973,6 +978,27 @@ const CreateBiography = () => {
   // 分段编辑：文本与媒体（固定阶段篇章，不允许新增/删除）
   const addSection = () => {};
   const removeSection = () => {};
+  // 润色前过滤：去除身份设定/基础资料引导等元话术
+  const filterPolishSource = (raw) => {
+    const txt = (raw || '').toString();
+    const lines = txt.split(/\r?\n/);
+    const shouldDrop = (line) => {
+      const s = (line || '').trim();
+      if (!s) return false;
+      const patterns = [
+        '这次记录是为谁创作',
+        '请选择：A. 为我自己 B. 为他人',
+        '请问与您记录的这位之间的关系是什么',
+        '我已记下：您所记录的人是您的',
+        '我已记下：这次记录是为您本人',
+        '为了更完整地展现他/她的一生，请您先提供一些基础资料',
+        '为了更完整地呈现，请先补充一些基础资料',
+        '让我们从一些基础资料开始'
+      ];
+      return patterns.some(p => s.includes(p));
+    };
+    return lines.filter(l => !shouldDrop(l)).join('\n');
+  };
   const updateSectionTitle = (index, value) => setSections(prev => prev.map((s, i) => i === index ? { ...s, title: sanitizeInput(value) } : s));
   const updateSectionText = (index, value) => setSections(prev => prev.map((s, i) => i === index ? { ...s, text: sanitizeInput(value) } : s));
   const removeMediaFromSection = (sectionIndex, mediaIndex) => setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: s.media.filter((_, mi) => mi !== mediaIndex) } : s));
@@ -1659,6 +1685,7 @@ const CreateBiography = () => {
                       disabled={isSaving || isUploading}
                         rows={1}
                         style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
@@ -1683,9 +1710,10 @@ const CreateBiography = () => {
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                          const system = '你是一位资深传记写作者。请根据“问答对话记录”整理出一段自然流畅、第一人称、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。';
-                          const qaSource = (sections[currentSectionIndex]?.text || '').toString();
-                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                          const system = '你是一位资深传记写作者。请根据“问答对话记录”整理出一段自然流畅、第一人称、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。';
+                          const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
+                          const qaSource = filterPolishSource(qaSourceRaw);
+                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
                           const messages = [
                             { role: 'system', content: system },
                             { role: 'user', content: userPayload },
