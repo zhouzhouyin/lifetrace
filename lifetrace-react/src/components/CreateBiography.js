@@ -465,6 +465,14 @@ const CreateBiography = () => {
     }
   };
 
+  // 访谈身份设定：本人/他人
+  const [authorMode, setAuthorMode] = useState(() => {
+    try { return localStorage.getItem('author_mode') || ''; } catch(_) { return ''; }
+  }); // '' | 'self' | 'other'
+  const [authorRelation, setAuthorRelation] = useState(() => {
+    try { return localStorage.getItem('author_relation') || ''; } catch(_) { return ''; }
+  }); // 如 父亲/母亲/爷爷 等
+
   const startInterview = () => {
     const idx = Math.min(currentSectionIndex, lifeStages.length - 1);
     // 确保进入访谈状态并同步当前阶段
@@ -476,7 +484,19 @@ const CreateBiography = () => {
     setCurrentSectionIndex(idx);
     // 首次仅给基础资料开场，等待用户先回答
     if (!hasShownOpening) {
-      const opening = '我们先从一些基础资料聊起吧：您怎么称呼？性别是什么？今年多大了？祖籍在哪里？如果方便，也请简单介绍一下您的家庭情况和教育经历。';
+      // 身份设定引导
+      if (!authorMode) {
+        const q1 = '这次记录是为谁创作？请选择：A. 为我自己 B. 为他人（如父母/亲人）';
+        setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
+        appendLineToSection(idx, `陪伴师：${q1}`);
+        setHasShownOpening(true);
+        return;
+      }
+      const opening = authorMode === 'other'
+        ? (authorRelation
+            ? `让我们从一些基础资料开始，方便后续梳理${authorRelation}的故事：请补充姓名、性别、年龄、祖籍、家庭与教育经历。`
+            : '让我们从一些基础资料开始，方便后续梳理这位亲人的故事：请补充姓名、性别、年龄、祖籍、家庭与教育经历。')
+        : '让我们从一些基础资料开始：您怎么称呼？性别是什么？今年多大了？祖籍在哪里？如果方便，也请简单介绍一下您的家庭情况和教育经历。';
       setChatMessages(prev => [...prev, { role: 'assistant', content: opening }]);
       try { appendLineToSection(idx, `陪伴师：${opening}`); } catch (_) {}
       if (autoSpeakAssistant) speakText(opening);
@@ -513,11 +533,44 @@ const CreateBiography = () => {
       setTimeout(() => navigate('/login'), 1000);
       return;
     }
+    // 处理身份设定回答
+    if (!authorMode) {
+      const v = trimmed.replace(/\s/g,'');
+      if (v === 'A' || v === 'a' || /自己|本人|为我/.test(trimmed)) {
+        setAuthorMode('self'); try{ localStorage.setItem('author_mode','self'); }catch(_){ }
+        const tip = '好的，这次我们为您本人记录。我会用适合“您”的称谓继续访谈。先从基础资料写起：姓名、性别、年龄、祖籍、家庭与教育经历。';
+        setChatMessages(prev => [...prev, { role: 'assistant', content: tip }]);
+        appendLineToSection(currentSectionIndex, `陪伴师：${tip}`);
+        return;
+      }
+      if (v === 'B' || v === 'b' || /他人|父母|亲人|为他/.test(trimmed)) {
+        setAuthorMode('other'); try{ localStorage.setItem('author_mode','other'); }catch(_){ }
+        const askRel = '请问与您记录的这位之间的关系是什么？例如：父亲/母亲/爷爷/奶奶/外公/外婆/妻子/丈夫/朋友等。';
+        setChatMessages(prev => [...prev, { role: 'assistant', content: askRel }]);
+        appendLineToSection(currentSectionIndex, `陪伴师：${askRel}`);
+        return;
+      }
+      const reprompt = '没关系，我们重新来一遍：请选择 A. 为我自己 B. 为他人（如父母/亲人）。';
+      setChatMessages(prev => [...prev, { role: 'assistant', content: reprompt }]);
+      appendLineToSection(currentSectionIndex, `陪伴师：${reprompt}`);
+      return;
+    }
+    if (authorMode === 'other' && !authorRelation) {
+      setAuthorRelation(trimmed);
+      try{ localStorage.setItem('author_relation', trimmed); }catch(_){ }
+      const tip2 = `已记录：与您的关系为“${trimmed}”。接下来我会以第三人称来协助整理${trimmed}的生命故事。为更完整地呈现他/她，请先补充基础资料：姓名、性别、年龄、祖籍、家庭与教育经历。`;
+      setChatMessages(prev => [...prev, { role: 'assistant', content: tip2 }]);
+      appendLineToSection(currentSectionIndex, `陪伴师：${tip2}`);
+      return;
+    }
+
     // 仅以“我：...”格式写入当前阶段篇章，避免重复
     // 同步素材文本可选，如不再使用素材区可注释
     // setMaterialsText(prev => (prev ? prev + '\n' + trimmed : trimmed));
 
-    const systemPrompt = `你是一位温暖、耐心、幽默而得体的情感陪伴师。目标：引发生命共鸣，帮助用户记录其一生中值得记述的人与事，从童年至今，直到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
+    const perspective = (authorMode === 'other') ? '请使用第三人称（他/她/父亲/母亲/爷爷/奶奶等），避免“您/我”。' : '请使用第二人称“您/你”，避免第三人称。';
+    const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理对方的人生经历，强调“整理与梳理”，避免闲聊感。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];

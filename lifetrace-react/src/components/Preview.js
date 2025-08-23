@@ -91,8 +91,8 @@ const Preview = () => {
           showToast('已分享到广场');
         }
       } else if (visibility === 'family') {
-        setMessage('已分享到家族');
-        showToast('已分享到家族');
+        setMessage('已上传到家族档案');
+        showToast('已上传到家族档案');
       } else {
         setMessage('已保存');
         showToast('已保存');
@@ -191,8 +191,8 @@ const Preview = () => {
         {/* 支付卡片已下线 */}
         <div className="mt-6 flex gap-2 flex-wrap">
           <button className="btn w-full sm:w-auto" onClick={() => handleUpload('private')} disabled={isSaving}>{isSaving ? '保存中...' : (noteId ? (t ? t('saveUpload') : '更新并上传') : (t ? t('saveUpload') : '保存并上传'))}</button>
-          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{t ? t('shareFamily') : '分享到家族'}</button>
-          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('public')} disabled={isSaving || !noteId}>{t ? t('shareSquare') : '分享到广场'}</button>
+          <button className="btn w-full sm:w-auto" onClick={() => handleUpload('family')} disabled={isSaving || !noteId}>{'上传到家族档案'}</button>
+          {/* 分享到广场已隐藏 */}
           <button className="btn w-full sm:w-auto" type="button" disabled={!noteId || isSharing} onClick={async ()=>{
             try {
               setIsSharing(true);

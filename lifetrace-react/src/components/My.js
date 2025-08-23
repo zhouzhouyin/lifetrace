@@ -373,7 +373,7 @@ const My = () => {
                           }}
                           disabled={isLoading}
                         >
-                          从广场撤销
+                          {/* 从广场撤销（隐藏） */}
                         </button>
                       ) : (
                         <button
@@ -383,14 +383,14 @@ const My = () => {
                               const token = localStorage.getItem('token');
                               await axios.put(`/api/note/${item.id}/public`, { isPublic: true }, { headers: { Authorization: `Bearer ${token}` } });
                               setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, isPublic: true } : n));
-                              setMessage('已分享到广场');
+                              /* setMessage('已分享到广场'); */
                             } catch (e) {
                               setMessage('分享失败：' + (e.response?.data?.message || e.message));
                             }
                           }}
                           disabled={isLoading}
                         >
-                          分享到广场
+                          {/* 分享到广场（隐藏） */}
                         </button>
                       )}
                       {item.sharedWithFamily ? (
@@ -408,7 +408,7 @@ const My = () => {
                           }}
                           disabled={isLoading}
                         >
-                          从家族撤销
+                          从家族档案撤销
                         </button>
                       ) : (
                         <button
@@ -418,14 +418,14 @@ const My = () => {
                               const token = localStorage.getItem('token');
                               await axios.put(`/api/note/${item.id}/family-share`, { shared: true }, { headers: { Authorization: `Bearer ${token}` } });
                               setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, sharedWithFamily: true } : n));
-                              setMessage('已分享到家族');
+                              setMessage('已上传到家族档案');
                             } catch (e) {
                               setMessage('分享失败：' + (e.response?.data?.message || e.message));
                             }
                           }}
                           disabled={isLoading}
                         >
-                          分享到家族
+                          上传到家族档案
                         </button>
                       )}
                       <button

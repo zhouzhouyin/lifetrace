@@ -75,9 +75,9 @@ const Family = () => {
   return (
     <div>
       <Helmet>
-        <title>家族传记 - 永念</title>
+        <title>家族档案 - 永念</title>
       </Helmet>
-      <h2 className="text-2xl font-bold mb-4">家族传记</h2>
+      <h2 className="text-2xl font-bold mb-4">家族档案</h2>
       <p className="mb-2">我的UID：{uid || '获取中…'}</p>
       <div className="card p-4 mb-4">
         <h3 className="font-semibold mb-2">通过UID添加家人</h3>
@@ -110,7 +110,7 @@ const Family = () => {
       </div>
 
       <div className="card p-4 mb-4">
-        <h3 className="font-semibold mb-2">家族传记（含我与家人）</h3>
+        <h3 className="font-semibold mb-2">家族档案（含我与家人）</h3>
         {familyBiographies && familyBiographies.length > 0 ? familyBiographies.map((b) => (
           <div key={b.id} className="flex items-center justify-between border-b py-2">
             <div>
