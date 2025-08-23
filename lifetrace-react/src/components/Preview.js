@@ -57,8 +57,7 @@ const Preview = () => {
         sharedWithFamily,
         cloudStatus: 'Uploaded',
         type: 'Biography',
-        summary: (summary || '').trim() || '',
-        contacts: (contacts || []).filter(c => (c.name||c.phone||c.address)).slice(0,10)
+        summary: (summary || '').trim() || ''
       };
       if (!noteId) {
         const res = await axios.post('/api/note', payload, { headers: { Authorization: `Bearer ${token}` } });
