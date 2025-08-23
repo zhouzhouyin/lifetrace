@@ -410,16 +410,38 @@ const CreateBiography = () => {
       setTimeout(() => navigate('/login'), 1000);
       return;
     }
+    // 若尚未选择“为谁创作”，优先引导身份设定
+    if (!authorMode) {
+      const q1 = '这次记录是为谁创作？请选择：A. 为我自己 B. 为他人（如父母/亲人）';
+      setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
+      appendLineToSection(targetIndex, `陪伴师：${q1}`);
+      setCurrentSectionIndex(targetIndex);
+      setIsInterviewing(true);
+      setMessage('');
+      return;
+    }
     setIsAsking(true);
     setMessage('正在生成本阶段问题…');
     try {
-      const systemPrompt = '你是一位温暖、耐心、幽默而得体的情感陪伴师。目标：引发生命共鸣，帮助用户记录其一生中值得纪念的人与事，从童年至今，再到对未来的期盼。请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先人性化反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。';
-      const kickoffUser = `请围绕阶段“${lifeStages[targetIndex]}”提出第一个暖心问题，先用一句简短话语表达共情与欢迎，然后给出问题。`;
+      const perspectiveKick = (authorMode === 'other')
+        ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免“您/我”。`
+        : '请使用第二人称“您/你”。';
+      const toneKick = (authorMode === 'other')
+        ? '你现在是“引导者/助手”，帮助记录者一起梳理对方的人生经历，强调“整理与梳理”。'
+        : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
+      const kickoffUser = (authorMode === 'other')
+        ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
+        : `请面向“您”提出本阶段的第一个暖心问题。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
-      const ai = normalizeAssistant(raw) || `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`;
+      const ai = normalizeAssistant(raw) || (
+        authorMode === 'other'
+          ? `让我们开始“${lifeStages[targetIndex]}”。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
+          : `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`
+      );
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 阶段开场问题写入对应阶段篇章
       appendLineToSection(targetIndex, `陪伴师：${ai}`);
@@ -435,13 +457,25 @@ const CreateBiography = () => {
     } catch (err) {
       // 短上下文重试
       try {
-        const systemPrompt = '你是一位温暖、耐心、幽默而得体的情感陪伴师。目标：引发生命共鸣，帮助用户记录其一生中值得纪念的人与事，从童年至今，再到对未来的期盼。请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先简短反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。';
-        const kickoffUser = `请围绕阶段“${lifeStages[targetIndex]}”提出第一个暖心问题，先用一句简短话语表达共情与欢迎，然后给出问题。`;
+        const perspectiveKick2 = (authorMode === 'other')
+          ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免“您/我”。`
+          : '请使用第二人称“您/你”。';
+        const toneKick2 = (authorMode === 'other')
+          ? '你现在是“引导者/助手”，帮助记录者一起梳理对方的人生经历，强调“整理与梳理”。'
+          : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
+        const kickoffUser = (authorMode === 'other')
+          ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
+          : `请面向“您”提出本阶段的第一个暖心问题。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
         const raw2 = resp2.data?.choices?.[0]?.message?.content;
-        const ai2 = normalizeAssistant(raw2) || `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`;
+        const ai2 = normalizeAssistant(raw2) || (
+          authorMode === 'other'
+            ? `让我们开始“${lifeStages[targetIndex]}”。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
+            : `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`
+        );
         setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
         appendLineToSection(targetIndex, `陪伴师：${ai2}`);
         if (autoSpeakAssistant) speakText(ai2);

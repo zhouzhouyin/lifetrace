@@ -40,7 +40,11 @@ const Contact = () => {
           <title>联系我们 - 永念</title>
           <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
         </Helmet>
-        <h2 className="text-4xl font-bold text-center text-gray-900 mb-8">联系我们</h2>
+
+        <h2 className="text-4xl font-bold text-center text-gray-900 mb-8">
+          联系我们
+        </h2>
+
         {message && (
           <div
             className={`mb-8 p-4 text-center text-white rounded-lg transition-opacity duration-300 animate-fade-in ${
@@ -50,9 +54,12 @@ const Contact = () => {
             {message}
           </div>
         )}
+
         <div className="space-y-10">
           <div className="text-center">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-4">品牌愿景 | 永念 Lifetrace</h3>
+            <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+              品牌愿景 | 永念 Lifetrace
+            </h3>
             <p className="text-lg text-gray-600 leading-8 max-w-3xl mx-auto">
               <span className="font-medium text-gray-800">让记忆永存，让精神传承百年</span>
               <br />
@@ -62,22 +69,15 @@ const Contact = () => {
             </p>
           </div>
 
-          {/* 已支持服务 */}
+          {/* 未来服务预告（合并了原“已支持服务”的全部付费内容） */}
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">我们已提供的服务</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">未来服务预告</h3>
+            <p className="text-gray-500 mb-4">(以下服务即将上线，敬请期待)</p>
             <ul className="text-left list-disc list-inside text-gray-600 max-w-lg mx-auto space-y-3">
               <li className="text-base">制作精美自传实体书，书写您的人生传奇</li>
               <li className="text-base">制作珍藏影集，定格每一个动人瞬间</li>
               <li className="text-base">保存时光胶囊，封存记忆，传递未来</li>
               <li className="text-base">数字遗产存储和管理，保管您在互联网上的资产（账号密码、文字、视频、照片）</li>
-            </ul>
-          </div>
-
-          {/* 未来服务预告 */}
-          <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">未来服务预告</h3>
-            <p className="text-gray-500 mb-4">(以下服务即将上线，敬请期待)</p>
-            <ul className="text-left list-disc list-inside text-gray-600 max-w-lg mx-auto space-y-3">
               <li className="text-base">独特实体电子纪念碑，致敬不朽人生</li>
               <li className="text-base">更多专属定制服务，满足您的个性化需求</li>
             </ul>
@@ -118,4 +118,5 @@ const Contact = () => {
 };
 
 export default Contact;
+
 
