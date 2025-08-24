@@ -61,15 +61,40 @@ const Home = () => {
           <p className="mt-4 text-base sm:text-lg text-gray-700">
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <button className="btn w-full sm:w-auto text-white bg-blue-600 hover:bg-blue-700 border-none" onClick={() => navigate(isLoggedIn ? '/create' : '/login')}>
-              {lang === 'zh' ? '开始记录' : 'Start Now'}
+          {/* CTA cards with copy (mobile-first) */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <button
+              aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
+              onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
+              className="text-left p-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+            >
+              <div className="text-2xl mb-1">✍️</div>
+              <h3 className="font-semibold text-lg">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
+              <p className="text-sm opacity-90 mt-1">
+                {lang === 'zh' ? '用温和的引导问答，从童年至当下，一步步写下。' : 'Gentle prompts to capture a lifetime, step by step.'}
+              </p>
             </button>
-            <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/family' : '/login')}>
-              {lang === 'zh' ? '家族档案' : 'Family Archive'}
+            <button
+              aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
+              onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
+              className="text-left p-4 rounded-lg bg-white hover:bg-gray-50 border transition shadow-sm"
+            >
+              <div className="text-2xl mb-1">👪</div>
+              <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
+              </p>
             </button>
-            <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/my' : '/login')}>
-              {lang === 'zh' ? '我的' : 'My'}
+            <button
+              aria-label={lang === 'zh' ? '我的' : 'My'}
+              onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
+              className="text-left p-4 rounded-lg bg-white hover:bg-gray-50 border transition shadow-sm"
+            >
+              <div className="text-2xl mb-1">📂</div>
+              <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '我的' : 'My'}</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
+              </p>
             </button>
           </div>
           {isLoggedIn && (
