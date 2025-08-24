@@ -152,6 +152,12 @@ const Login = () => {
           <button type="submit" className="btn w-full mt-2" disabled={isLoading}>
             {isLoading ? (lang === 'zh' ? '登录中...' : 'Logging in...') : (lang === 'zh' ? '登录' : 'Login')}
           </button>
+          <div className="text-center text-sm" style={{ color: '#bfa366' }}>
+            {lang === 'zh' ? '没有账号？' : 'No account?'}
+            <button type="button" className="underline ml-1" onClick={() => navigate('/register')} style={{ color: '#e7c36f' }}>
+              {lang === 'zh' ? '去注册' : 'Register now'}
+            </button>
+          </div>
           <button
             type="button"
             className="btn bg-gray-500 hover:bg-gray-600 w-full"

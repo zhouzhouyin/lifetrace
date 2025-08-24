@@ -48,17 +48,17 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50/50">
+    <div className="min-h-screen">
       <Helmet>
         <title>{lang === 'zh' ? '首页 - 永念' : 'Home - LifeTrace'}</title>
       </Helmet>
       {/* Hero */}
       <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12" style={{ backgroundColor: '#0b0b0d' }}>
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: '#d6b46a' }}>
             {lang === 'zh' ? '把一生好好写下，温柔地交给时间' : 'Write a life, gently handed to time'}
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-gray-700">
+          <p className="mt-4 text-base sm:text-lg" style={{ color: '#bfa366' }}>
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
           {/* CTA cards with copy (mobile-first) */}
@@ -70,8 +70,8 @@ const Home = () => {
               style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">✍️</div>
-              <h3 className="font-semibold text-lg">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
-              <p className="text-sm opacity-90 mt-1">
+              <h3 className="font-semibold text-lg" style={{ color: '#d6b46a' }}>{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
+              <p className="text-sm opacity-90 mt-1" style={{ color: '#bfa366' }}>
                 {lang === 'zh' ? '用温和的引导问答，从童年至当下，一步步写下。' : 'Gentle prompts to capture a lifetime, step by step.'}
               </p>
             </button>
@@ -82,8 +82,8 @@ const Home = () => {
               style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">👪</div>
-              <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <h3 className="font-semibold text-lg" style={{ color: '#d6b46a' }}>{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
+              <p className="text-sm mt-1" style={{ color: '#bfa366' }}>
                 {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
               </p>
             </button>
@@ -94,8 +94,8 @@ const Home = () => {
               style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">✨</div>
-              <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '我的' : 'My'}</h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <h3 className="font-semibold text-lg" style={{ color: '#d6b46a' }}>{lang === 'zh' ? '我的' : 'My'}</h3>
+              <p className="text-sm mt-1" style={{ color: '#bfa366' }}>
                 {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
               </p>
             </button>

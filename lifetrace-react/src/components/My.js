@@ -325,12 +325,13 @@ const My = () => {
   // 已移除“我的随笔”展示
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
-      <div className="card max-w-2xl w-full p-6">
+    <div className="flex flex-col items-center min-h-screen p-4">
+      <div className="card max-w-2xl w-full p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <Helmet>
           <title>我的主页 - 永念</title>
         </Helmet>
-        <h2 className="text-2xl font-bold text-center mb-6">我的主页</h2>
+        <h2 className="text-2xl font-bold text-center mb-1">我的主页</h2>
+        <p className="text-sm text-center mb-5" style={{ color: '#bfa366' }}>将散落的点滴收在一处，留给未来的人。</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('无效') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
@@ -344,10 +345,10 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的传记</h3>
               {biographies.length > 0 ? (
                 biographies.map((item) => (
-                  <div key={item.id} className="card p-4">
+                  <div key={item.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
                     <h4 className="font-semibold">{item.title}</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="whitespace-pre-wrap" style={{ color: '#d6b46a' }}>{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
+                    <p className="text-sm" style={{ color: '#bfa366' }}>
                       {item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')} | {item.isPublic ? '(公开)' : '(私有)'} | {item.cloudStatus === 'Not Uploaded' ? '(本地)' : '(云端)'}
                     </p>
                     <div className="flex gap-2 mt-2">
@@ -468,24 +469,24 @@ const My = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-700">暂无传记</p>
+                <p>暂无传记</p>
               )}
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">我的收藏</h3>
               {favorites.length > 0 ? (
                 favorites.map((item) => (
-                  <div key={item.id} className="card p-4">
+                  <div key={item.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
                     <h4 className="font-semibold">{item.title || '未命名传记'}</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
-                    <p className="text-sm text-gray-500">{item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')}</p>
+                    <p className="whitespace-pre-wrap" style={{ color: '#d6b46a' }}>{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
+                    <p className="text-sm" style={{ color: '#bfa366' }}>{item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')}</p>
                     <div className="flex gap-2 mt-2">
                       <button className="btn" onClick={() => handleViewNote(item.id, 'Biography')} disabled={isLoading}>查看</button>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-700">暂无收藏</p>
+                <p>暂无收藏</p>
               )}
             </div>
             {/** “我的随笔”模块已移除 */}
@@ -493,9 +494,9 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的相册</h3>
               {photos.length > 0 ? (
                 photos.map(file => (
-                  <div key={file.id} className="card p-4">
-                    <p className="text-gray-700">{file.desc || '无描述'}</p>
-                    <p className="text-sm text-gray-500">
+                  <div key={file.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
+                    <p>{file.desc || '无描述'}</p>
+                    <p className="text-sm" style={{ color: '#bfa366' }}>
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
                     </p>
                     <img
@@ -532,16 +533,16 @@ const My = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-700">暂无相册</p>
+                <p>暂无相册</p>
               )}
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">我的视频</h3>
               {videos.length > 0 ? (
                 videos.map(file => (
-                  <div key={file.id} className="card p-4">
-                    <p className="text-gray-700">{file.desc || '无描述'}</p>
-                    <p className="text-sm text-gray-500">
+                  <div key={file.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
+                    <p>{file.desc || '无描述'}</p>
+                    <p className="text-sm" style={{ color: '#bfa366' }}>
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
                     </p>
                     <video
@@ -577,16 +578,16 @@ const My = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-700">暂无视频</p>
+                <p>暂无视频</p>
               )}
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">我的音频</h3>
               {audios.length > 0 ? (
                 audios.map(file => (
-                  <div key={file.id} className="card p-4">
-                    <p className="text-gray-700">{file.desc || '无描述'}</p>
-                    <p className="text-sm text-gray-500">
+                  <div key={file.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
+                    <p>{file.desc || '无描述'}</p>
+                    <p className="text-sm" style={{ color: '#bfa366' }}>
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
                     </p>
                     <audio
@@ -622,7 +623,7 @@ const My = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-700">暂无音频</p>
+                <p>暂无音频</p>
               )}
             </div>
             <div className="flex gap-4">

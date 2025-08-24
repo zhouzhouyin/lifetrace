@@ -1614,9 +1614,9 @@ const CreateBiography = () => {
                 >
                   {getSectionLabelByIndex(idx)}
                 </button>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+                </div>
           {/* 永恒计划引导：仅在用户点击“查看此生”后于预览页展示；此处不再弹出 */}
           
           {/* 情感陪伴师访谈（一体化：隐藏单独区域，所有问答只在篇章正文中体现） */}
@@ -1678,7 +1678,6 @@ const CreateBiography = () => {
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">提示：回车发送，Shift+Enter 换行</div>
                     {/* 语音设置面板已移除 */}
                   </div>
                   {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}

@@ -73,34 +73,36 @@ const Family = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen">
       <Helmet>
         <title>家族档案 - 永念</title>
       </Helmet>
-      <h2 className="text-2xl font-bold mb-4">家族档案</h2>
-      <p className="mb-2">我的UID：{uid || '获取中…'}</p>
-      <div className="card p-4 mb-4">
+      <div className="max-w-3xl mx-auto p-4 sm:p-6">
+        <h2 className="text-2xl font-bold mb-2">家族档案</h2>
+        <p className="text-sm mb-4" style={{ color: '#bfa366' }}>连接家人，彼此见证，共同守护家族的记忆。</p>
+        <p className="mb-4">我的UID：{uid || '获取中…'}</p>
+      <div className="card p-4 mb-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <h3 className="font-semibold mb-2">通过UID添加家人</h3>
         <div className="flex gap-2 flex-wrap">
-          <input className="input" placeholder="对方UID" value={targetUid} onChange={e => setTargetUid(e.target.value)} />
-          <input className="input" placeholder="我与TA的关系（如：父亲/配偶）" value={relationFromRequester} onChange={e => setRelationFromRequester(e.target.value)} />
+          <input className="input flex-1 min-w-[200px]" placeholder="对方UID" value={targetUid} onChange={e => setTargetUid(e.target.value)} />
+          <input className="input flex-1 min-w-[220px]" placeholder="我与TA的关系（如：父亲/配偶）" value={relationFromRequester} onChange={e => setRelationFromRequester(e.target.value)} />
           <button className="btn" onClick={sendRequest}>发送请求</button>
         </div>
       </div>
 
-      <div className="card p-4 mb-4">
+      <div className="card p-4 mb-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <h3 className="font-semibold mb-2">待处理请求（对方向你发起）</h3>
         {familyRequests && familyRequests.length > 0 ? familyRequests.map(r => (
           <div key={r.id} className="flex items-center gap-2 mb-2">
             <span>来自 {r.requester.username}（UID: {r.requester.uid}），对方称呼你：{r.relationFromRequester || '未填写'}</span>
-            <input className="input" placeholder="你与TA的关系" value={relationFromTarget} onChange={e => setRelationFromTarget(e.target.value)} />
+            <input className="input flex-1 min-w-[160px]" placeholder="你与TA的关系" value={relationFromTarget} onChange={e => setRelationFromTarget(e.target.value)} />
             <button className="btn" onClick={() => acceptRequest(r.id)}>接受</button>
             <button className="btn bg-gray-500 hover:bg-gray-600" onClick={() => rejectRequest(r.id)}>拒绝</button>
           </div>
         )) : <p>暂无请求</p>}
       </div>
 
-      <div className="card p-4 mb-4">
+      <div className="card p-4 mb-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <h3 className="font-semibold mb-2">已认证的家人</h3>
         {familyMembers && familyMembers.length > 0 ? familyMembers.map((m, idx) => (
           <div key={idx} className="mb-2">
@@ -109,13 +111,13 @@ const Family = () => {
         )) : <p>暂无家人</p>}
       </div>
 
-      <div className="card p-4 mb-4">
+      <div className="card p-4 mb-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <h3 className="font-semibold mb-2">家族档案（含我与家人）</h3>
         {familyBiographies && familyBiographies.length > 0 ? familyBiographies.map((b) => (
-          <div key={b.id} className="flex items-center justify-between border-b py-2">
+          <div key={b.id} className="flex items-center justify-between border-b py-2" style={{ borderColor: '#2a2a30' }}>
             <div>
-              <div className="font-medium">{b.title || '(无标题)'} <span className="text-gray-600 text-sm">（{getOwnerRelationLabel(b.ownerId, b.isOwner)}）</span></div>
-              <div className="text-sm text-gray-500">{new Date(b.timestamp).toLocaleString('zh-CN')} | {b.isPublic ? '已公开' : '私有'}</div>
+              <div className="font-medium">{b.title || '(无标题)'} <span className="text-sm" style={{ color: '#bfa366' }}>（{getOwnerRelationLabel(b.ownerId, b.isOwner)}）</span></div>
+              <div className="text-sm" style={{ color: '#bfa366' }}>{new Date(b.timestamp).toLocaleString('zh-CN')} | {b.isPublic ? '已公开' : '私有'}</div>
             </div>
             <div className="flex gap-2">
               <button className="btn" onClick={() => navigate(`/view/${b.id}`)}>查看</button>
@@ -134,8 +136,10 @@ const Family = () => {
           </div>
         )) : <p>暂无传记</p>}
       </div>
-
-      <button className="btn" onClick={() => navigate(-1)}>返回</button>
+      <div className="flex justify-center">
+        <button className="btn" onClick={() => navigate(-1)}>返回</button>
+      </div>
+      </div>
     </div>
   );
 };

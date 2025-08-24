@@ -225,6 +225,12 @@ const Register = () => {
               {lang === 'zh' ? '返回登录' : 'Back to Login'}
             </button>
           </div>
+          <div className="text-center text-sm mt-2" style={{ color: '#bfa366' }}>
+            {lang === 'zh' ? '已有账号？' : 'Already have an account?'}
+            <button type="button" className="underline ml-1" onClick={() => navigate('/login')} style={{ color: '#e7c36f' }}>
+              {lang === 'zh' ? '去登录' : 'Sign in'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
