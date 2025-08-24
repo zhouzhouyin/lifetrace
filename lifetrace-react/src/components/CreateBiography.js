@@ -1605,7 +1605,7 @@ const CreateBiography = () => {
             {/* 顶部标题与导航移除，导航按钮移动到输入框下方 */}
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
-                <div className={`border rounded p-3 sm:p-4 ring-2 ring-blue-400`}>
+                <div className={`border rounded p-3 sm:p-4 ring-2`} style={{ borderColor: '#2a2a30', boxShadow: 'inset 0 0 0 2px #2a2a30' }}>
                   <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
                     <div className="font-medium text-base sm:text-lg truncate max-w-[60%]">{getSectionLabelByIndex(currentSectionIndex)}</div>
                     <div className="flex gap-2 shrink-0">

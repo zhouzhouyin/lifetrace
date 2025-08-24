@@ -60,7 +60,7 @@ const Privacy = () => {
 
         <h2 className="text-xl font-semibold mt-6 mb-4">五、联系我们</h2>
         <p className="text-gray-700 mb-6">
-          如果您对本政策有任何疑问，请通过 <a href="mailto:1056829015@qq.com" className="text-blue-600 hover:underline">1056829015@qq.com</a> 与我们联系。
+          如果您对本政策有任何疑问，请通过 <a href="mailto:1056829015@qq.com" className="hover:underline" style={{ color: '#e7c36f' }}>1056829015@qq.com</a> 与我们联系。
         </p>
 
         <button className="btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition" onClick={() => navigate(-1)}>返回</button>

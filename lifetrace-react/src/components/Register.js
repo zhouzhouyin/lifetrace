@@ -197,9 +197,9 @@ const Register = () => {
           {/* 隐私政策与服务条款（注册前必须查看并同意） */}
           <div className="text-sm text-gray-700">
             <div className="mb-2">
-              <a href="/privacy" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
+              <a href="/privacy" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
               <span className="mx-2">{lang === 'zh' ? '和' : 'and'}</span>
-              <a href="/terms" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
+              <a href="/terms" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
             </div>
             <label className="flex items-center gap-2">
               <input type="checkbox" onChange={(e)=>{ const v=e.target.checked; try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />

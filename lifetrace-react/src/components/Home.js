@@ -66,7 +66,8 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
               onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
-              className="text-left p-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+              className="text-left p-4 rounded-lg transition shadow-sm"
+              style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">✍️</div>
               <h3 className="font-semibold text-lg">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>

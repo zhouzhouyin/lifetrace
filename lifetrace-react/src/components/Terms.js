@@ -131,10 +131,10 @@ const Terms = () => {
 
         <h2 className="text-xl font-semibold mt-6 mb-4">十、联系我们</h2>
         <p className="text-gray-700 mb-6">
-          如果您对本条款有任何疑问，请通过以下方式联系我们：<a href="mailto:1056829015@qq.com" className="text-blue-600 hover:underline">1056829015@qq.com</a>。
+          如果您对本条款有任何疑问，请通过以下方式联系我们：<a href="mailto:1056829015@qq.com" className="hover:underline" style={{ color: '#e7c36f' }}>1056829015@qq.com</a>。
         </p>
 
-        <button className="btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition" onClick={() => navigate(-1)}>返回</button>
+        <button className="btn px-4 py-2 rounded transition" onClick={() => navigate(-1)} style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}>返回</button>
       </div>
     </div>
   );
