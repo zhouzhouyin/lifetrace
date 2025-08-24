@@ -12,6 +12,12 @@ body {
   color: #d6b46a; /* 金色文字 */
 }
 
+/* 强制标题与常见元素也应用暗金色 */
+h1, h2, h3, h4, h5, h6 { color: #d6b46a; }
+label, p, span, a, li, dt, dd, small, strong, em { color: inherit; }
+a { color: #e7c36f; }
+a:hover { color: #f0d089; }
+
 .btn {
   @apply px-5 py-3 rounded transition font-semibold border;
   background-color: #1a1a1e;
