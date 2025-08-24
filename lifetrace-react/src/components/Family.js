@@ -134,7 +134,7 @@ const Family = () => {
               )}
             </div>
           </div>
-        )) : <p>暂无传记</p>}
+        )) : <p>暂无记录</p>}
       </div>
       <div className="flex justify-center">
         <button className="btn" onClick={() => navigate(-1)}>返回</button>
