@@ -451,23 +451,7 @@ const My = () => {
                 <p>暂无传记</p>
               )}
             </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的收藏</h3>
-              {favorites.length > 0 ? (
-                favorites.map((item) => (
-                  <div key={item.id} className="card p-4" style={{ background: '#101013', borderColor: '#2a2a30' }}>
-                    <h4 className="font-semibold">{item.title || '未命名传记'}</h4>
-                    <p className="whitespace-pre-wrap" style={{ color: '#d6b46a' }}>{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
-                    <p className="text-sm" style={{ color: '#bfa366' }}>{item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button className="btn" onClick={() => handleViewNote(item.id, 'Biography')} disabled={isLoading}>查看</button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无收藏</p>
-              )}
-            </div>
+            {/* 我的收藏（隐藏） */}
             {/** “我的随笔”模块已移除 */}
             <div>
               <h3 className="text-xl font-semibold mb-2">我的相册</h3>
