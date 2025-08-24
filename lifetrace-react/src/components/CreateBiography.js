@@ -1572,7 +1572,7 @@ const CreateBiography = () => {
   // 已迁移到注册页：不再在创建页拦截
 
   return (
-    <div className="min-h-screen bg-gray-100 py-4 sm:py-6">
+    <div className="min-h-screen py-4 sm:py-6">
       <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
@@ -1587,6 +1587,8 @@ const CreateBiography = () => {
             maxLength={200}
           />
         </div>
+        {/* 温暖副标题提示 */}
+        <p className="text-sm mb-4" style={{ color: '#bfa366' }}>以温柔对话，慢慢整理一生的回忆。可点击“开始访谈”，或直接在下方书写。</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
@@ -1594,6 +1596,27 @@ const CreateBiography = () => {
         )}
         {/* 隐私条款弹窗已移除 */}
         <div className="flex flex-col gap-6">
+          {/* 阶段面包屑（横向滚动） */}
+          <div className="-mx-4 sm:mx-0 px-4 overflow-x-auto">
+            <div className="flex gap-2 pb-2 min-w-max">
+              {lifeStages.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => goToSectionByIndex(idx)}
+                  className="px-3 py-1 rounded-full border text-sm whitespace-nowrap"
+                  style={{
+                    backgroundColor: idx === currentSectionIndex ? '#1a1a1e' : '#121216',
+                    borderColor: idx === currentSectionIndex ? '#d6b46a' : '#2a2a30',
+                    color: '#d6b46a'
+                  }}
+                  aria-current={idx === currentSectionIndex ? 'page' : undefined}
+                >
+                  {getSectionLabelByIndex(idx)}
+                </button>
+              ))}
+            </div>
+          </div>
           {/* 永恒计划引导：仅在用户点击“查看此生”后于预览页展示；此处不再弹出 */}
           
           {/* 情感陪伴师访谈（一体化：隐藏单独区域，所有问答只在篇章正文中体现） */}
@@ -1605,13 +1628,9 @@ const CreateBiography = () => {
             {/* 顶部标题与导航移除，导航按钮移动到输入框下方 */}
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
-                <div className={`border rounded p-3 sm:p-4 ring-2`} style={{ borderColor: '#2a2a30', boxShadow: 'inset 0 0 0 2px #2a2a30' }}>
+                <div className={`border rounded p-3 sm:p-4 ring-2`} style={{ background: '#121216', borderColor: '#2a2a30', boxShadow: 'inset 0 0 0 2px #2a2a30' }}>
                   <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
-                    <div className="font-medium text-base sm:text-lg truncate max-w-[60%]">{getSectionLabelByIndex(currentSectionIndex)}</div>
-                    <div className="flex gap-2 shrink-0">
-                      <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-                      <button type="button" className="btn px-2 py-1 text-xs sm:text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
-                  </div>
+                    <div className="font-medium text-base sm:text-lg truncate" style={{ color: '#d6b46a' }}>{getSectionLabelByIndex(currentSectionIndex)}</div>
                   </div>
                   <input
                     type="text"
@@ -1631,6 +1650,11 @@ const CreateBiography = () => {
               disabled={isSaving || isUploading}
                     ref={sectionTextareaRef}
                   />
+                  {/* 章节导航（移动到正文下方） */}
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" className="btn px-3 py-2 text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
+                    <button type="button" className="btn px-3 py-2 text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                  </div>
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
@@ -1654,6 +1678,7 @@ const CreateBiography = () => {
                       <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
                       <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
                     </div>
+                    <div className="text-xs text-gray-500 mt-1">提示：回车发送，Shift+Enter 换行</div>
                     {/* 语音设置面板已移除 */}
                   </div>
                   {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}
