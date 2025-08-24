@@ -248,7 +248,7 @@ const View = () => {
                 ) : (
                   <>
                     <button className="btn" onClick={() => setReadOnly(false)}>编辑</button>
-                    <button className="btn" onClick={() => navigate('/create', { state: { editNoteId: id } })}>在创建页继续编辑</button>
+                    {/* 在创建页继续编辑（隐藏） */}
                   </>
                 )}
                 <button className="btn bg-gray-500 hover:bg-gray-600" onClick={() => navigate(-1)} disabled={isSaving}>返回</button>
