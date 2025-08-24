@@ -66,21 +66,15 @@ const Login = () => {
       console.error('Login.js: Login error:', err.response?.data || err.message);
       let errorMessage = '登录失败，请检查用户名或密码';
       if (err.response) {
-        switch (err.response.status) {
-          case 400:
-            errorMessage = '请求格式错误，请检查输入';
-            break;
-          case 401:
-            errorMessage = '账号或密码错误';
-            break;
-          case 429:
-            errorMessage = '请求过于频繁，请稍后再试';
-            break;
-          case 500:
-            errorMessage = '服务器错误，请稍后重试';
-            break;
-          default:
-            errorMessage = err.response?.data?.message || err.message;
+        const code = err.response.status;
+        if (code === 400 || code === 401) {
+          errorMessage = '登录失败：请重新检查用户名和密码';
+        } else if (code === 429) {
+          errorMessage = '请求过于频繁，请稍后再试';
+        } else if (code === 500) {
+          errorMessage = '服务器错误，请稍后重试';
+        } else {
+          errorMessage = err.response?.data?.message || err.message || '登录失败，请稍后再试';
         }
       }
       setMessage(errorMessage);

@@ -62,6 +62,17 @@ const Register = () => {
       return;
     }
 
+    // 隐私与条款校验
+    try {
+      const viewedPrivacy = localStorage.getItem('viewed_privacy') === '1';
+      const viewedTerms = localStorage.getItem('viewed_terms') === '1';
+      const agreed = localStorage.getItem('agree_policies_reg') === '1';
+      if (!(viewedPrivacy && viewedTerms && agreed)) {
+        setMessage('请先点击查看《隐私政策》《服务条款》，并勾选同意后再注册');
+        return;
+      }
+    } catch (_) {}
+
     setIsLoading(true);
     try {
       console.log('Sending register request:', { username: sanitizedUsername });
@@ -183,6 +194,19 @@ const Register = () => {
               </button>
             </div>
           </div>
+          {/* 隐私政策与服务条款（注册前必须查看并同意） */}
+          <div className="text-sm text-gray-700">
+            <div className="mb-2">
+              <a href="/privacy" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
+              <span className="mx-2">{lang === 'zh' ? '和' : 'and'}</span>
+              <a href="/terms" className="text-blue-600 underline" onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
+            </div>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" onChange={(e)=>{ const v=e.target.checked; try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
+              <span>{lang === 'zh' ? '我已阅读并同意上述条款（需先点击查看）' : 'I have read and agree to the above (please view first)'}</span>
+            </label>
+          </div>
+
           <div className="flex gap-4">
             <button type="submit" className="btn w-full" disabled={isLoading}>
               {isLoading ? (lang === 'zh' ? '注册中...' : 'Registering...') : (lang === 'zh' ? '注册' : 'Register')}

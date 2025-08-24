@@ -48,34 +48,77 @@ const Home = () => {
   };
 
   return (
-    <div className="text-center container mx-auto px-3 sm:px-4">
+    <div className="min-h-screen bg-amber-50/50">
       <Helmet>
         <title>{lang === 'zh' ? '首页 - 永念' : 'Home - LifeTrace'}</title>
       </Helmet>
-      <h2 className="text-xl sm:text-2xl font-bold mb-4">
-        {slogans[sloganIndex] || ''}
-      </h2>
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center">
-        <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/create' : '/login')}>{lang === 'zh' ? '记录此生' : 'Record Life'}</button>
-        {/** 独立上传入口已移除。上传媒体请在“创建传记”的篇章内添加。 */}
-        {/** 写随笔功能已移除 */}
-        {/* 广场入口已隐藏 */}
-        {/** 聊天交友功能已移除 */}
-        <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/family' : '/login')}>{lang === 'zh' ? '家族档案' : 'Family Archive'}</button>
-        <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/my' : '/login')}>{lang === 'zh' ? '我的' : 'My'}</button>
-        {isLoggedIn && (
-          <button className="btn w-full sm:hidden" onClick={handleMobileLogout}>
-            {lang === 'zh' ? '登出' : 'Logout'}
-          </button>
-        )}
-        {isLoggedIn && role === 'admin' && (
-          <>
-            <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/reports')}>{lang === 'zh' ? '举报管理' : 'Report Management'}</button>
-            <button className="btn w-full sm:w-auto" onClick={() => navigate('/admin/stats')}>{lang === 'zh' ? '后台统计' : 'Admin Stats'}</button>
-          </>
-        )}
-        
-      </div>
+      {/* Hero */}
+      <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
+            {lang === 'zh' ? '把一生好好写下，温柔地交给时间' : 'Write a life, gently handed to time'}
+          </h1>
+          <p className="mt-4 text-base sm:text-lg text-gray-700">
+            {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button className="btn w-full sm:w-auto text-white bg-blue-600 hover:bg-blue-700 border-none" onClick={() => navigate(isLoggedIn ? '/create' : '/login')}>
+              {lang === 'zh' ? '开始记录' : 'Start Now'}
+            </button>
+            <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/family' : '/login')}>
+              {lang === 'zh' ? '家族档案' : 'Family Archive'}
+            </button>
+            <button className="btn w-full sm:w-auto" onClick={() => navigate(isLoggedIn ? '/my' : '/login')}>
+              {lang === 'zh' ? '我的' : 'My'}
+            </button>
+          </div>
+          {isLoggedIn && (
+            <div className="mt-3 sm:hidden">
+              <button className="btn w-full" onClick={handleMobileLogout}>
+                {lang === 'zh' ? '登出' : 'Logout'}
+              </button>
+            </div>
+          )}
+          {isLoggedIn && role === 'admin' && (
+            <div className="mt-3 flex gap-3 justify-center">
+              <button className="btn" onClick={() => navigate('/admin/reports')}>{lang === 'zh' ? '举报管理' : 'Report Management'}</button>
+              <button className="btn" onClick={() => navigate('/admin/stats')}>{lang === 'zh' ? '后台统计' : 'Admin Stats'}</button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="container mx-auto px-4 pb-10 sm:pb-16">
+        <div className="max-w-5xl mx-auto grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+          <div className="p-5 rounded-lg bg-white shadow-sm border">
+            <div className="text-3xl mb-2">📖</div>
+            <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '专业整理与引导' : 'Guided Storycraft'}</h3>
+            <p className="text-sm text-gray-600">{lang === 'zh' ? '温和的引导式问答，帮您梳理每个阶段的记忆，形成清晰的故事结构。' : 'Gentle prompts help organize memories into a clear, meaningful narrative.'}</p>
+          </div>
+          <div className="p-5 rounded-lg bg-white shadow-sm border">
+            <div className="text-3xl mb-2">👪</div>
+            <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '家族档案，私密保存' : 'Family Archive'}</h3>
+            <p className="text-sm text-gray-600">{lang === 'zh' ? '只与家人共享，安全留存宝贵回忆，今后也能随时补充与回看。' : 'Share privately with family and preserve your stories securely.'}</p>
+          </div>
+          <div className="p-5 rounded-lg bg-white shadow-sm border">
+            <div className="text-3xl mb-2">✨</div>
+            <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '温情呈现，随时导出' : 'Warm Presentation'}</h3>
+            <p className="text-sm text-gray-600">{lang === 'zh' ? '精心排版与润色，让回忆被温柔地呈现；文字与图片都可保存。' : 'Thoughtful layout and polish, ready to save and share with loved ones.'}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote */}
+      <section className="container mx-auto px-4 pb-12">
+        <div className="max-w-4xl mx-auto bg-white/70 rounded-lg p-6 text-center border">
+          <p className="text-gray-700 italic">
+            {lang === 'zh'
+              ? '“当他们想起你，这里有你留下的声音与文字。”'
+              : '“When they think of you, your words and voice remain here.”'}
+          </p>
+        </div>
+      </section>
     </div>
   );
 };
