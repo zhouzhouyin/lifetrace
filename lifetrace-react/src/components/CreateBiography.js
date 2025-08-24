@@ -1767,14 +1767,14 @@ const CreateBiography = () => {
 
 
           {showPreview && (
-            <div className="mt-6 border rounded p-4 bg-white">
+            <div className="mt-6 border rounded p-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
               <h3 className="text-xl font-semibold mb-3">预览（不可编辑）</h3>
               {(bioTitle || '我的一生') && <h2 className="text-2xl font-bold mb-2">{bioTitle || '我的一生'}</h2>}
               <div className="space-y-6">
                 {sections.map((sec, idx) => (
-                  <article key={idx} className="border-b pb-4">
+                  <article key={idx} className="border-b pb-4" style={{ borderColor: '#2a2a30' }}>
                     {sec.title && <h4 className="text-lg font-semibold mb-2">{sec.title}</h4>}
-                    {sec.text && <p className="whitespace-pre-wrap text-gray-800">{getPreviewText(sec.text)}</p>}
+                    {sec.text && <p className="whitespace-pre-wrap">{getPreviewText(sec.text)}</p>}
                     {Array.isArray(sec.media) && sec.media.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                         {sec.media.map((m, mi) => (
