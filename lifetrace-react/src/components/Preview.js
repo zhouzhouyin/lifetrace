@@ -229,7 +229,7 @@ const Preview = () => {
       </div>
     </div>
     {toast && (
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-4 bg-black text-white text-sm px-3 py-2 rounded shadow z-50" role="status">{toast}</div>
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-4 text-sm px-3 py-2 rounded shadow z-50" role="status" style={{ backgroundColor: '#101013', color: '#e7c36f', border: '1px solid #3a3a40' }}>{toast}</div>
     )}
     </>
   );

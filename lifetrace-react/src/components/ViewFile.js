@@ -119,21 +119,13 @@ const ViewFile = () => {
         <title>查看文件 - 永念</title>
       </Helmet>
       {message && (
-        <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-2 text-white rounded ${
-            message.includes('失败') || message.includes('不存在') || message.includes('无效')
-              ? 'bg-red-500'
-              : 'bg-green-500'
-          }`}
-        >
-          {message}
-        </div>
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-2 rounded ${message.includes('失败') || message.includes('不存在') || message.includes('无效') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>{message}</div>
       )}
       {isLoading ? (
-        <div className="text-center text-white">加载中...</div>
+        <div className="text-center" style={{ color: '#e7c36f' }}>加载中...</div>
       ) : file ? (
         <div className="relative w-full h-screen flex flex-col items-center justify-center">
-          <h3 className="text-lg font-semibold text-white mb-4">{file.desc || '无描述'}</h3>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#d6b46a' }}>{file.desc || '无描述'}</h3>
           <p className="text-sm text-gray-400 mb-4">{new Date(file.timestamp).toLocaleString('zh-CN')}</p>
           {file.filePath.match(/\.(jpeg|jpg|png|gif|webp|bmp)$/i) ? (
             <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
@@ -173,15 +165,10 @@ const ViewFile = () => {
           ) : (
             <p className="text-red-500">不支持的文件格式</p>
           )}
-          <button
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-            onClick={() => navigate(-1)}
-          >
-            返回
-          </button>
+          <button className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded" style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }} onClick={() => navigate(-1)}>返回</button>
         </div>
       ) : (
-        <p className="text-center text-white">无文件数据</p>
+        <p className="text-center" style={{ color: '#e7c36f' }}>无文件数据</p>
       )}
     </div>
   );

@@ -93,14 +93,14 @@ const Login = () => {
   }, [message]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="card max-w-md w-full p-6">
+    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#000000' }}>
+      <div className="card max-w-md w-full p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <Helmet>
           <title>{lang === 'zh' ? '登录 - 永念' : 'Login - LifeTrace'}</title>
         </Helmet>
         <h2 className="text-2xl font-bold text-center mb-6">{lang === 'zh' ? '登录' : 'Login'}</h2>
         {message && (
-          <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('错误') ? 'bg-red-500' : 'bg-green-500'}`}>
+          <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
           </div>
         )}

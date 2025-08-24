@@ -53,7 +53,7 @@ const Home = () => {
         <title>{lang === 'zh' ? '首页 - 永念' : 'Home - LifeTrace'}</title>
       </Helmet>
       {/* Hero */}
-      <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12">
+      <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12" style={{ backgroundColor: '#0b0b0d' }}>
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
             {lang === 'zh' ? '把一生好好写下，温柔地交给时间' : 'Write a life, gently handed to time'}
@@ -117,9 +117,9 @@ const Home = () => {
       {/* Features removed per request */}
 
       {/* Quote */}
-      <section className="container mx-auto px-4 pb-12">
-        <div className="max-w-4xl mx-auto bg-white/70 rounded-lg p-6 text-center border">
-          <p className="text-gray-700 italic">
+      <section className="container mx-auto px-4 pb-12" style={{ backgroundColor: '#0b0b0d' }}>
+        <div className="max-w-4xl mx-auto rounded-lg p-6 text-center border" style={{ background: '#121216', borderColor: '#2a2a30' }}>
+          <p className="italic" style={{ color: '#d6b46a' }}>
             {lang === 'zh'
               ? '“当他们想起你，这里有你留下的声音与文字。”'
               : '“When they think of you, your words and voice remain here.”'}

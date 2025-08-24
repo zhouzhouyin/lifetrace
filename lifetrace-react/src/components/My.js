@@ -332,7 +332,7 @@ const My = () => {
         </Helmet>
         <h2 className="text-2xl font-bold text-center mb-6">我的主页</h2>
         {message && (
-          <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('无效') ? 'bg-red-500' : 'bg-green-500'}`}>
+          <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('无效') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
           </div>
         )}

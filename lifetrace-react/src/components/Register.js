@@ -119,14 +119,14 @@ const Register = () => {
   }, [message]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="card max-w-md w-full p-6">
+    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#000000' }}>
+      <div className="card max-w-md w-full p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
         <Helmet>
           <title>{lang === 'zh' ? '注册 - 永念' : 'Register - LifeTrace'}</title>
         </Helmet>
         <h2 className="text-2xl font-bold text-center mb-6">{lang === 'zh' ? '注册' : 'Register'}</h2>
         {message && (
-          <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('错误') || message.includes('不一致') || message.includes('长度') || message.includes('用户名已存在') ? 'bg-red-500' : 'bg-green-500'}`}>
+          <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('错误') || message.includes('不一致') || message.includes('长度') || message.includes('用户名已存在') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
           </div>
         )}

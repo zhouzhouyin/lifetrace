@@ -1588,7 +1588,7 @@ const CreateBiography = () => {
           />
         </div>
         {message && (
-          <div className={`mb-4 p-2 text-center text-white rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-500' : 'bg-green-500'}`}>
+          <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
           </div>
         )}
