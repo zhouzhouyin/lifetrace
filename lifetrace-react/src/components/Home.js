@@ -90,7 +90,7 @@ const Home = () => {
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
               className="text-left p-4 rounded-lg bg-white hover:bg-gray-50 border transition shadow-sm"
             >
-              <div className="text-2xl mb-1">📂</div>
+              <div className="text-2xl mb-1">✨</div>
               <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '我的' : 'My'}</h3>
               <p className="text-sm text-gray-600 mt-1">
                 {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
@@ -116,18 +116,18 @@ const Home = () => {
       {/* Features */}
       <section className="container mx-auto px-4 pb-10 sm:pb-16">
         <div className="max-w-5xl mx-auto grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-          <div className="p-5 rounded-lg bg-white shadow-sm border">
-            <div className="text-3xl mb-2">📖</div>
+          <div className="p-4 rounded-md bg-white/80 border cursor-default">
+            <div className="text-2xl mb-2">📖</div>
             <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '专业整理与引导' : 'Guided Storycraft'}</h3>
             <p className="text-sm text-gray-600">{lang === 'zh' ? '温和的引导式问答，帮您梳理每个阶段的记忆，形成清晰的故事结构。' : 'Gentle prompts help organize memories into a clear, meaningful narrative.'}</p>
           </div>
-          <div className="p-5 rounded-lg bg-white shadow-sm border">
-            <div className="text-3xl mb-2">👪</div>
+          <div className="p-4 rounded-md bg-white/80 border cursor-default">
+            <div className="text-2xl mb-2">👪</div>
             <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '家族档案，私密保存' : 'Family Archive'}</h3>
             <p className="text-sm text-gray-600">{lang === 'zh' ? '只与家人共享，安全留存宝贵回忆，今后也能随时补充与回看。' : 'Share privately with family and preserve your stories securely.'}</p>
           </div>
-          <div className="p-5 rounded-lg bg-white shadow-sm border">
-            <div className="text-3xl mb-2">✨</div>
+          <div className="p-4 rounded-md bg-white/80 border cursor-default">
+            <div className="text-2xl mb-2">📂</div>
             <h3 className="font-semibold text-lg mb-1">{lang === 'zh' ? '温情呈现，随时导出' : 'Warm Presentation'}</h3>
             <p className="text-sm text-gray-600">{lang === 'zh' ? '精心排版与润色，让回忆被温柔地呈现；文字与图片都可保存。' : 'Thoughtful layout and polish, ready to save and share with loved ones.'}</p>
           </div>
