@@ -70,9 +70,6 @@ const Home = () => {
             >
               <div className="text-2xl mb-1">✍️</div>
               <h3 className="font-semibold text-lg">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
-              <p className="text-sm opacity-90 mt-1">
-                {lang === 'zh' ? '用温和的引导问答，从童年至当下，一步步写下。' : 'Gentle prompts to capture a lifetime, step by step.'}
-              </p>
             </button>
             <button
               aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
@@ -81,9 +78,6 @@ const Home = () => {
             >
               <div className="text-2xl mb-1">👪</div>
               <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
-              </p>
             </button>
             <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
@@ -92,9 +86,6 @@ const Home = () => {
             >
               <div className="text-2xl mb-1">✨</div>
               <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '我的' : 'My'}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
-              </p>
             </button>
           </div>
           {isLoggedIn && (
