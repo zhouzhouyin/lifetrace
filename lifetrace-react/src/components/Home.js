@@ -78,7 +78,8 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
               onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
-              className="text-left p-4 rounded-lg bg-white hover:bg-gray-50 border transition shadow-sm"
+              className="text-left p-4 rounded-lg transition shadow-sm"
+              style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">👪</div>
               <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
@@ -89,7 +90,8 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
-              className="text-left p-4 rounded-lg bg-white hover:bg-gray-50 border transition shadow-sm"
+              className="text-left p-4 rounded-lg transition shadow-sm"
+              style={{ backgroundColor: '#1a1a1e', color: '#e7c36f', border: '1px solid #3a3a40' }}
             >
               <div className="text-2xl mb-1">✨</div>
               <h3 className="font-semibold text-lg text-gray-900">{lang === 'zh' ? '我的' : 'My'}</h3>
@@ -116,16 +118,7 @@ const Home = () => {
 
       {/* Features removed per request */}
 
-      {/* Quote */}
-      <section className="container mx-auto px-4 pb-12" style={{ backgroundColor: '#0b0b0d' }}>
-        <div className="max-w-4xl mx-auto rounded-lg p-6 text-center border" style={{ background: '#121216', borderColor: '#2a2a30' }}>
-          <p className="italic" style={{ color: '#d6b46a' }}>
-            {lang === 'zh'
-              ? '“当他们想起你，这里有你留下的声音与文字。”'
-              : '“When they think of you, your words and voice remain here.”'}
-          </p>
-        </div>
-      </section>
+      {/* Quote removed per request to avoid large block on desktop */}
     </div>
   );
 };
