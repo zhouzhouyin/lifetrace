@@ -64,17 +64,20 @@ const Login = () => {
       setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       console.error('Login.js: Login error:', err.response?.data || err.message);
-      let errorMessage = '登录失败，请检查用户名或密码';
-      if (err.response) {
+      let errorMessage = '登录失败，请稍后再试';
+      // 明确区分：超时 vs. 凭证错误
+      if (err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')) {
+        errorMessage = '请求超时，请重试';
+      } else if (err.response) {
         const code = err.response.status;
         if (code === 400 || code === 401) {
-          errorMessage = '登录失败：请重新检查用户名和密码';
+          errorMessage = '用户名或密码错误，请重试';
         } else if (code === 429) {
           errorMessage = '请求过于频繁，请稍后再试';
-        } else if (code === 500) {
+        } else if (code >= 500) {
           errorMessage = '服务器错误，请稍后重试';
         } else {
-          errorMessage = err.response?.data?.message || err.message || '登录失败，请稍后再试';
+          errorMessage = err.response?.data?.message || '登录失败，请稍后再试';
         }
       }
       setMessage(errorMessage);

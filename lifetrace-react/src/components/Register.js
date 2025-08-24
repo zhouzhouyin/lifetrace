@@ -33,6 +33,16 @@ const Register = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // 政策查看与同意的本地状态
+  const [viewedPrivacy, setViewedPrivacy] = useState(() => {
+    try { return localStorage.getItem('viewed_privacy') === '1'; } catch (_) { return false; }
+  });
+  const [viewedTerms, setViewedTerms] = useState(() => {
+    try { return localStorage.getItem('viewed_terms') === '1'; } catch (_) { return false; }
+  });
+  const [agreedPolicies, setAgreedPolicies] = useState(() => {
+    try { return localStorage.getItem('agree_policies_reg') === '1'; } catch (_) { return false; }
+  });
   const navigate = useNavigate();
 
   // 提交注册（移除防抖，避免事件被回收导致无法提交）
@@ -62,16 +72,11 @@ const Register = () => {
       return;
     }
 
-    // 隐私与条款校验
-    try {
-      const viewedPrivacy = localStorage.getItem('viewed_privacy') === '1';
-      const viewedTerms = localStorage.getItem('viewed_terms') === '1';
-      const agreed = localStorage.getItem('agree_policies_reg') === '1';
-      if (!(viewedPrivacy && viewedTerms && agreed)) {
-        setMessage('请先点击查看《隐私政策》《服务条款》，并勾选同意后再注册');
-        return;
-      }
-    } catch (_) {}
+    // 隐私与条款校验（必须已查看并勾选同意）
+    if (!(viewedPrivacy && viewedTerms && agreedPolicies)) {
+      setMessage('请先点击查看《隐私政策》《服务条款》，并勾选同意后再注册');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -197,18 +202,18 @@ const Register = () => {
           {/* 隐私政策与服务条款（注册前必须查看并同意） */}
           <div className="text-sm text-gray-700">
             <div className="mb-2">
-              <a href="/privacy" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
+              <a href="/privacy" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; setViewedPrivacy(true); window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
               <span className="mx-2">{lang === 'zh' ? '和' : 'and'}</span>
-              <a href="/terms" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
+              <a href="/terms" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; setViewedTerms(true); window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
             </div>
             <label className="flex items-center gap-2">
-              <input type="checkbox" onChange={(e)=>{ const v=e.target.checked; try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
+              <input type="checkbox" checked={agreedPolicies} disabled={!(viewedPrivacy && viewedTerms)} onChange={(e)=>{ const v=e.target.checked; setAgreedPolicies(v); try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
               <span>{lang === 'zh' ? '我已阅读并同意上述条款（需先点击查看）' : 'I have read and agree to the above (please view first)'}</span>
             </label>
           </div>
 
           <div className="flex gap-4">
-            <button type="submit" className="btn w-full" disabled={isLoading}>
+            <button type="submit" className="btn w-full" disabled={isLoading || !(viewedPrivacy && viewedTerms && agreedPolicies)}>
               {isLoading ? (lang === 'zh' ? '注册中...' : 'Registering...') : (lang === 'zh' ? '注册' : 'Register')}
             </button>
             <button
