@@ -390,6 +390,15 @@ const CreateBiography = () => {
     } catch (_) {}
   }, [currentSectionIndex, sections]);
 
+  // 切换篇章时，优先聚焦回答输入框，提升可发现性
+  useEffect(() => {
+    try {
+      if (answerInputRef.current) {
+        answerInputRef.current.focus();
+      }
+    } catch (_) {}
+  }, [currentSectionIndex]);
+
   // 完成首篇或上传一定数量媒体后，引导“永恒计划”
   useEffect(() => {
     try {
@@ -1645,6 +1654,17 @@ const CreateBiography = () => {
                 <div className={`border rounded p-3 sm:p-4 ring-2`} style={{ background: '#121216', borderColor: '#2a2a30', boxShadow: 'inset 0 0 0 2px #2a2a30' }}>
                   <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
                     <div className="font-medium text-base sm:text-lg truncate" style={{ color: '#d6b46a' }}>{getSectionLabelByIndex(currentSectionIndex)}</div>
+                    <div className="shrink-0">
+                      {!(sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') && (
+                        <button
+                          className="btn"
+                          onClick={startInterview}
+                          style={{ padding: '6px 10px', fontSize: '14px' }}
+                        >
+                          {t ? t('startInterview') : '开始访谈'}
+                        </button>
+                      )}
+                  </div>
                   </div>
                   <input
                     type="text"
@@ -1671,10 +1691,11 @@ const CreateBiography = () => {
                   </div>
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
-                    <button className="btn w-full sm:w-auto" onClick={startInterview}>{t ? t('startInterview') : '开始访谈'}</button>
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
                     <div className="flex gap-2 w-full sm:hidden">
-                      <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
+                      <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
+                        {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
+                      </button>
                     </div>
                     <div className="flex-1 flex gap-2 items-stretch">
                       <textarea
@@ -1689,8 +1710,12 @@ const CreateBiography = () => {
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
-                      <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading}>{isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}</button>
-                      <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading}>{isAsking ? '请稍候...' : (t ? t('send') : '发送')}</button>
+                      <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
+                        {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
+                    </button>
+                      <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
+                        {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
+                      </button>
                     </div>
                     {/* 语音设置面板已移除 */}
                   </div>
