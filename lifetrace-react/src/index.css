@@ -52,9 +52,8 @@ a:hover { color: #1d4ed8; } /* blue-700 */
 
 .card {
   @apply rounded p-6 shadow-sm;
-  background: #2563eb; /* blue-600 */
-  border: 1px solid #1d4ed8; /* blue-700 */
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid #e5e7eb; /* gray-200 */
 }
 
 .progress-container { @apply w-full rounded h-2; background: #e5e7eb; }
