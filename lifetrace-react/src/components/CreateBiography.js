@@ -1911,44 +1911,6 @@ const CreateBiography = () => {
               {!( (sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') ) && (
                 <button className="btn" onClick={() => { startInterview(); if (!isSmallScreen()) setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>开始访谈</button>
               )}
-              <button
-                className="btn flex-shrink-0"
-                disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
-                onClick={async () => {
-                  const section = sections[currentSectionIndex] || {};
-                  if (!((section.text || '').trim())) return;
-                  setPolishingSectionIndex(currentSectionIndex);
-                  try {
-                    const token = localStorage.getItem('token');
-                    if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                    const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
-                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
-                    const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
-                    const qaSource = filterPolishSource(qaSourceRaw);
-                    const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
-                    const messages = [
-                      { role: 'system', content: system },
-                      { role: 'user', content: userPayload },
-                    ];
-                    const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                    const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-                    if (polished) {
-                      setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
-                      const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
-                      setMessage(fb);
-                      setTimeout(() => setMessage(''), 1000);
-                    }
-                  } catch (e) {
-                    console.error('Polish current section error (focus-bottom):', e);
-                    setMessage('当前阶段篇章润色失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
-                  } finally {
-                    setPolishingSectionIndex(null);
-                  }
-                }}
-                style={{ padding: '8px 12px', fontSize: '14px' }}
-              >
-                {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
-              </button>
             </div>
           </div>
           <div className="px-3 pt-2 text-xs text-gray-100 bg-blue-600/95">在下方输入框回答，我会继续温柔引导您。</div>
