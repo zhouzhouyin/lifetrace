@@ -1753,7 +1753,7 @@ const CreateBiography = () => {
                       {/* 桌面端：与输入框并排显示语音输入 */}
                       <button className="btn btn-tertiary hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
                          {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
-                     </button>
+                    </button>
                       <button className="btn btn-primary w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
                         {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
                       </button>
