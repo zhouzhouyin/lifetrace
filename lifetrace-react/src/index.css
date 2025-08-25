@@ -28,7 +28,7 @@ body {
 h1, h2, h3, h4, h5, h6 { color: inherit; }
 label, p, span, a, li, dt, dd, small, strong, em { color: inherit; }
 a { color: #2563eb; } /* blue-600 */
-a:hover { color: #1d4ed8; } /* blue-700 */
+a:hover { color: #1e40af; } /* blue-700 */
 
 /* Button base and variants */
 .btn {
@@ -65,12 +65,15 @@ a:hover { color: #1d4ed8; } /* blue-700 */
   -webkit-overflow-scrolling: touch;
 }
 .input::placeholder { color: #6b7280; }
-.input:focus { outline: 2px solid #93c5fd; }
+.input:focus { outline: 2px solid #bfdbfe; box-shadow: 0 0 0 2px rgba(191, 219, 254, 0.6); }
 
+/* Subtle card hover to add warmth */
 .card {
-  @apply rounded p-6 shadow-sm;
-  background: #ffffff;
-  border: 1px solid #e5e7eb; /* gray-200 */
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
 }
 
 .progress-container { @apply w-full rounded h-2; background: #e5e7eb; }
@@ -82,6 +85,9 @@ a:hover { color: #1d4ed8; } /* blue-700 */
 .chat-messages { @apply h-64 overflow-y-auto mb-4 p-2; background: #f3f4f6; }
 
 .chat-input { @apply flex gap-2; }
+
+/* Section titles spacing */
+h2, h3 { scroll-margin-top: 80px; }
 
 /* 适老化：说明/注释等小号文字统一放大 */
 .text-sm { font-size: 0.875rem; line-height: 1.5; }
