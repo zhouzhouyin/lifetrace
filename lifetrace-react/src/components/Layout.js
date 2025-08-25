@@ -17,7 +17,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f7f0dc', color: '#111827' }}>
-      <header className="p-3 sm:p-4" style={{ backgroundColor: '#2563eb', borderBottom: '1px solid #1d4ed8' }}>
+      <header className="p-3 sm:p-4 bg-gradient-to-r from-blue-500 to-blue-700 border-b" style={{ borderBottomColor: '#1d4ed8' }}>
         <div className="container mx-auto px-3 sm:px-4 relative flex items-center">
           <h1 className="text-2xl sm:text-3xl font-bold mx-auto text-white">{lang === 'zh' ? '永念' : 'LifeTrace'}</h1>
           <div className="absolute right-3 top-2 flex items-center gap-2">

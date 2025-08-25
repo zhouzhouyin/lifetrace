@@ -1709,7 +1709,7 @@ const CreateBiography = () => {
                     <div className="shrink-0">
                       <button
                         type="button"
-                        className="btn btn-secondary inline-flex sm:hidden mr-2"
+                        className="btn btn-primary inline-flex sm:hidden mr-2"
                         onClick={() => { setIsFocusMode(true); setTimeout(scrollAnswerIntoView, 0); }}
                         style={{ padding: '6px 10px', fontSize: '14px' }}
                       >
@@ -1883,10 +1883,10 @@ const CreateBiography = () => {
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"
-              className="btn btn-secondary ring-1 ring-blue-400"
+              className="btn btn-secondary ring-1 ring-blue-400 w-full sm:w-auto"
               onClick={() => navigate(-1)}
               disabled={isSaving || isUploading}
-              style={{ padding: '10px 24px', minWidth: '140px', textAlign: 'center' }}
+              style={{ padding: '12px 20px', minWidth: '220px', textAlign: 'center' }}
             >
               返回
             </button>
@@ -1924,7 +1924,7 @@ const CreateBiography = () => {
       {isFocusMode && (
         <div className="fixed inset-0 sm:hidden z-50 bg-white text-gray-900">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-blue-600 text-white shadow">
-            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '8px 12px', fontSize: '14px' }}>返回</button>
+            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '6px 10px', fontSize: '12px' }}>返回</button>
             <div className="text-base font-semibold truncate">{getSectionLabelByIndex(currentSectionIndex)}</div>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '6px 10px', fontSize: '12px' }}>上一篇</button>
