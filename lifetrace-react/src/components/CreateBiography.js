@@ -1748,7 +1748,7 @@ const CreateBiography = () => {
                         value={answerInput}
                         onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                         ref={answerInputRef}
-                        disabled={isSaving || isUploading}
+                      disabled={isSaving || isUploading}
                         rows={1}
                         style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
