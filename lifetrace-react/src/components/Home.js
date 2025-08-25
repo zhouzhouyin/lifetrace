@@ -7,13 +7,15 @@ const Home = () => {
   const { isLoggedIn, t, lang, role, setIsLoggedIn } = useContext(AppContext);
   const navigate = useNavigate();
   const zhSlogans = [
-    '生而不灭于遗忘，你的故事永有人可读',
-    '写下你的故事，给未来的孩子一盏可以回望的灯',
-    '为后代留一本真实的家族史，让爱得以传承',
-    '让记忆延续，让精神成为家族的财富',
-    '从童年至暮年，你的每一刻都值得被珍藏',
+    '生而不灭于遗忘，生命故事永有人可读',
+    '写下人生的故事，给未来的孩子一盏可以回望的灯',
+    '记录一段人生，让回忆成为家族永恒的财富',
+    '每一段人生，都值得被留存成最美的故事',
+    '从童年至暮年，人生的每一刻都值得被珍藏',
     '当他们想起你，这里有你留下的声音与文字',
     '用技术对抗遗忘，让生命温柔长存',
+	'跨越世代的对话，从一本故事集开始',
+	'让爱与故事，在家族中温柔延续',
   ];
   const enSlogans = [
     'Reunite with memories, stay connected with family. Let time gently keep your story.',

@@ -412,7 +412,7 @@ const CreateBiography = () => {
     }
     // 若尚未选择“为谁创作”，优先引导身份设定
     if (!authorMode) {
-      const q1 = '这次记录是为谁创作？请选择：A. 为我自己 B. 为他人（如父母/亲人）';
+      const q1 = '这次记录是为谁创作？请选择：1. 为我自己  2. 为他人（如父母/亲人）  3. 暂不确定（可稍后再选）。请仅回复 1/2/3 的编号。';
       setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
       appendLineToSection(targetIndex, `陪伴师：${q1}`);
       setCurrentSectionIndex(targetIndex);
@@ -514,13 +514,22 @@ const CreateBiography = () => {
     setIsInterviewing(true);
     setStageTurns(Array(lifeStages.length).fill(0));
     }
+    // 若为全新草稿（无对话且各篇章均为空），重置身份设定以确保先询问“为谁创作”
+    try {
+      const noChat = (chatMessages || []).length === 0;
+      const noContent = (sections || []).every(s => !((s?.text || '').toString().trim().length > 0));
+      if (noChat && noContent) {
+        if (authorMode) { setAuthorMode(''); try { localStorage.removeItem('author_mode'); } catch(_){} }
+        if (authorRelation) { setAuthorRelation(''); try { localStorage.removeItem('author_relation'); } catch(_){} }
+      }
+    } catch (_) {}
     setStageIndex(idx);
     setCurrentSectionIndex(idx);
     // 首次仅给基础资料开场，等待用户先回答
     if (!hasShownOpening) {
       // 身份设定引导
       if (!authorMode) {
-        const q1 = '这次记录是为谁创作？请选择：A. 为我自己 B. 为他人（如父母/亲人）';
+        const q1 = '这次记录是为谁创作？请选择：1. 为我自己  2. 为他人（如父母/亲人）  3. 暂不确定（可稍后再选）。请仅回复 1/2/3 的编号。';
         setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
         appendLineToSection(idx, `陪伴师：${q1}`);
         setHasShownOpening(true);
@@ -570,7 +579,9 @@ const CreateBiography = () => {
     // 处理身份设定回答
     if (!authorMode) {
       const v = trimmed.replace(/\s/g,'');
-      if (v === 'A' || v === 'a' || /自己|本人|为我/.test(trimmed)) {
+      // 记录用户的初始选择到篇章
+      appendLineToSection(currentSectionIndex, `我：${trimmed}`);
+      if (v === '1' || /自己|本人|为我/.test(trimmed)) {
         setAuthorMode('self'); try{ localStorage.setItem('author_mode','self'); }catch(_){ }
         const tip = '我已记下：这次记录是为您本人。接下来，我将陪伴您一起整理人生故事。为了更完整地呈现，请先补充一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。';
         setChatMessages(prev => [...prev, { role: 'assistant', content: tip }]);
@@ -579,21 +590,24 @@ const CreateBiography = () => {
         setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
         return;
       }
-      if (v === 'B' || v === 'b' || /他人|父母|亲人|为他/.test(trimmed)) {
+      if (v === '2' || /他人|父母|亲人|为他/.test(trimmed)) {
         setAuthorMode('other'); try{ localStorage.setItem('author_mode','other'); }catch(_){ }
-        const askRel = '请问与您记录的这位之间的关系是什么？例如：父亲/母亲/爷爷/奶奶/外公/外婆/妻子/丈夫/朋友等。';
+        const askRel = '请问与您记录的这位之间的关系是什么？例如：父亲/母亲/爷爷/奶奶/外公/外婆/妻子/丈夫/朋友等。（请直接回复关系称谓）';
         setChatMessages(prev => [...prev, { role: 'assistant', content: askRel }]);
         appendLineToSection(currentSectionIndex, `陪伴师：${askRel}`);
         setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
         return;
       }
-      const reprompt = '没关系，我们重新来一遍：请选择 A. 为我自己 B. 为他人（如父母/亲人）。';
+      // 选择 3 或其他无效输入：提示仅回复 1/2/3
+      const reprompt = '没关系，我们重新来一遍：请选择 1. 为我自己  2. 为他人（如父母/亲人）  3. 暂不确定（请仅回复 1/2/3 的编号）。';
       setChatMessages(prev => [...prev, { role: 'assistant', content: reprompt }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${reprompt}`);
       setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
       return;
     }
     if (authorMode === 'other' && !authorRelation) {
+      // 记录用户的关系回答到篇章
+      appendLineToSection(currentSectionIndex, `我：${trimmed}`);
       setAuthorRelation(trimmed);
       try{ localStorage.setItem('author_relation', trimmed); }catch(_){ }
       const tip2 = `我已记下：您所记录的人是您的“${trimmed}”。接下来，我将陪伴您一起整理他/她的生命故事。为了更完整地展现他/她的一生，请您先提供一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。`;
@@ -1697,7 +1711,8 @@ const CreateBiography = () => {
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                          const system = '你是一位资深传记写作者。请根据“问答对话记录”整理出一段自然流畅、第一人称、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。';
+                          const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用“我/我们”。' : '请使用第一人称“我”的表述方式。';
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据“问答对话记录”整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
