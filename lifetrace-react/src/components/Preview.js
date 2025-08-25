@@ -108,7 +108,7 @@ const Preview = () => {
   return (
     <>
     <div className="min-h-screen py-4 sm:py-6">
-      <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
+      <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 gap-2">
           {isEditing ? (
             <input
@@ -148,7 +148,7 @@ const Preview = () => {
           </div>
         </div>
         {/* 温暖说明 */}
-        <p className="text-sm mb-3" style={{ color: '#bfa366' }}>{isEditing ? '在下方完善简介与内容，保存后可分享给家人或朋友。' : '这是一份属于您的生命记录，愿它温柔地被看见。'}</p>
+        <p className="text-sm mb-3 text-gray-700">{isEditing ? '在下方完善简介与内容，保存后可分享给家人或朋友。' : '这是一份属于您的生命记录，愿它温柔地被看见。'}</p>
         {isEditing ? (
           <textarea
             className="input w-full h-24 sm:h-20 mb-4"
@@ -159,7 +159,7 @@ const Preview = () => {
           />
         ) : (
           (summary || '').trim() ? (
-            <p className="mb-4 whitespace-pre-wrap" style={{ color: '#d6b46a' }}>{summary}</p>
+            <p className="mb-4 whitespace-pre-wrap text-gray-800">{summary}</p>
           ) : null
         )}
         {message && <div className="mb-3 text-sm" style={{ color: '#bfa366' }}>{message}</div>}
@@ -174,12 +174,12 @@ const Preview = () => {
         ) : (
           <div className="space-y-4">
             {(fullText || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
-              <p key={i} className="whitespace-pre-wrap" style={{ color: '#d6b46a' }}>{para}</p>
+              <p key={i} className="whitespace-pre-wrap text-gray-800">{para}</p>
             ))}
             {Array.isArray(chapters) && chapters.some(s => Array.isArray(s.media) && s.media.length > 0) && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                 {chapters.flatMap((s) => (s.media || []).map((m) => ({ ...m }))).map((m, mi) => (
-                  <div key={mi} className="border rounded overflow-hidden" style={{ background: '#101013', borderColor: '#2a2a30' }}>
+                  <div key={mi} className="border rounded overflow-hidden bg-white border-gray-200">
                     {m.type === 'image' && <img src={m.url} alt={m.desc || ''} className="w-full h-32 object-cover" />}
                     {m.type === 'video' && <video src={m.url} className="w-full h-32 object-cover" controls />}
                     {m.type === 'audio' && <audio src={m.url} className="w-full" controls />}
@@ -231,7 +231,7 @@ const Preview = () => {
       </div>
     </div>
     {toast && (
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-4 text-sm px-3 py-2 rounded shadow z-50" role="status" style={{ backgroundColor: '#101013', color: '#e7c36f', border: '1px solid #3a3a40' }}>{toast}</div>
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-4 text-sm px-3 py-2 rounded shadow z-50 bg-blue-600 text-white border border-blue-700" role="status">{toast}</div>
     )}
     </>
   );

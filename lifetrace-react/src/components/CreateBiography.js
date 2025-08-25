@@ -98,17 +98,17 @@ const CreateBiography = () => {
   const chatContainerRef = useRef(null);
   const sectionTextareaRef = useRef(null);
   const answerInputRef = useRef(null);
-  // 首次“开始访谈”仅展示基础资料开场
+  // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
   
-  // 显示用阶段标签：统一为“xxx回忆”（未来愿望保持不变）
+  // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
     if (base === '未来愿望') return base;
     return `${base}回忆`;
   };
 
-  // 篇章区域展示用标签：显示为“X篇”（不影响情感访谈师区域）
+  // 篇章区域展示用标签：显示为"X篇"（不影响情感访谈师区域）
   const getSectionLabelByIndex = (idx) => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
     return `${base}篇`;
@@ -348,14 +348,14 @@ const CreateBiography = () => {
     }
   };
 
-  // 预览用：移除尚未被回答的“陪伴师：”问题（仅影响预览，不改原文）
+  // 预览用：移除尚未被回答的"陪伴师："问题（仅影响预览，不改原文）
   const getPreviewText = (rawText) => {
     const lines = (rawText || '').toString().split(/\r?\n/);
     const cleaned = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (/^陪伴师：/.test(line.trim())) {
-        // 向后查找在下一个“陪伴师：”或文本结尾前，是否存在“我：”行
+        // 向后查找在下一个"陪伴师："或文本结尾前，是否存在"我："行
         let j = i + 1;
         let answered = false;
         for (; j < lines.length; j++) {
@@ -399,7 +399,7 @@ const CreateBiography = () => {
     } catch (_) {}
   }, [currentSectionIndex]);
 
-  // 完成首篇或上传一定数量媒体后，引导“永恒计划”
+  // 完成首篇或上传一定数量媒体后，引导"永恒计划"
   useEffect(() => {
     try {
       if (localStorage.getItem('eternal_prompt_shown') === '1') return;
@@ -419,7 +419,7 @@ const CreateBiography = () => {
       setTimeout(() => navigate('/login'), 1000);
       return;
     }
-    // 若尚未选择“为谁创作”，优先引导身份设定
+    // 若尚未选择"为谁创作"，优先引导身份设定
     if (!authorMode) {
       const q1 = '这次记录是为谁创作？请选择：1. 为我自己  2. 为他人（如父母/亲人）  3. 暂不确定（可稍后再选）。请仅回复 1/2/3 的编号。';
       setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
@@ -433,23 +433,23 @@ const CreateBiography = () => {
     setMessage('正在生成本阶段问题…');
     try {
       const perspectiveKick = (authorMode === 'other')
-        ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免“您/我”。`
-        : '请使用第二人称“您/你”。';
+        ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免"您/我"。`
+        : '请使用第二人称"您/你"。';
       const toneKick = (authorMode === 'other')
-        ? '你现在是“引导者/助手”，帮助记录者一起梳理对方的人生经历，强调“整理与梳理”。'
-        : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
+        ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
+        : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现"下一个问题"字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
-        : `请面向“您”提出本阶段的第一个暖心问题。`;
+        : `请面向"您"提出本阶段的第一个暖心问题。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
       const ai = normalizeAssistant(raw) || (
         authorMode === 'other'
-          ? `让我们开始“${lifeStages[targetIndex]}”。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
-          : `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`
+          ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
+          : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
       );
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 阶段开场问题写入对应阶段篇章
@@ -467,23 +467,23 @@ const CreateBiography = () => {
       // 短上下文重试
       try {
         const perspectiveKick2 = (authorMode === 'other')
-          ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免“您/我”。`
-          : '请使用第二人称“您/你”。';
+          ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免"您/我"。`
+          : '请使用第二人称"您/你"。';
         const toneKick2 = (authorMode === 'other')
-          ? '你现在是“引导者/助手”，帮助记录者一起梳理对方的人生经历，强调“整理与梳理”。'
-          : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
+          ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
+          : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现"下一个问题"字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
-          : `请面向“您”提出本阶段的第一个暖心问题。`;
+          : `请面向"您"提出本阶段的第一个暖心问题。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
         const raw2 = resp2.data?.choices?.[0]?.message?.content;
         const ai2 = normalizeAssistant(raw2) || (
           authorMode === 'other'
-            ? `让我们开始“${lifeStages[targetIndex]}”。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
-            : `我们来聊聊“${lifeStages[targetIndex]}”。可以先从一件让您记忆深刻的小事说起吗？`
+            ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
+            : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
         );
         setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
         appendLineToSection(targetIndex, `陪伴师：${ai2}`);
@@ -503,7 +503,7 @@ const CreateBiography = () => {
     } finally {
       setIsAsking(false);
       setIsInterviewing(true);
-      // 清理“正在生成”提示
+      // 清理"正在生成"提示
       setMessage('');
     }
   };
@@ -523,7 +523,7 @@ const CreateBiography = () => {
     setIsInterviewing(true);
     setStageTurns(Array(lifeStages.length).fill(0));
     }
-    // 若为全新草稿（无对话且各篇章均为空），重置身份设定以确保先询问“为谁创作”
+    // 若为全新草稿（无对话且各篇章均为空），重置身份设定以确保先询问"为谁创作"
     try {
       const noChat = (chatMessages || []).length === 0;
       const noContent = (sections || []).every(s => !((s?.text || '').toString().trim().length > 0));
@@ -619,20 +619,20 @@ const CreateBiography = () => {
       appendLineToSection(currentSectionIndex, `我：${trimmed}`);
       setAuthorRelation(trimmed);
       try{ localStorage.setItem('author_relation', trimmed); }catch(_){ }
-      const tip2 = `我已记下：您所记录的人是您的“${trimmed}”。接下来，我将陪伴您一起整理他/她的生命故事。为了更完整地展现他/她的一生，请您先提供一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。`;
+      const tip2 = `我已记下：您所记录的人是您的"${trimmed}"。接下来，我将陪伴您一起整理他/她的生命故事。为了更完整地展现他/她的一生，请您先提供一些基础资料：姓名、性别、年龄、祖籍，以及家庭和教育经历。`;
       setChatMessages(prev => [...prev, { role: 'assistant', content: tip2 }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${tip2}`);
       setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
       return;
     }
 
-    // 仅以“我：...”格式写入当前阶段篇章，避免重复
+    // 仅以"我：..."格式写入当前阶段篇章，避免重复
     // 同步素材文本可选，如不再使用素材区可注释
     // setMaterialsText(prev => (prev ? prev + '\n' + trimmed : trimmed));
 
-    const perspective = (authorMode === 'other') ? '请使用第三人称（他/她/父亲/母亲/爷爷/奶奶等），避免“您/我”。' : '请使用第二人称“您/你”，避免第三人称。';
-    const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理对方的人生经历，强调“整理与梳理”，避免闲聊感。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
+    const perspective = (authorMode === 'other') ? '请使用第三人称（他/她/父亲/母亲/爷爷/奶奶等），避免"您/我"。' : '请使用第二人称"您/你"，避免第三人称。';
+    const tone = (authorMode === 'other') ? '你现在是"引导者/助手"，与记录者一起梳理对方的人生经历，强调"整理与梳理"，避免闲聊感。' : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -744,7 +744,7 @@ const CreateBiography = () => {
     recognition.start();
   };
 
-  // 语音输入：把识别内容写入“回答输入框”而非篇章正文
+  // 语音输入：把识别内容写入"回答输入框"而非篇章正文
   const handleSectionSpeech = () => {
     // Prefer iFLYTEK streaming via signed ws; fallback to browser SpeechRecognition
     if (!isIatRecording) {
@@ -1073,11 +1073,11 @@ const CreateBiography = () => {
     // 无论是否在访谈中，导航仅切换篇章与当前阶段索引，不自动触发AI提问
     const targetStage = Math.min(clamped, lifeStages.length - 1);
     setStageIndex(targetStage);
-    // 若已在访谈流程里，并且该阶段从未出现过陪伴师的开场语，则轻提示引导点击“开始访谈”或直接输入
+    // 若已在访谈流程里，并且该阶段从未出现过陪伴师的开场语，则轻提示引导点击"开始访谈"或直接输入
     if (isInterviewing) {
       const sectionText = (sections[targetStage]?.text || '').toString();
       if (!sectionText.includes('陪伴师：')) {
-        setMessage('提示：此阶段尚未开始，点击“开始访谈”或直接输入您的想法');
+        setMessage('提示：此阶段尚未开始，点击"开始访谈"或直接输入您的想法');
         setTimeout(() => setMessage(''), 1500);
       }
     }
@@ -1611,7 +1611,7 @@ const CreateBiography = () => {
           />
         </div>
         {/* 温暖副标题提示 */}
-        <p className="text-sm mb-4" style={{ color: '#bfa366' }}>以温柔对话，慢慢整理一生的回忆。可点击“开始访谈”，或直接在下方书写。</p>
+        <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。可点击"开始访谈"，或直接在下方书写。</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
@@ -1627,12 +1627,7 @@ const CreateBiography = () => {
                   key={idx}
                   type="button"
                   onClick={() => goToSectionByIndex(idx)}
-                  className="px-3 py-1 rounded-full border text-sm whitespace-nowrap"
-                  style={{
-                    backgroundColor: idx === currentSectionIndex ? '#1a1a1e' : '#121216',
-                    borderColor: idx === currentSectionIndex ? '#d6b46a' : '#2a2a30',
-                    color: '#d6b46a'
-                  }}
+                  className={`px-3 py-1 rounded-full border text-sm whitespace-nowrap ${idx === currentSectionIndex ? 'bg-blue-600 border-blue-700 text-white' : 'bg-blue-600/80 border-blue-700 text-white'}`}
                   aria-current={idx === currentSectionIndex ? 'page' : undefined}
                 >
                   {getSectionLabelByIndex(idx)}
@@ -1640,7 +1635,7 @@ const CreateBiography = () => {
                 ))}
               </div>
                 </div>
-          {/* 永恒计划引导：仅在用户点击“查看此生”后于预览页展示；此处不再弹出 */}
+          {/* 永恒计划引导：仅在用户点击"查看此生"后于预览页展示；此处不再弹出 */}
           
           {/* 情感陪伴师访谈（一体化：隐藏单独区域，所有问答只在篇章正文中体现） */}
           <div className="hidden" aria-hidden>
@@ -1651,9 +1646,9 @@ const CreateBiography = () => {
             {/* 顶部标题与导航移除，导航按钮移动到输入框下方 */}
             <div className="space-y-4">
               {sections[currentSectionIndex] && (
-                <div className={`border rounded p-3 sm:p-4 ring-2`} style={{ background: '#121216', borderColor: '#2a2a30', boxShadow: 'inset 0 0 0 2px #2a2a30' }}>
+                <div className={`border rounded p-3 sm:p-4 ring-2 bg-blue-600 border-blue-700 text-white`}>
                   <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
-                    <div className="font-medium text-base sm:text-lg truncate" style={{ color: '#d6b46a' }}>{getSectionLabelByIndex(currentSectionIndex)}</div>
+                    <div className="font-medium text-base sm:text-lg truncate text-white">{getSectionLabelByIndex(currentSectionIndex)}</div>
                     <div className="shrink-0">
                       {!(sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') && (
                         <button
@@ -1736,8 +1731,8 @@ const CreateBiography = () => {
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                          const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用“我/我们”。' : '请使用第一人称“我”的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据“问答对话记录”整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
+                          const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -1817,7 +1812,7 @@ const CreateBiography = () => {
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
             <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
             <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
-            {/* 去掉“生成分享链接”按钮，分享统一在预览页完成 */}
+            {/* 去掉"生成分享链接"按钮，分享统一在预览页完成 */}
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"
@@ -1831,7 +1826,7 @@ const CreateBiography = () => {
 
 
           {showPreview && (
-            <div className="mt-6 border rounded p-4" style={{ background: '#121216', borderColor: '#2a2a30' }}>
+            <div className="mt-6 border rounded p-4 bg-blue-600 border-blue-700 text-white">
               <h3 className="text-xl font-semibold mb-3">预览（不可编辑）</h3>
               {(bioTitle || '我的一生') && <h2 className="text-2xl font-bold mb-2">{bioTitle || '我的一生'}</h2>}
               <div className="space-y-6">
