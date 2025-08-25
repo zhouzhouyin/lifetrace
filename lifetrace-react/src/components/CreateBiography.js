@@ -1643,7 +1643,7 @@ const CreateBiography = () => {
           <input
             type="text"
             className="input text-center text-2xl sm:text-3xl font-bold"
-            placeholder={t ? t('titlePlaceholder') : '请输入传记主标题（例如：我的一生）'}
+            placeholder={t ? t('titlePlaceholder') : '请输入主标题（如：我的一生）'}
             value={bioTitle}
             onChange={(e) => setBioTitle(sanitizeInput(e.target.value))}
             maxLength={200}
