@@ -396,7 +396,7 @@ const CreateBiography = () => {
   // 切换篇章时，优先聚焦回答输入框，提升可发现性
   useEffect(() => {
     try {
-      if (answerInputRef.current) {
+      if (answerInputRef.current && !isSmallScreen()) {
         answerInputRef.current.focus();
       }
     } catch (_) {}
@@ -560,7 +560,7 @@ const CreateBiography = () => {
         setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
         appendLineToSection(idx, `陪伴师：${q1}`);
         setHasShownOpening(true);
-        scrollAnswerIntoView();
+        if (!isSmallScreen()) scrollAnswerIntoView();
         return;
       }
       if (authorMode === 'other' && !authorRelation) {
@@ -568,7 +568,7 @@ const CreateBiography = () => {
         setChatMessages(prev => [...prev, { role: 'assistant', content: askRel }]);
         appendLineToSection(idx, `陪伴师：${askRel}`);
         setHasShownOpening(true);
-        scrollAnswerIntoView();
+        if (!isSmallScreen()) scrollAnswerIntoView();
         return;
       }
       // 已具备身份与（如需）关系信息：直接进入阶段开场，不再询问基础资料
@@ -588,7 +588,7 @@ const CreateBiography = () => {
     if (lastUserPos <= lastAssistantPos) {
       setMessage('请先在下方输入框回答，然后我会继续提问');
       setTimeout(() => setMessage(''), 1500);
-      scrollAnswerIntoView();
+      if (!isSmallScreen()) scrollAnswerIntoView();
     }
   };
 
@@ -1903,8 +1903,46 @@ const CreateBiography = () => {
               <button className="btn" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>上一篇</button>
               <button className="btn" onClick={goToNextSection} disabled={currentSectionIndex >= sections.length - 1} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>下一篇</button>
               {!( (sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') ) && (
-                <button className="btn" onClick={() => { startInterview(); setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>开始访谈</button>
+                <button className="btn" onClick={() => { startInterview(); if (!isSmallScreen()) setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>开始访谈</button>
               )}
+              <button
+                className="btn flex-shrink-0"
+                disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
+                onClick={async () => {
+                  const section = sections[currentSectionIndex] || {};
+                  if (!((section.text || '').trim())) return;
+                  setPolishingSectionIndex(currentSectionIndex);
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
+                    const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
+                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
+                    const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
+                    const qaSource = filterPolishSource(qaSourceRaw);
+                    const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                    const messages = [
+                      { role: 'system', content: system },
+                      { role: 'user', content: userPayload },
+                    ];
+                    const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+                    const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                    if (polished) {
+                      setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
+                      const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
+                      setMessage(fb);
+                      setTimeout(() => setMessage(''), 1000);
+                    }
+                  } catch (e) {
+                    console.error('Polish current section error (focus-bottom):', e);
+                    setMessage('当前阶段篇章润色失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
+                  } finally {
+                    setPolishingSectionIndex(null);
+                  }
+                }}
+                style={{ padding: '8px 12px', fontSize: '14px' }}
+              >
+                {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
+              </button>
             </div>
           </div>
           <div className="px-3 pt-2 text-xs text-gray-100 bg-blue-600/95">在下方输入框回答，我会继续温柔引导您。</div>
@@ -1931,66 +1969,76 @@ const CreateBiography = () => {
             )}
           </div>
           {/* 底部固定输入条 */}
-          <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-200 p-2 flex gap-2 shadow-lg">
-            <button className="btn flex-shrink-0 sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
-              {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
-            </button>
-           
-          <textarea
-            className="input flex-1 min-h-[44px] max-h-24 resize-none"
-            placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
-            value={answerInput}
-            onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
-            ref={answerInputRef}
-            disabled={isSaving || isUploading}
-            rows={1}
-            style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
-          />
-          <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
-            {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
-          </button>
-          <button
-            className="btn flex-shrink-0"
-            disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
-            onClick={async () => {
-              const section = sections[currentSectionIndex] || {};
-              if (!((section.text || '').trim())) return;
-              setPolishingSectionIndex(currentSectionIndex);
-              try {
-                const token = localStorage.getItem('token');
-                if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
-                const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
-                const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
-                const qaSource = filterPolishSource(qaSourceRaw);
-                const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
-                const messages = [
-                  { role: 'system', content: system },
-                  { role: 'user', content: userPayload },
-                ];
-                const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-                if (polished) {
-                  setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
-                  const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
-                  setMessage(fb);
-                  setTimeout(() => setMessage(''), 1000);
-                }
-              } catch (e) {
-                console.error('Polish current section error (focus):', e);
-                setMessage('当前阶段篇章润色失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
-              } finally {
-                setPolishingSectionIndex(null);
-              }
-            }}
-            style={{ padding: '6px 10px', fontSize: '14px' }}
-          >
-            {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
-          </button>
+          <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-200 p-2 shadow-lg">
+            <div className="flex items-center gap-2">
+              <button className="btn flex-shrink-0 sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ width: '44px', padding: '6px 0', fontSize: '18px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>🎤</button>
+              <textarea
+                className="input flex-1 min-h-[44px] max-h-24 resize-none"
+                placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
+                value={answerInput}
+                onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
+                ref={answerInputRef}
+                disabled={isSaving || isUploading}
+                rows={1}
+                style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
+              />
+              <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '8px 12px', fontSize: '14px' }}>
+                {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
+              </button>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <label className="btn w-full">
+                {t ? t('addMedia') : '添加图片/视频/音频'}
+                <input
+                  type="file"
+                  accept="image/*,video/*,audio/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleUploadMediaToSection(currentSectionIndex, e.target.files[0])}
+                  disabled={isSaving || isUploading}
+                />
+              </label>
+              <button
+                className="btn w-full"
+                disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
+                onClick={async () => {
+                  const section = sections[currentSectionIndex] || {};
+                  if (!((section.text || '').trim())) return;
+                  setPolishingSectionIndex(currentSectionIndex);
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
+                    const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
+                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
+                    const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
+                    const qaSource = filterPolishSource(qaSourceRaw);
+                    const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                    const messages = [
+                      { role: 'system', content: system },
+                      { role: 'user', content: userPayload },
+                    ];
+                    const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+                    const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                    if (polished) {
+                      setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
+                      const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
+                      setMessage(fb);
+                      setTimeout(() => setMessage(''), 1000);
+                    }
+                  } catch (e) {
+                    console.error('Polish current section error (focus-bottom-grid):', e);
+                    setMessage('当前阶段篇章润色失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
+                  } finally {
+                    setPolishingSectionIndex(null);
+                  }
+                }}
+              >
+                {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
   );
 };
