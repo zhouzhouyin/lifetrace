@@ -1748,6 +1748,11 @@ const CreateBiography = () => {
                   <div className="mt-2" />
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
+                    {/* 非全屏：移动端 上一/下一 导航（仅一组） */}
+                    <div className={`flex gap-2 w-full sm:hidden ${isFocusMode ? 'hidden' : ''}`}>
+                      <button type="button" className="btn btn-secondary flex-1" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
+                      <button type="button" className="btn btn-secondary flex-1" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                    </div>
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
                     <div className={`flex gap-2 w-full sm:hidden ${isFocusMode ? 'hidden' : ''}`}>
                       <button className="btn btn-tertiary flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
@@ -1878,9 +1883,10 @@ const CreateBiography = () => {
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
               type="button"
-              className="btn bg-gray-500 hover:bg-gray-600"
+              className="btn btn-secondary ring-1 ring-blue-400"
               onClick={() => navigate(-1)}
               disabled={isSaving || isUploading}
+              style={{ padding: '10px 16px' }}
             >
               返回
             </button>
