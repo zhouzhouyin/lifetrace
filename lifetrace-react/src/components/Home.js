@@ -68,33 +68,36 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
               onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm bg-blue-600 text-white border border-blue-700"
+              className="text-left p-4 rounded-lg transition shadow-sm border"
+              style={{ backgroundImage: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', color: '#0f172a', borderColor: '#bfdbfe' }}
             >
               <div className="text-2xl mb-1">✍️</div>
-              <h3 className="font-semibold text-lg text-white">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
-              <p className="text-sm opacity-90 mt-1 text-white/90">
+              <h3 className="font-semibold text-lg" style={{ color: '#0f172a' }}>{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
+              <p className="text-sm opacity-90 mt-1" style={{ color: '#0f172a' }}>
                 {lang === 'zh' ? '用温和的引导问答，从童年至当下，一步步写下。' : 'Gentle prompts to capture a lifetime, step by step.'}
               </p>
             </button>
             <button
               aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
               onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm bg-blue-600 text-white border border-blue-700"
+              className="text-left p-4 rounded-lg transition shadow-sm border"
+              style={{ backgroundImage: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', color: '#0f172a', borderColor: '#bfdbfe' }}
             >
               <div className="text-2xl mb-1">👪</div>
-              <h3 className="font-semibold text-lg text-white">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
-              <p className="text-sm mt-1 text-white/90">
+              <h3 className="font-semibold text-lg" style={{ color: '#0f172a' }}>{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
+              <p className="text-sm mt-1" style={{ color: '#0f172a' }}>
                 {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
               </p>
             </button>
             <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm bg-blue-600 text-white border border-blue-700"
+              className="text-left p-4 rounded-lg transition shadow-sm border"
+              style={{ backgroundImage: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', color: '#0f172a', borderColor: '#bfdbfe' }}
             >
               <div className="text-2xl mb-1">✨</div>
-              <h3 className="font-semibold text-lg text-white">{lang === 'zh' ? '我的' : 'My'}</h3>
-              <p className="text-sm mt-1 text-white/90">
+              <h3 className="font-semibold text-lg" style={{ color: '#0f172a' }}>{lang === 'zh' ? '我的' : 'My'}</h3>
+              <p className="text-sm mt-1" style={{ color: '#0f172a' }}>
                 {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
               </p>
             </button>

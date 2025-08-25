@@ -1730,14 +1730,14 @@ const CreateBiography = () => {
                   />
                   {/* 章节导航（移动到正文下方） */}
                   <div className="mt-2 flex gap-2">
-                    <button type="button" className="btn px-3 py-2 text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-                    <button type="button" className="btn px-3 py-2 text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
+                    <button type="button" className="px-3 py-2 text-sm rounded border" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0} style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>{t ? t('prev') : '上一篇'}</button>
+                    <button type="button" className="px-3 py-2 text-sm rounded border" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1} style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>{t ? t('next') : '下一篇'}</button>
                   </div>
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
                     <div className={`flex gap-2 w-full sm:hidden ${isFocusMode ? 'hidden' : ''}`}>
-                      <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
+                      <button className="flex-1 rounded border" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px', background: '#f3f4f6', color: '#2563eb', borderColor: '#e5e7eb' }}>
                         {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
                       </button>
                     </div>
@@ -1754,18 +1754,18 @@ const CreateBiography = () => {
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
                       />
                       {/* 桌面端：与输入框并排显示语音输入 */}
-                      <button className="btn hidden sm:inline-flex" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
+                      <button className="hidden sm:inline-flex rounded border" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px', background: '#f3f4f6', color: '#2563eb', borderColor: '#e5e7eb' }}>
                         {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
                     </button>
-                      <button className="btn w-auto" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
-                        {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
+                      <button className="btn w-auto" onClick={sendAnswer} disabled={isIsAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
+                        {isIsAsking ? '请稍候...' : (t ? t('send') : '发送')}
                       </button>
                     </div>
                     {/* 语音设置面板已移除 */}
                   </div>
                   {/* 添加媒体 / 生成回忆 行（顺序：先添加媒体，再生成回忆） */}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <label className="btn w-full sm:w-auto">
+                    <label className="w-full sm:w-auto rounded border inline-flex items-center justify-center" style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>
                       {t ? t('addMedia') : '添加图片/视频/音频'}
                       <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadMediaToSection(currentSectionIndex, e.target.files[0])} disabled={isSaving || isUploading} />
                     </label>
@@ -1953,7 +1953,7 @@ const CreateBiography = () => {
           {/* 底部固定输入条 */}
           <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-200 p-2 shadow-lg">
             <div>
-              <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '10px 12px', fontSize: '14px' }}>语音输入</button>
+              <button className="w-full sm:hidden rounded border" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '10px 12px', fontSize: '14px', background: '#f3f4f6', color: '#2563eb', borderColor: '#e5e7eb' }}>语音输入</button>
             </div>
             <div className="mt-2 flex items-center justify-center gap-2">
               <textarea
@@ -1972,7 +1972,7 @@ const CreateBiography = () => {
               </button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="btn w-full">
+              <label className="w-full rounded border inline-flex items-center justify-center" style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>
                 {t ? t('addMedia') : '添加图片/视频/音频'}
                 <input
                   type="file"
