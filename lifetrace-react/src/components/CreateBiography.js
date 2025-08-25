@@ -1955,16 +1955,16 @@ const CreateBiography = () => {
             <div>
               <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '10px 12px', fontSize: '14px' }}>语音输入</button>
             </div>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center justify-center gap-2">
               <textarea
-                className="input flex-1 min-h-[44px] max-h-32 resize-none"
+                className="input resize-none w-[75vw] sm:flex-1"
                 placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
                 value={answerInput}
                 onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                 ref={answerInputRef}
                 disabled={isSaving || isUploading}
-                rows={2}
-                style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+                rows={1}
+                style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
               />
               <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '8px 12px', fontSize: '14px' }}>
