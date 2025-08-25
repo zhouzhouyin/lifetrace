@@ -68,7 +68,7 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
               onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm border bg-gradient-to-br from-blue-100 to-blue-200 text-slate-900 border-blue-200 hover:from-blue-200 hover:to-blue-300"
+              className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
             >
               <div className="text-2xl mb-1">✍️</div>
               <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
@@ -79,7 +79,7 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
               onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm border bg-gradient-to-br from-blue-100 to-blue-200 text-slate-900 border-blue-200 hover:from-blue-200 hover:to-blue-300"
+              className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
             >
               <div className="text-2xl mb-1">👪</div>
               <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
@@ -90,7 +90,7 @@ const Home = () => {
             <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
-              className="text-left p-4 rounded-lg transition shadow-sm border bg-gradient-to-br from-blue-100 to-blue-200 text-slate-900 border-blue-200 hover:from-blue-200 hover:to-blue-300"
+              className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
             >
               <div className="text-2xl mb-1">✨</div>
               <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '我的' : 'My'}</h3>

@@ -1729,12 +1729,7 @@ const CreateBiography = () => {
                     ref={sectionTextareaRef}
                   />
                   {/* 章节导航（移动到正文下方） */}
-                  <div className="mt-2 flex gap-2">
--                    <button type="button" className="px-3 py-2 text-sm rounded border" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0} style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>{t ? t('prev') : '上一篇'}</button>
--                    <button type="button" className="px-3 py-2 text-sm rounded border" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1} style={{ background: '#ffffff', color: '#2563eb', borderColor: '#2563eb' }}>{t ? t('next') : '下一篇'}</button>
-+                    <button type="button" className="btn btn-secondary px-3 py-2 text-sm" onClick={goToPrevSection} disabled={isSaving || isUploading || currentSectionIndex <= 0}>{t ? t('prev') : '上一篇'}</button>
-+                    <button type="button" className="btn btn-secondary px-3 py-2 text-sm" onClick={goToNextSection} disabled={isSaving || isUploading || currentSectionIndex >= sections.length - 1}>{t ? t('next') : '下一篇'}</button>
-                   </div>
+                  <div className="mt-2" />
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
@@ -1907,7 +1902,7 @@ const CreateBiography = () => {
       {isFocusMode && (
         <div className="fixed inset-0 sm:hidden z-50 bg-white text-gray-900">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-blue-600 text-white shadow">
-            <button className="btn" onClick={() => setIsFocusMode(false)} style={{ padding: '6px 10px', fontSize: '14px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>返回</button>
+            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '10px 14px', fontSize: '14px' }}>返回</button>
             <div className="text-base font-semibold truncate">{getSectionLabelByIndex(currentSectionIndex)}</div>
             <div className="flex items-center gap-2">
               <button className="btn" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>上一篇</button>
