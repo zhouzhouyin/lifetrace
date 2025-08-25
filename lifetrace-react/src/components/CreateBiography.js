@@ -100,6 +100,8 @@ const CreateBiography = () => {
   const answerInputRef = useRef(null);
   // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
+  const isSmallScreen = () => { try { return window.innerWidth < 640; } catch (_) { return false; } };
   
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
@@ -531,6 +533,9 @@ const CreateBiography = () => {
     if (!isInterviewing) {
     setIsInterviewing(true);
     setStageTurns(Array(lifeStages.length).fill(0));
+    }
+    if (isSmallScreen()) {
+      setIsFocusMode(true);
     }
     // 若为全新草稿（无对话且各篇章均为空），重置身份设定以确保先询问"为谁创作"
     try {
@@ -1662,6 +1667,14 @@ const CreateBiography = () => {
                   <div className="flex items-center justify-between gap-2 mb-2 flex-nowrap">
                     <div className="font-medium text-base sm:text-lg truncate text-gray-900">{getSectionLabelByIndex(currentSectionIndex)}</div>
                     <div className="shrink-0">
+                      <button
+                        type="button"
+                        className="btn inline-flex sm:hidden mr-2"
+                        onClick={() => { setIsFocusMode(true); setTimeout(scrollAnswerIntoView, 0); }}
+                        style={{ padding: '6px 10px', fontSize: '14px' }}
+                      >
+                        专注写作
+                      </button>
                       {!(sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') && (
                         <button
                           className="btn"
@@ -1699,12 +1712,12 @@ const CreateBiography = () => {
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
                   <div className="mt-2 flex gap-2 flex-col sm:flex-row flex-wrap">
                     {/* 移动端：单独一行放置语音输入，避免挤占输入框空间 */}
-                    <div className="flex gap-2 w-full sm:hidden">
+                    <div className={`flex gap-2 w-full sm:hidden ${isFocusMode ? 'hidden' : ''}`}>
                       <button className="btn flex-1" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
                         {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
                       </button>
                     </div>
-                    <div className="flex-1 flex gap-2 items-stretch">
+                    <div className={`flex-1 flex gap-2 items-stretch ${isFocusMode ? 'hidden sm:flex' : ''}`}>
                       <textarea
                         className="input flex-1 min-h-[44px] resize-none"
                         placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
@@ -1864,6 +1877,58 @@ const CreateBiography = () => {
           )}
         </div>
       </div>
+      {/* 手机端专注模式覆盖层 */}
+      {isFocusMode && (
+        <div className="fixed inset-0 sm:hidden z-50 bg-white text-gray-900">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+            <button className="btn" onClick={() => setIsFocusMode(false)} style={{ padding: '6px 10px', fontSize: '14px' }}>返回</button>
+            <div className="text-base font-semibold truncate">{getSectionLabelByIndex(currentSectionIndex)}</div>
+            <div className="w-[72px]" aria-hidden></div>
+          </div>
+          <div className="px-3 pt-3 pb-24 overflow-y-auto">
+            {/* 正文预览（可滚动） */}
+            {(sections[currentSectionIndex]?.title || '').trim() && (
+              <h4 className="text-lg font-semibold mb-2">{sections[currentSectionIndex]?.title}</h4>
+            )}
+            {(sections[currentSectionIndex]?.text || '').trim() ? (
+              <p className="whitespace-pre-wrap text-gray-800">{getPreviewText(sections[currentSectionIndex]?.text || '')}</p>
+            ) : (
+              <p className="text-gray-500">还没有内容，先在下方回答问题开始创作吧。</p>
+            )}
+            {Array.isArray(sections[currentSectionIndex]?.media) && sections[currentSectionIndex].media.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                {sections[currentSectionIndex].media.map((m, mi) => (
+                  <div key={mi} className="border rounded overflow-hidden bg-white border-gray-200">
+                    {m.type === 'image' && <img src={m.url} alt={m.desc || ''} className="w-full h-28 object-cover" />}
+                    {m.type === 'video' && <video src={m.url} className="w-full h-28 object-cover" controls />}
+                    {m.type === 'audio' && <audio src={m.url} className="w-full" controls />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* 底部固定输入条 */}
+          <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-200 p-2 flex gap-2">
+            <button className="btn flex-shrink-0 sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '8px 10px', fontSize: '15px' }}>
+              {isIatRecording ? (t ? (t('stopRecording') || '停止录音') : '停止录音') : (t ? t('voiceInput') : '语音输入')}
+            </button>
+            <textarea
+              className="input flex-1 min-h-[44px] max-h-24 resize-none"
+              placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
+              value={answerInput}
+              onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
+              ref={answerInputRef}
+              disabled={isSaving || isUploading}
+              rows={1}
+              style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
+            />
+            <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '6px 10px', fontSize: '14px' }}>
+              {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
