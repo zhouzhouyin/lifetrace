@@ -1886,7 +1886,7 @@ const CreateBiography = () => {
               className="btn btn-secondary ring-1 ring-blue-400"
               onClick={() => navigate(-1)}
               disabled={isSaving || isUploading}
-              style={{ padding: '10px 16px' }}
+              style={{ padding: '10px 24px', minWidth: '140px', textAlign: 'center' }}
             >
               返回
             </button>
@@ -1924,7 +1924,7 @@ const CreateBiography = () => {
       {isFocusMode && (
         <div className="fixed inset-0 sm:hidden z-50 bg-white text-gray-900">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-blue-600 text-white shadow">
-            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '12px 16px', fontSize: '14px' }}>返回</button>
+            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '8px 12px', fontSize: '14px' }}>返回</button>
             <div className="text-base font-semibold truncate">{getSectionLabelByIndex(currentSectionIndex)}</div>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '6px 10px', fontSize: '12px' }}>上一篇</button>
@@ -1990,8 +1990,8 @@ const CreateBiography = () => {
                 {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
               </button>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="btn btn-secondary w-full inline-flex items-center justify-center ring-1 ring-blue-400">
+            <div className="mt-2 flex flex-col gap-2">
+              <label className="btn btn-secondary w-full inline-flex items-center justify-center ring-1 ring-blue-400" style={{ padding: '10px 12px' }}>
                 {t ? t('addMedia') : '添加图片/视频/音频'}
                 <input
                   type="file"
@@ -2035,6 +2035,7 @@ const CreateBiography = () => {
                     setPolishingSectionIndex(null);
                   }
                 }}
+                style={{ padding: '10px 12px' }}
               >
                 {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
               </button>
