@@ -104,7 +104,19 @@ const CreateBiography = () => {
   const isSmallScreen = () => { try { return window.innerWidth < 640; } catch (_) { return false; } };
   const focusContentRef = useRef(null);
   const [isFocusEditing, setIsFocusEditing] = useState(false);
-  
+  const stageScrollRef = useRef(null);
+  const stageBtnsRef = useRef([]);
+  const centerStageChip = (idx) => {
+    try {
+      const container = stageScrollRef.current;
+      const el = stageBtnsRef.current[idx];
+      if (!container || !el) return;
+      const target = el.offsetLeft - (container.clientWidth / 2) + (el.clientWidth / 2);
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      container.scrollTo({ left: Math.max(0, Math.min(target, maxScroll)), behavior: 'smooth' });
+    } catch (_) {}
+  };
+
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
@@ -1114,12 +1126,15 @@ const CreateBiography = () => {
   };
   const goToPrevSection = () => {
     if (currentSectionIndex <= 0) return;
-    goToSectionByIndex(currentSectionIndex - 1);
+    const next = currentSectionIndex - 1;
+    goToSectionByIndex(next);
+    setTimeout(() => centerStageChip(next), 0);
   };
   const goToNextSection = () => {
     const nextIndex = currentSectionIndex + 1;
     if (nextIndex >= sections.length) return; // 翻页式：不自动新增篇章
     goToSectionByIndex(nextIndex);
+    setTimeout(() => centerStageChip(nextIndex), 0);
   };
   const navigate = useNavigate();
   const location = useLocation();
@@ -1661,15 +1676,16 @@ const CreateBiography = () => {
         {/* 隐私条款弹窗已移除 */}
         <div className="flex flex-col gap-6">
           {/* 阶段面包屑（横向滚动） */}
-          <div className="-mx-4 sm:mx-0 px-4 overflow-x-auto">
+          <div className="-mx-4 sm:mx-0 px-4 overflow-x-auto" ref={stageScrollRef}>
             <div className="flex gap-2 pb-2 min-w-max">
               {lifeStages.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => goToSectionByIndex(idx)}
+                  onClick={() => { goToSectionByIndex(idx); centerStageChip(idx); }}
                   className={`px-3 py-1 rounded-full border text-sm whitespace-nowrap ${idx === currentSectionIndex ? 'bg-blue-600 border-blue-700 text-white' : 'bg-blue-600/80 border-blue-700 text-white'}`}
                   aria-current={idx === currentSectionIndex ? 'page' : undefined}
+                  ref={(el) => { stageBtnsRef.current[idx] = el; }}
                 >
                   {getSectionLabelByIndex(idx)}
                 </button>
@@ -1693,7 +1709,7 @@ const CreateBiography = () => {
                     <div className="shrink-0">
                       <button
                         type="button"
-                        className="btn inline-flex sm:hidden mr-2"
+                        className="btn btn-secondary inline-flex sm:hidden mr-2"
                         onClick={() => { setIsFocusMode(true); setTimeout(scrollAnswerIntoView, 0); }}
                         style={{ padding: '6px 10px', fontSize: '14px' }}
                       >
@@ -1701,7 +1717,7 @@ const CreateBiography = () => {
                       </button>
                       {!(sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') && (
                         <button
-                          className="btn"
+                          className="btn btn-primary"
                           onClick={startInterview}
                           style={{ padding: '6px 10px', fontSize: '14px' }}
                         >
@@ -1856,8 +1872,8 @@ const CreateBiography = () => {
           {/* 去掉"分享到家族传记"勾选区 */}
           <div className="flex gap-4 flex-wrap">
             {/* 批量润色与撤销：一个按钮负责首次和再次润色 */}
-            <button type="button" className="btn" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
-            <button type="button" className="btn" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
+            <button type="button" className="btn btn-secondary ring-1 ring-blue-400" onClick={handlePreview} disabled={isPolishing || isSaving || isUploading}>查看此生</button>
+            <button type="button" className="btn btn-secondary ring-1 ring-blue-400" onClick={handleSaveAndUpload} disabled={isSaving || isUploading}>{isUploading ? '上传中...' : '保存并上传'}</button>
             {/* 去掉"生成分享链接"按钮，分享统一在预览页完成 */}
             {/** 分享到广场（公开）入口移到 My.js，这里仅保留上传与本地保存 */}
             <button
@@ -1902,15 +1918,15 @@ const CreateBiography = () => {
       {isFocusMode && (
         <div className="fixed inset-0 sm:hidden z-50 bg-white text-gray-900">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-blue-600 text-white shadow">
-            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '10px 14px', fontSize: '14px' }}>返回</button>
+            <button className="btn btn-secondary" onClick={() => setIsFocusMode(false)} style={{ padding: '12px 16px', fontSize: '14px' }}>返回</button>
             <div className="text-base font-semibold truncate">{getSectionLabelByIndex(currentSectionIndex)}</div>
             <div className="flex items-center gap-2">
-              <button className="btn" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>上一篇</button>
-              <button className="btn" onClick={goToNextSection} disabled={currentSectionIndex >= sections.length - 1} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>下一篇</button>
+              <button className="btn btn-secondary" onClick={goToPrevSection} disabled={currentSectionIndex <= 0} style={{ padding: '6px 10px', fontSize: '12px' }}>上一篇</button>
+              <button className="btn btn-secondary" onClick={goToNextSection} disabled={currentSectionIndex >= sections.length - 1} style={{ padding: '6px 10px', fontSize: '12px' }}>下一篇</button>
               {!( (sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') ) && (
-                <button className="btn" onClick={() => { startInterview(); if (!isSmallScreen()) setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>开始访谈</button>
+                <button className="btn btn-primary" onClick={() => { startInterview(); if (!isSmallScreen()) setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '6px 10px', fontSize: '12px' }}>开始访谈</button>
               )}
-              <button className="btn" onClick={() => setIsFocusEditing(v => !v)} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>{isFocusEditing ? '完成编辑' : '编辑本篇'}</button>
+              <button className="btn btn-secondary" onClick={() => setIsFocusEditing(v => !v)} style={{ padding: '6px 10px', fontSize: '12px' }}>{isFocusEditing ? '完成编辑' : '编辑本篇'}</button>
             </div>
           </div>
           <div className="px-3 pt-2 text-xs text-gray-100 bg-blue-600/95">在下方输入框回答，我会继续温柔引导您。</div>
@@ -1969,7 +1985,7 @@ const CreateBiography = () => {
               </button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="btn btn-secondary w-full inline-flex items-center justify-center">
+              <label className="btn btn-secondary w-full inline-flex items-center justify-center ring-1 ring-blue-400">
                 {t ? t('addMedia') : '添加图片/视频/音频'}
                 <input
                   type="file"
@@ -1980,7 +1996,7 @@ const CreateBiography = () => {
                 />
               </label>
               <button
-                className="btn btn-primary w-full"
+                className="btn btn-primary w-full ring-1 ring-blue-400"
                 disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
                 onClick={async () => {
                   const section = sections[currentSectionIndex] || {};
