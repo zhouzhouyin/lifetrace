@@ -326,7 +326,7 @@ const My = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4">
-      <div className="card max-w-2xl w-full p-6">
+      <div className="card max-w-2xl w-full p-6" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 40%)', borderColor: '#e5e7eb' }}>
         <Helmet>
           <title>我的主页 - 永念</title>
         </Helmet>
@@ -345,7 +345,7 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的传记</h3>
               {biographies.length > 0 ? (
                 biographies.map((item) => (
-                  <div key={item.id} className="card p-4">
+                  <div key={item.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
                     <h4 className="font-semibold">{item.title}</h4>
                     <p className="whitespace-pre-wrap text-gray-800">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
                     <p className="text-sm text-gray-600">
@@ -353,7 +353,7 @@ const My = () => {
                     </p>
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn"
+                        className="btn btn-secondary"
                         onClick={() => handleViewNote(item.id, item.type)}
                         disabled={isLoading}
                       >
@@ -361,7 +361,7 @@ const My = () => {
                       </button>
                       {item.isPublic ? (
                         <button
-                          className="btn"
+                          className="btn btn-secondary"
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem('token');
@@ -378,7 +378,7 @@ const My = () => {
                         </button>
                       ) : (
                         <button
-                          className="btn"
+                          className="btn btn-secondary"
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem('token');
@@ -396,7 +396,7 @@ const My = () => {
                       )}
                       {item.sharedWithFamily ? (
                         <button
-                          className="btn"
+                          className="btn btn-secondary"
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem('token');
@@ -413,7 +413,7 @@ const My = () => {
                         </button>
                       ) : (
                         <button
-                          className="btn"
+                          className="btn btn-secondary"
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem('token');
@@ -430,7 +430,7 @@ const My = () => {
                         </button>
                       )}
                       <button
-                        className="btn"
+                        className="btn btn-secondary"
                         onClick={() => handleEditNote(item.id, item.type)}
                         disabled={isLoading}
                       >
@@ -438,9 +438,10 @@ const My = () => {
                       </button>
                       {/* 生成分享链接（在“我的”页隐藏，改在预览页进行） */}
                       <button
-                        className="btn bg-red-600 hover:bg-red-700"
+                        className="btn"
                         onClick={() => handleDeleteNote(item.id)}
                         disabled={isLoading}
+                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
                       >
                         删除
                       </button>
@@ -457,7 +458,7 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的相册</h3>
               {photos.length > 0 ? (
                 photos.map(file => (
-                  <div key={file.id} className="card p-4">
+                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
                     <p>{file.desc || '无描述'}</p>
                     <p className="text-sm text-gray-600">
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
@@ -479,16 +480,17 @@ const My = () => {
                     />
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn"
+                        className="btn btn-secondary"
                         onClick={() => handleViewFile(file.id)}
                         disabled={isLoading}
                       >
                         查看
                       </button>
                       <button
-                        className="btn bg-red-600 hover:bg-red-700"
+                        className="btn"
                         onClick={() => handleDeleteFile(file.id)}
                         disabled={isLoading}
+                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
                       >
                         删除
                       </button>
@@ -503,7 +505,7 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的视频</h3>
               {videos.length > 0 ? (
                 videos.map(file => (
-                  <div key={file.id} className="card p-4">
+                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
                     <p>{file.desc || '无描述'}</p>
                     <p className="text-sm text-gray-600">
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
@@ -524,16 +526,17 @@ const My = () => {
                     />
                     <div className="flex gap-2 mt-2">
                       <button
-                        className="btn"
+                        className="btn btn-secondary"
                         onClick={() => handleViewFile(file.id)}
                         disabled={isLoading}
                       >
                         查看
                       </button>
                       <button
-                        className="btn bg-red-600 hover:bg-red-700"
+                        className="btn"
                         onClick={() => handleDeleteFile(file.id)}
                         disabled={isLoading}
+                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
                       >
                         删除
                       </button>
@@ -548,7 +551,7 @@ const My = () => {
               <h3 className="text-xl font-semibold mb-2">我的音频</h3>
               {audios.length > 0 ? (
                 audios.map(file => (
-                  <div key={file.id} className="card p-4">
+                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
                     <p>{file.desc || '无描述'}</p>
                     <p className="text-sm" style={{ color: '#bfa366' }}>
                       {new Date(file.timestamp).toLocaleString('zh-CN')}
@@ -576,9 +579,10 @@ const My = () => {
                         查看
                       </button>
                       <button
-                        className="btn bg-red-600 hover:bg-red-700"
+                        className="btn"
                         onClick={() => handleDeleteFile(file.id)}
                         disabled={isLoading}
+                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
                       >
                         删除
                       </button>
@@ -591,14 +595,14 @@ const My = () => {
             </div>
             <div className="flex gap-4">
               <button
-                className="btn"
+                className="btn btn-primary"
                 onClick={handleGenerateMark}
                 disabled={isLoading}
               >
                 生成永恒印记
               </button>
               <button
-                className="btn bg-gray-500 hover:bg-gray-600"
+                className="btn btn-secondary"
                 onClick={() => navigate('/')}
                 disabled={isLoading}
               >
