@@ -1081,6 +1081,12 @@ const CreateBiography = () => {
       const type = inferMediaType(file);
       setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: [...s.media, { type, url, desc }] } : s));
       setMessage('媒体已添加到分段');
+      // 在专注模式下，添加媒体后滚动到最底部，便于立即看到新媒体
+      try {
+        if (isFocusMode && focusContentRef.current) {
+          setTimeout(() => { try { focusContentRef.current.scrollTop = focusContentRef.current.scrollHeight; } catch (_) {} }, 0);
+        }
+      } catch (_) {}
     } catch (err) {
       console.error('Upload media error:', err);
       setMessage('上传媒体失败：' + (err.response?.data?.message || err.message));
@@ -1970,22 +1976,21 @@ const CreateBiography = () => {
           </div>
           {/* 底部固定输入条 */}
           <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-200 p-2 shadow-lg">
-            <div className="flex items-center gap-2">
-              <button className="btn flex-shrink-0 sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ width: '44px', padding: '6px 0', fontSize: '18px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>🎤</button>
+            <div>
+              <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '10px 12px', fontSize: '14px' }}>语音输入</button>
+            </div>
+            <div className="mt-2">
               <textarea
-                className="input flex-1 min-h-[44px] max-h-24 resize-none"
+                className="input w-full min-h-[44px] max-h-32 resize-none"
                 placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
                 value={answerInput}
                 onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
                 ref={answerInputRef}
                 disabled={isSaving || isUploading}
-                rows={1}
-                style={{ height: '44px', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}
+                rows={2}
+                style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
               />
-              <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '8px 12px', fontSize: '14px' }}>
-                {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
-              </button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <label className="btn w-full">
@@ -2012,7 +2017,7 @@ const CreateBiography = () => {
                     const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
                     const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                     const qaSource = filterPolishSource(qaSourceRaw);
-                    const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                    const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\\n\\n${qaSource}\\n\\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
                     const messages = [
                       { role: 'system', content: system },
                       { role: 'user', content: userPayload },
