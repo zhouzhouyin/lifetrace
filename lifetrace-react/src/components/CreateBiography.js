@@ -103,6 +103,7 @@ const CreateBiography = () => {
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
   const isSmallScreen = () => { try { return window.innerWidth < 640; } catch (_) { return false; } };
   const focusContentRef = useRef(null);
+  const [isFocusEditing, setIsFocusEditing] = useState(false);
   
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
@@ -552,6 +553,7 @@ const CreateBiography = () => {
     } catch (_) {}
     setStageIndex(idx);
     setCurrentSectionIndex(idx);
+    try { if (isFocusEditing) setIsFocusEditing(false); } catch(_){}
     // 首次仅给基础资料开场，之后不再重复
     if (!hasShownOpening) {
       // 身份设定引导
@@ -1911,19 +1913,31 @@ const CreateBiography = () => {
               {!( (sections[currentSectionIndex]?.text || '').toString().includes('陪伴师：') ) && (
                 <button className="btn" onClick={() => { startInterview(); if (!isSmallScreen()) setTimeout(scrollAnswerIntoView, 0); }} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>开始访谈</button>
               )}
+              <button className="btn" onClick={() => setIsFocusEditing(v => !v)} style={{ padding: '4px 8px', fontSize: '12px', background: '#ffffff', color: '#111827', borderColor: '#e5e7eb' }}>{isFocusEditing ? '完成编辑' : '编辑本篇'}</button>
             </div>
           </div>
           <div className="px-3 pt-2 text-xs text-gray-100 bg-blue-600/95">在下方输入框回答，我会继续温柔引导您。</div>
-          <div className="px-3 pt-3 pb-24 overflow-y-auto" ref={focusContentRef}>
+          <div
+            className="px-3 pt-3 pb-24 overflow-y-auto"
+            ref={focusContentRef}
+            style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', maxHeight: 'calc(100vh - 120px - 180px)' }}
+          >
             {/* 正文预览（可滚动） */}
             {(sections[currentSectionIndex]?.title || '').trim() && (
               <h4 className="text-lg font-semibold mb-2">{sections[currentSectionIndex]?.title}</h4>
             )}
-            {(sections[currentSectionIndex]?.text || '').trim() ? (
+            {isFocusEditing ? (
+              <textarea
+                className="input w-full min-h-[40vh] max-h-[60vh] resize-y"
+                value={sections[currentSectionIndex]?.text || ''}
+                onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
+                placeholder="编辑本篇正文..."
+              />
+            ) : ((sections[currentSectionIndex]?.text || '').trim() ? (
               <p className="whitespace-pre-wrap text-gray-800">{(sections[currentSectionIndex]?.text || '')}</p>
             ) : (
               <p className="text-gray-500">还没有内容，先在下方回答问题开始创作吧。</p>
-            )}
+            ))}
             {Array.isArray(sections[currentSectionIndex]?.media) && sections[currentSectionIndex].media.length > 0 && (
               <div className="grid grid-cols-2 gap-3 mt-3">
                 {sections[currentSectionIndex].media.map((m, mi) => (
@@ -1941,9 +1955,9 @@ const CreateBiography = () => {
             <div>
               <button className="btn w-full sm:hidden" onClick={handleSectionSpeech} disabled={isSaving || isUploading} style={{ padding: '10px 12px', fontSize: '14px' }}>语音输入</button>
             </div>
-            <div className="mt-2">
+            <div className="mt-2 flex items-center gap-2">
               <textarea
-                className="input w-full min-h-[44px] max-h-32 resize-none"
+                className="input flex-1 min-h-[44px] max-h-32 resize-none"
                 placeholder={t ? t('answerPlaceholder') : '请输入您的回答...'}
                 value={answerInput}
                 onChange={(e) => { const v = sanitizeInput(e.target.value); setAnswerInput(v); autoResizeAnswer(e.target); }}
@@ -1953,6 +1967,9 @@ const CreateBiography = () => {
                 style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAnswer(); } }}
               />
+              <button className="btn flex-shrink-0" onClick={sendAnswer} disabled={isAsking || isSaving || isUploading} style={{ padding: '8px 12px', fontSize: '14px' }}>
+                {isAsking ? '请稍候...' : (t ? t('send') : '发送')}
+              </button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <label className="btn w-full">
