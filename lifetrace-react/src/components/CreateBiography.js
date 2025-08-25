@@ -399,6 +399,14 @@ const CreateBiography = () => {
     } catch (_) {}
   }, [currentSectionIndex]);
 
+  const scrollAnswerIntoView = () => {
+    try {
+      const el = answerInputRef.current;
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (_) {}
+  };
+
   // 完成首篇或上传一定数量媒体后，引导"永恒计划"
   useEffect(() => {
     try {
@@ -427,6 +435,7 @@ const CreateBiography = () => {
       setCurrentSectionIndex(targetIndex);
       setIsInterviewing(true);
       setMessage('');
+      scrollAnswerIntoView();
       return;
     }
     setIsAsking(true);
@@ -542,6 +551,7 @@ const CreateBiography = () => {
         setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
         appendLineToSection(idx, `陪伴师：${q1}`);
         setHasShownOpening(true);
+        scrollAnswerIntoView();
         return;
       }
       const opening = authorMode === 'other'
@@ -553,6 +563,7 @@ const CreateBiography = () => {
       try { appendLineToSection(idx, `陪伴师：${opening}`); } catch (_) {}
       if (autoSpeakAssistant) speakText(opening);
       setHasShownOpening(true);
+      scrollAnswerIntoView();
       return;
     }
     // 非首次：若该阶段尚未开始则生成开场；否则若用户尚未回答，给出提示
@@ -567,6 +578,7 @@ const CreateBiography = () => {
     if (lastUserPos <= lastAssistantPos) {
       setMessage('请先在下方输入框回答，然后我会继续提问');
       setTimeout(() => setMessage(''), 1500);
+      scrollAnswerIntoView();
     }
   };
 
@@ -1611,7 +1623,7 @@ const CreateBiography = () => {
           />
         </div>
         {/* 温暖副标题提示 */}
-        <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。可点击"开始访谈"，或直接在下方书写。</p>
+        <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。请点击"开始访谈"，在"请输入您的回答"中作答；生成后可在上方篇章里自由编辑与完善。</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
