@@ -30,14 +30,31 @@ label, p, span, a, li, dt, dd, small, strong, em { color: inherit; }
 a { color: #2563eb; } /* blue-600 */
 a:hover { color: #1d4ed8; } /* blue-700 */
 
+/* Button base and variants */
 .btn {
   @apply px-5 py-3 rounded transition font-semibold border;
-  background-color: #2563eb; /* blue-600 */
-  border-color: #2563eb;
-  color: #ffffff;
   font-size: 16px;
 }
-.btn:hover { background-color: #1d4ed8; border-color: #1d4ed8; }
+.btn-primary {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+.btn-primary:hover { background-color: #1d4ed8; border-color: #1d4ed8; }
+
+.btn-secondary {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.btn-secondary:hover { background-color: #f8fafc; }
+
+.btn-tertiary {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #2563eb;
+}
+.btn-tertiary:hover { background-color: #e5e7eb; }
 
 .input {
   @apply rounded px-4 py-3 w-full focus:outline-none;
