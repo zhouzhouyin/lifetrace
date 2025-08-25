@@ -1650,7 +1650,7 @@ const CreateBiography = () => {
           />
         </div>
         {/* 温暖副标题提示 */}
-        <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。请点击"开始访谈"，在"请输入您的回答"中作答；生成后可在上方篇章里自由编辑与完善。</p>
+        <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。请点击"开始访谈"，在"请输入您的回答"中作答；生成后可在上方篇章里自由编辑与完善。点击最下方查看此生可以查看完整回忆。</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
