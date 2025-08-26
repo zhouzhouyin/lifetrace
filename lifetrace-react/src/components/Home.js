@@ -135,14 +135,30 @@ const Home = () => {
 
   // 每天首次进入展示
   useEffect(() => {
-    try { lastShownRef.current = localStorage.getItem('daily_last_shown') || ''; } catch (_) {}
-    try { snoozeUntilRef.current = localStorage.getItem('daily_generate_snooze_until') || ''; } catch (_) {}
+    const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+    try { lastShownRef.current = localStorage.getItem(`daily_last_shown_${scope}`) || ''; } catch (_) {}
+    try { snoozeUntilRef.current = localStorage.getItem(`daily_generate_snooze_until_${scope}`) || ''; } catch (_) {}
     const today = new Date().toISOString().slice(0,10);
     const snoozed = snoozeUntilRef.current && new Date(snoozeUntilRef.current) > new Date();
-    if (dailyEnabled && lastShownRef.current !== today && !snoozed) {
+    // 触发条件：1) 今天第一次进入 2) 或检测到刚登录（last_login_at_scope 是今日）
+    let shouldShow = false;
+    if (dailyEnabled && !snoozed) {
+      if (lastShownRef.current !== today) {
+        shouldShow = true;
+      } else {
+        try {
+          const lastLogin = localStorage.getItem(`last_login_at_${scope}`) || '';
+          if (lastLogin) {
+            const d = new Date(lastLogin).toISOString().slice(0,10);
+            if (d === today) shouldShow = true;
+          }
+        } catch (_) {}
+      }
+    }
+    if (shouldShow) {
       setShowDailyCard(true);
       pickAndStoreQuestion();
-      try { localStorage.setItem('daily_last_shown', today); } catch (_) {}
+      try { localStorage.setItem(`daily_last_shown_${scope}`, today); } catch (_) {}
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailyEnabled, lang]);
@@ -196,7 +212,8 @@ const Home = () => {
       if (idx >= 0) counts[idx] = (counts[idx] || 0) + 1;
     });
     setStageStats(counts);
-    try { snoozeUntilRef.current = localStorage.getItem('daily_generate_snooze_until') || ''; } catch (_) {}
+    const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+    try { snoozeUntilRef.current = localStorage.getItem(`daily_generate_snooze_until_${scope}`) || ''; } catch (_) {}
     const snoozed = snoozeUntilRef.current && new Date(snoozeUntilRef.current) > new Date();
     const shouldShow = Object.values(counts).some(v => (v || 0) >= STAGE_THRESHOLD) && !snoozed;
     setShowSuggestCard(shouldShow);
@@ -205,7 +222,8 @@ const Home = () => {
   const remindLater = () => {
     const dt = new Date();
     dt.setDate(dt.getDate() + 10);
-    localStorage.setItem('daily_generate_snooze_until', dt.toISOString());
+    const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+    localStorage.setItem(`daily_generate_snooze_until_${scope}`, dt.toISOString());
     setShowSuggestCard(false);
   };
 

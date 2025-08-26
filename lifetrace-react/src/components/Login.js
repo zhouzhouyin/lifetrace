@@ -53,6 +53,10 @@ const Login = () => {
       localStorage.setItem('username', returnedUsername);
       if (userId) localStorage.setItem('userId', userId);
       if (uid) localStorage.setItem('uid', uid);
+      try {
+        const scope = uid || returnedUsername || 'anon';
+        localStorage.setItem(`last_login_at_${scope}`, new Date().toISOString());
+      } catch (_) {}
       setToken(token);
       setContextUsername(returnedUsername);
       if (userId) {
