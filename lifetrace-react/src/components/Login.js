@@ -96,12 +96,13 @@ const Login = () => {
   }, [message]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#000000' }}>
-      <div className="card max-w-md w-full p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
+    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f7f0dc' }}>
+      <div className="card max-w-md w-full p-6" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
         <Helmet>
           <title>{lang === 'zh' ? '登录 - 永念' : 'Login - LifeTrace'}</title>
         </Helmet>
-        <h2 className="text-2xl font-bold text-center mb-6">{lang === 'zh' ? '登录' : 'Login'}</h2>
+        <h2 className="text-2xl font-bold text-center mb-1">{lang === 'zh' ? '登录' : 'Login'}</h2>
+        <p className="text-sm text-center mb-5 text-gray-700">{lang === 'zh' ? '欢迎回来，继续把重要的故事写下。' : 'Welcome back. Continue your story.'}</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
@@ -145,27 +146,37 @@ const Login = () => {
               </button>
             </div>
           </div>
-          <div className="mt-1 text-sm text-center">
-            <span className="text-gray-600">忘记密码？</span>
-            <a href="mailto:1056829015@qq.com" className="underline ml-1" style={{ color: '#e7c36f' }}>联系管理员 1056829015@qq.com</a>
+          <div className="mt-1 text-sm text-center text-gray-700">
+            <span>忘记密码？</span>
+            <a href="mailto:1056829015@qq.com" className="underline ml-1" style={{ color: '#2563eb' }}>联系管理员 1056829015@qq.com</a>
           </div>
           <button type="submit" className="btn w-full mt-2" disabled={isLoading}>
             {isLoading ? (lang === 'zh' ? '登录中...' : 'Logging in...') : (lang === 'zh' ? '登录' : 'Login')}
           </button>
-          <div className="text-center text-sm" style={{ color: '#bfa366' }}>
+          <div className="text-center text-sm" style={{ color: '#6b7280' }}>
             {lang === 'zh' ? '没有账号？' : 'No account?'}
             <button type="button" className="underline ml-1" onClick={() => navigate('/register')} style={{ color: '#e7c36f' }}>
               {lang === 'zh' ? '去注册' : 'Register now'}
             </button>
           </div>
-          <button
-            type="button"
-            className="btn bg-gray-500 hover:bg-gray-600 w-full"
-            onClick={() => navigate('/register')}
-            disabled={isLoading}
-          >
-            {lang === 'zh' ? '去注册' : 'Go to Register'}
-          </button>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              className="btn bg-gray-500 hover:bg-gray-600 w-full"
+              onClick={() => navigate('/register')}
+              disabled={isLoading}
+            >
+              {lang === 'zh' ? '去注册' : 'Go to Register'}
+            </button>
+            <button
+              type="button"
+              className="btn w-full"
+              onClick={() => navigate('/')}
+              disabled={isLoading}
+            >
+              {lang === 'zh' ? '返回首页' : 'Back Home'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

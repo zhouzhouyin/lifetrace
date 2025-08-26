@@ -351,7 +351,7 @@ export const AppContextProvider = ({ children }) => {
               localStorage.removeItem('username');
               localStorage.removeItem('userId');
               localStorage.removeItem('uid');
-              const publicRoutes = ['/login', '/register', '/square'];
+              const publicRoutes = ['/login', '/register', '/square', '/privacy', '/terms'];
               if (!publicRoutes.includes(location.pathname)) {
                 navigate('/login', { replace: true });
               }
@@ -369,7 +369,7 @@ export const AppContextProvider = ({ children }) => {
             localStorage.removeItem('role');
             localStorage.removeItem('role');
             localStorage.removeItem('uid');
-            const publicRoutes = ['/login', '/register', '/square'];
+            const publicRoutes = ['/login', '/register', '/square', '/privacy', '/terms'];
             if (!publicRoutes.includes(location.pathname)) {
               navigate('/login', { replace: true });
             }
@@ -380,7 +380,7 @@ export const AppContextProvider = ({ children }) => {
         }
       } else {
         setIsLoggedIn(false);
-        const publicRoutes = ['/login', '/register', '/square'];
+        const publicRoutes = ['/login', '/register', '/square', '/privacy', '/terms'];
         if (!publicRoutes.includes(location.pathname)) {
           navigate('/login', { replace: true });
         }

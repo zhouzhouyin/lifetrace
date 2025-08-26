@@ -301,7 +301,7 @@ const Home = () => {
           {showDailyCard && (
             <div className="mt-6 card text-left p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]}</div>
-              <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : ((currentQuestionId ? `Q${currentQuestionId} ` : '') + (currentQuestion || '...'))}</div>
+              <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : (currentQuestion || '...')}</div>
               <textarea
                 className="input w-full mb-3"
                 placeholder={lang === 'zh' ? '在这里写下你的回答（可选）' : 'Write your brief answer (optional)'}
@@ -314,7 +314,7 @@ const Home = () => {
                 <button className="btn btn-secondary" onClick={handleSwap}>换一个</button>
                 <button className="btn btn-secondary" onClick={handleSkip}>跳过</button>
                 <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
-                <button className="btn" onClick={handleSaveToMemo}>保存到随手记</button>
+                <button className="btn" onClick={handleSaveToMemo}>记为随手记</button>
               </div>
             </div>
           )}

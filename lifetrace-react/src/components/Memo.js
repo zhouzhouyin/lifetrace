@@ -213,7 +213,7 @@ const Memo = () => {
               上传到家族档案
             </label>
             <button className="btn btn-tertiary" onClick={handleVoiceInput}>{isRecording ? '停止录音' : '语音输入'}</button>
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || uploading}>{uploading ? '提交中…' : '发布'}</button>
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || uploading}>{uploading ? '保存中…' : '保存'}</button>
             <button
               className="btn btn-secondary"
               onClick={() => {

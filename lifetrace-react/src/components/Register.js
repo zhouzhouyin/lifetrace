@@ -124,12 +124,13 @@ const Register = () => {
   }, [message]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#000000' }}>
-      <div className="card max-w-md w-full p-6" style={{ background: '#121216', borderColor: '#2a2a30' }}>
+    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f7f0dc' }}>
+      <div className="card max-w-md w-full p-6" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
         <Helmet>
           <title>{lang === 'zh' ? '注册 - 永念' : 'Register - LifeTrace'}</title>
         </Helmet>
-        <h2 className="text-2xl font-bold text-center mb-6">{lang === 'zh' ? '注册' : 'Register'}</h2>
+        <h2 className="text-2xl font-bold text-center mb-1">{lang === 'zh' ? '注册' : 'Register'}</h2>
+        <p className="text-sm text-center mb-5 text-gray-700">{lang === 'zh' ? '开始把重要的人和事好好写下。' : 'Start gently capturing your story.'}</p>
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('错误') || message.includes('不一致') || message.includes('长度') || message.includes('用户名已存在') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
@@ -202,9 +203,9 @@ const Register = () => {
           {/* 隐私政策与服务条款（注册前必须查看并同意） */}
           <div className="text-sm text-gray-700">
             <div className="mb-2">
-              <a href="/privacy" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; setViewedPrivacy(true); window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
+              <a href="/privacy" className="underline" style={{ color: '#2563eb' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_privacy','1'); }catch(_){}; setViewedPrivacy(true); window.location.href='/privacy'; }}>{lang === 'zh' ? '《隐私政策》' : 'Privacy Policy'}</a>
               <span className="mx-2">{lang === 'zh' ? '和' : 'and'}</span>
-              <a href="/terms" className="underline" style={{ color: '#e7c36f' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; setViewedTerms(true); window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
+              <a href="/terms" className="underline" style={{ color: '#2563eb' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; setViewedTerms(true); window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
             </div>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={agreedPolicies} disabled={!(viewedPrivacy && viewedTerms)} onChange={(e)=>{ const v=e.target.checked; setAgreedPolicies(v); try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
