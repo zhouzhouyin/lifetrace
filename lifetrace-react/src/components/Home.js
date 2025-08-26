@@ -64,7 +64,7 @@ const Home = () => {
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
           {/* CTA cards with copy (mobile-first) */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
             <button
               aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
               onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
@@ -74,6 +74,17 @@ const Home = () => {
               <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '开始记录' : 'Start Now'}</h3>
               <p className="text-sm opacity-90 mt-1 text-slate-900">
                 {lang === 'zh' ? '用温和的引导问答，从童年至当下，一步步写下。' : 'Gentle prompts to capture a lifetime, step by step.'}
+              </p>
+            </button>
+            <button
+              aria-label={lang === 'zh' ? '随手记' : 'Memo'}
+              onClick={() => navigate(isLoggedIn ? '/memo' : '/login')}
+              className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
+            >
+              <div className="text-2xl mb-1">📒</div>
+              <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '随手记' : 'Memo'}</h3>
+              <p className="text-sm opacity-90 mt-1 text-slate-900">
+                {lang === 'zh' ? '几句话、一张照片或一段语音，记录一个瞬间。' : 'A few words, a photo or voice to capture the moment.'}
               </p>
             </button>
             <button

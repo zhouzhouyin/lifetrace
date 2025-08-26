@@ -15,6 +15,7 @@ const CreateBiography = lazy(() => import('./components/CreateBiography'));
 // const Record = lazy(() => import('./components/Record'));
 // const Note = lazy(() => import('./components/Note'));
 const Square = lazy(() => import('./components/Square'));
+const Memo = lazy(() => import('./components/Memo'));
 // const Chat = lazy(() => import('./components/Chat'));
 const Family = lazy(() => import('./components/Family'));
 const Contact = lazy(() => import('./components/Contact'));
@@ -53,6 +54,7 @@ const App = () => {
                   <Route path="/square" element={<Square />} />
                   {/** 聊天交友功能已移除 */}
                   <Route path="/family" element={<ProtectedRoute><Family /></ProtectedRoute>} />
+                  <Route path="/memo" element={<ProtectedRoute><Memo /></ProtectedRoute>} />
                   <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
                   <Route path="/my" element={<ProtectedRoute><My /></ProtectedRoute>} />
                   <Route path="/view/:id" element={<ProtectedRoute><View /></ProtectedRoute>} />
