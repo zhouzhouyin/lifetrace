@@ -40,6 +40,8 @@ const My = () => {
     setNotes: setLocalNotes,
     setError,
     username,
+    memos,
+    setMemos,
   } = useContext(AppContext);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -153,6 +155,17 @@ const My = () => {
       }
 
       // 获取上传文件
+      // 获取我的随手记
+      try {
+        const token2 = localStorage.getItem('token');
+        const resMemos = await retry(() =>
+          axios.get('/api/memos', { headers: { Authorization: `Bearer ${token2}` } })
+        );
+        const list = Array.isArray(resMemos.data) ? resMemos.data : [];
+        setMemos(list.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+      } catch (err) {
+        console.error('My.js: Fetch memos error:', err);
+      }
       try {
         const response = await retry(() =>
           axios.get('/api/uploads', {
@@ -341,6 +354,67 @@ const My = () => {
           <div className="text-center">加载中...</div>
         ) : (
           <div className="space-y-6">
+            {/* 我的随手记 */}
+            <div>
+              <h3 className="text-xl font-semibold mb-2">我的随手记</h3>
+              {Array.isArray(memos) && memos.length > 0 ? (
+                memos.map((m) => (
+                  <div key={m.id || m._id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+                    <p className="text-gray-800 whitespace-pre-wrap">{m.text || ''}</p>
+                    {(Array.isArray(m.tags) && m.tags.length > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {m.tags.map((t) => (
+                          <span key={t} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">#{t}</span>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(m.media) && m.media.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        {m.media.map((mm, i) => (
+                          <div key={i} className="border rounded overflow-hidden">
+                            {mm.type === 'image' && <img src={mm.url} alt="" className="w-full h-32 object-cover" />}
+                            {mm.type === 'video' && <video src={mm.url} className="w-full h-32 object-cover" controls />}
+                            {mm.type === 'audio' && <audio src={mm.url} className="w-full" controls />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between">
+                      <p className="text-sm text-gray-600">{new Date(m.timestamp || Date.now()).toLocaleString('zh-CN')}</p>
+                      {(Array.isArray(m.tags) && m.tags.includes('每日回首')) && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            try {
+                              const raw = localStorage.getItem('dailyPasteboard');
+                              const obj = raw ? JSON.parse(raw) : { items: [] };
+                              const tags = Array.isArray(m.tags) ? m.tags : [];
+                              const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+                              const stageIdx = stages.findIndex(s => tags.includes(s));
+                              const text = (m.text || '').toString();
+                              let q = '', a = '';
+                              const mq = text.match(/问题：([\s\S]*?)\n/);
+                              if (mq) q = (mq[1] || '').trim();
+                              const ma = text.match(/回答：([\s\S]*)/);
+                              if (ma) a = (ma[1] || '').trim();
+                              const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+                              obj.items.push({ stageIndex: Math.max(0, stageIdx), text: line });
+                              localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
+                              setMessage('已加入回忆');
+                              setTimeout(() => setMessage(''), 1200);
+                            } catch (_) {}
+                          }}
+                        >
+                          加入回忆
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>暂无随手记</p>
+              )}
+            </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">我的传记</h3>
               {biographies.length > 0 ? (

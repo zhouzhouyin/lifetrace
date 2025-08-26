@@ -151,6 +151,32 @@ const CreateBiography = () => {
       }
     } catch (_) {}
   }, []);
+
+  // 每日回首粘贴板：将 Home 的每日Q&A自动写入对应篇章
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('dailyPasteboard');
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (!obj || !Array.isArray(obj.items) || obj.items.length === 0) return;
+      const items = obj.items;
+      setSections(prev => {
+        const next = [...prev];
+        for (const it of items) {
+          const idx = Math.max(0, Math.min(Number(it.stageIndex) || 0, next.length - 1));
+          const base = (next[idx]?.text || '').toString();
+          const addition = (it.text || '').toString();
+          const merged = base ? (base + '\n' + addition) : addition;
+          next[idx] = { ...next[idx], text: merged };
+        }
+        return next;
+      });
+      // 清空粘贴板
+      localStorage.removeItem('dailyPasteboard');
+      setMessage('已从“每日回首”粘贴最新问答到对应篇章');
+      setTimeout(() => setMessage(''), 1500);
+    } catch (_) {}
+  }, []);
   // 图文并茂篇章（每篇章：title + text + media[]）——固定为各阶段一一对应
   const [sections, setSections] = useState(Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] })));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // 用户主动选择的当前篇章

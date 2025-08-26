@@ -29,6 +29,7 @@ export const AppContextProvider = ({ children }) => {
   const [files, setFiles] = useState([]); // 存储 /api/uploads 数据
   const [publicNotes, setPublicNotes] = useState([]);
   const [publicBiographies, setPublicBiographies] = useState([]);
+  const [memos, setMemos] = useState([]); // 轻量化随手记
   const [familyMembers, setFamilyMembers] = useState([]); // 已认证家人
   const [familyRequests, setFamilyRequests] = useState([]); // 待处理的家人请求
   const [error, setError] = useState('');
@@ -423,6 +424,8 @@ export const AppContextProvider = ({ children }) => {
         setPublicNotes,
         publicBiographies,
         setPublicBiographies,
+        memos,
+        setMemos,
         familyMembers,
         setFamilyMembers,
         familyRequests,

@@ -6,7 +6,7 @@ import { AppContext } from '../context/AppContext';
 
 // 轻量化“随手记”：文本/照片/视频/音频 + 标签，按时间线展示
 const Memo = () => {
-  const { isLoggedIn, setError, username } = useContext(AppContext);
+  const { isLoggedIn, setError, username, setMemos: setGlobalMemos } = useContext(AppContext);
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [text, setText] = useState('');
@@ -16,6 +16,8 @@ const Memo = () => {
   const [mediaPreview, setMediaPreview] = useState('');
   const [uploading, setUploading] = useState(false);
   const [memos, setMemos] = useState([]);
+  const [shareToFamily, setShareToFamily] = useState(false);
+  const lifeStages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -131,6 +133,7 @@ const Memo = () => {
           text: text.trim(),
           tags,
           media: uploadedUrl ? [{ type: mediaType, url: uploadedUrl }] : [],
+          shareToFamily: !!shareToFamily,
         }, { headers: { Authorization: `Bearer ${token}` } });
         created = resp.data;
       } catch (e) {
@@ -145,6 +148,7 @@ const Memo = () => {
         };
       }
       setMemos(prev => [ created, ...prev ]);
+      try { setGlobalMemos && setGlobalMemos(prev => [ created, ...(Array.isArray(prev)?prev:[]) ]); } catch (_) {}
       setText(''); setTags([]); setTagsInput(''); setMediaFile(null); setMediaPreview('');
       setMessage('已记录');
       setTimeout(() => setMessage(''), 1500);
@@ -204,8 +208,41 @@ const Memo = () => {
               添加图片/视频/音频
               <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleFileChange} />
             </label>
+            <label className="flex items-center gap-2 text-sm text-gray-800">
+              <input type="checkbox" checked={shareToFamily} onChange={(e) => setShareToFamily(e.target.checked)} />
+              上传到家族档案
+            </label>
             <button className="btn btn-tertiary" onClick={handleVoiceInput}>{isRecording ? '停止录音' : '语音输入'}</button>
             <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || uploading}>{uploading ? '提交中…' : '发布'}</button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                try {
+                  const raw = localStorage.getItem('dailyPasteboard');
+                  const obj = raw ? JSON.parse(raw) : { items: [] };
+                  (memos || []).forEach(m => {
+                    const tags = Array.isArray(m.tags) ? m.tags : [];
+                    if (!tags.includes('每日回首')) return;
+                    const idx = lifeStages.findIndex(s => tags.includes(s));
+                    if (idx < 0) return;
+                    const text = (m.text || '').toString();
+                    let q = '', a = '';
+                    const mq = text.match(/问题：([\s\S]*?)\n/);
+                    if (mq) q = (mq[1] || '').trim();
+                    const ma = text.match(/回答：([\s\S]*)/);
+                    if (ma) a = (ma[1] || '').trim();
+                    const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+                    obj.items.push({ stageIndex: idx, text: line });
+                  });
+                  localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
+                  navigate('/create');
+                } catch (_) {
+                  navigate('/create');
+                }
+              }}
+            >
+              整理成回忆
+            </button>
           </div>
 
           {mediaPreview && (
