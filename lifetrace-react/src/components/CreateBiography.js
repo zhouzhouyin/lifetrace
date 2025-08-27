@@ -1663,8 +1663,8 @@ const CreateBiography = () => {
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
         </Helmet>
-        {/* 记录对象基本信息表单 */}
-        <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
+        {/* 记录对象基本信息表单（首页已填写，此处隐藏） */}
+        <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900 hidden">
           <h3 className="text-lg font-semibold mb-2">记录对象信息</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input" placeholder="姓名" value={profile.name||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), name:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />

@@ -191,6 +191,8 @@ const Home = () => {
         } catch (_) {}
       }
     }
+    // 若路由返回首页时误触发，依赖 today 只弹一次；确保我们不在已弹当天重复弹
+    if (lastShownRef.current === today) shouldShow = false;
     if (shouldShow) {
       setShowDailyCard(true);
       pickAndStoreQuestion();
