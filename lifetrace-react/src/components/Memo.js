@@ -54,7 +54,7 @@ const Memo = () => {
     try { setMediaPreview(f ? URL.createObjectURL(f) : ''); } catch (_) {}
   };
 
-  // 标签输入解析：支持 #旅行 #童年 或 旅行 童年
+  // 标签输入解析：支持 #旅行 #童年 或 旅行 童年（首个 # 自动补全显示）
   const parseTags = (s) => {
     return (s || '')
       .split(/[#\s]+/)
