@@ -152,9 +152,32 @@ const CreateBiography = () => {
     } catch (_) {}
   }, []);
 
-  // 每日回首粘贴板：将 Home 的每日Q&A自动写入对应篇章
+  // 每日回首粘贴板：从本地或路由 state 写入对应篇章
   useEffect(() => {
     try {
+      // 1) 优先读取路由状态传来的 pasteItems（避免时序问题）
+      const state = location.state || {};
+      if (Array.isArray(state.pasteItems) && state.pasteItems.length > 0) {
+        const items = state.pasteItems;
+        setSections(prev => {
+          const next = [...prev];
+          for (const it of items) {
+            const idx = Math.max(0, Math.min(Number(it.stageIndex) || 0, next.length - 1));
+            const base = (next[idx]?.text || '').toString();
+            const addition = (it.text || '').toString();
+            const merged = base ? (base + '\n' + addition) : addition;
+            next[idx] = { ...next[idx], text: merged };
+          }
+          return next;
+        });
+        // 清除一次性 state，避免后退/重复进入再次粘贴
+        try { navigate('/create', { replace: true, state: {} }); } catch (_) {}
+        setMessage('已把选中的随手记粘贴到对应篇章');
+        setTimeout(() => setMessage(''), 1200);
+        return; // 已处理则不再读本地板
+      }
+
+      // 2) 读取本地板（兼容旧逻辑）
       const raw = localStorage.getItem('dailyPasteboard');
       if (!raw) return;
       const obj = JSON.parse(raw);

@@ -454,8 +454,6 @@ const My = () => {
                           className="btn btn-secondary"
                           onClick={() => {
                             try {
-                              const raw = localStorage.getItem('dailyPasteboard');
-                              const obj = raw ? JSON.parse(raw) : { items: [] };
                               const tags = Array.isArray(m.tags) ? m.tags : [];
                               const stageIdx = resolveStageIndexFromTags(tags);
                               const text = (m.text || '').toString();
@@ -465,11 +463,7 @@ const My = () => {
                               const ma = text.match(/回答：([\s\S]*)/);
                               if (ma) a = (ma[1] || '').trim();
                               const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                              obj.items.push({ stageIndex: Math.max(0, stageIdx), text: line });
-                              localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
-                              setMessage('已加入回忆');
-                              setTimeout(() => setMessage(''), 1200);
-                              navigate('/create');
+                              navigate('/create', { state: { pasteItems: [{ stageIndex: Math.max(0, stageIdx), text: line }] } });
                             } catch (_) {}
                           }}
                         >
@@ -482,17 +476,11 @@ const My = () => {
                             className="btn btn-secondary"
                             onClick={() => {
                               try {
-                                const raw = localStorage.getItem('dailyPasteboard');
-                                const obj = raw ? JSON.parse(raw) : { items: [] };
                                 const tags = Array.isArray(m.tags) ? m.tags : [];
                                 const stageIdx = resolveStageIndexFromTags(tags);
                                 const line = (m.text || '').toString();
                                 const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-                                obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
-                                localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
-                                setMessage('已加入回忆');
-                                setTimeout(() => setMessage(''), 1200);
-                                navigate('/create');
+                                navigate('/create', { state: { pasteItems: [{ stageIndex: Math.max(0, stageIdx), text: add }] } });
                               } catch(_) {}
                             }}
                           >
