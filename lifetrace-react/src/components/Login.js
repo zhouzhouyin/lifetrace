@@ -56,6 +56,9 @@ const Login = () => {
       try {
         const scope = uid || returnedUsername || 'anon';
         localStorage.setItem(`last_login_at_${scope}`, new Date().toISOString());
+        if (localStorage.getItem(`daily_reflection_enabled_${scope}`) == null) {
+          localStorage.setItem(`daily_reflection_enabled_${scope}`, '1');
+        }
       } catch (_) {}
       setToken(token);
       setContextUsername(returnedUsername);

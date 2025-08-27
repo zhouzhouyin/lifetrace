@@ -9,7 +9,11 @@ const Home = () => {
   const navigate = useNavigate();
   // 每日回首设置
   const [dailyEnabled, setDailyEnabled] = useState(() => {
-    try { return localStorage.getItem('daily_reflection_enabled') !== '0'; } catch (_) { return true; }
+    try {
+      const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+      const v = localStorage.getItem(`daily_reflection_enabled_${scope}`);
+      return v == null ? true : v !== '0';
+    } catch (_) { return true; }
   });
   const [showDailyCard, setShowDailyCard] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -45,7 +49,10 @@ const Home = () => {
 
   const saveEnabled = (v) => {
     setDailyEnabled(v);
-    try { localStorage.setItem('daily_reflection_enabled', v ? '1' : '0'); } catch (_) {}
+    try {
+      const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+      localStorage.setItem(`daily_reflection_enabled_${scope}`, v ? '1' : '0');
+    } catch (_) {}
   };
 
   // 确保每阶段存在5题的池（带全局编号），并按历史ID去重
@@ -155,13 +162,19 @@ const Home = () => {
     }
   };
 
-  // 每天首次进入展示
+  // 每天首次进入展示 + 首次用户引导
   useEffect(() => {
     const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
     try { lastShownRef.current = localStorage.getItem(`daily_last_shown_${scope}`) || ''; } catch (_) {}
     try { snoozeUntilRef.current = localStorage.getItem(`daily_generate_snooze_until_${scope}`) || ''; } catch (_) {}
     const today = new Date().toISOString().slice(0,10);
     const snoozed = snoozeUntilRef.current && new Date(snoozeUntilRef.current) > new Date();
+    // 首次注册/登录后如无 author_mode，优先触发身份选择与资料卡
+    const needPick = !localStorage.getItem('author_mode');
+    if (needPick) {
+      setNeedAuthorSelect(true);
+      setShowProfileForm(false);
+    }
     // 触发条件：1) 今天第一次进入 2) 或检测到刚登录（last_login_at_scope 是今日）
     let shouldShow = false;
     if (dailyEnabled && !snoozed) {
