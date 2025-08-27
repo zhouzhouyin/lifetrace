@@ -225,17 +225,26 @@ const Memo = () => {
                   const obj = raw ? JSON.parse(raw) : { items: [] };
                   (memos || []).forEach(m => {
                     const tags = Array.isArray(m.tags) ? m.tags : [];
-                    if (!tags.includes('每日回首')) return;
-                    const idx = lifeStages.findIndex(s => tags.includes(s));
-                    if (idx < 0) return;
-                    const text = (m.text || '').toString();
-                    let q = '', a = '';
-                    const mq = text.match(/问题：([\s\S]*?)\n/);
-                    if (mq) q = (mq[1] || '').trim();
-                    const ma = text.match(/回答：([\s\S]*)/);
-                    if (ma) a = (ma[1] || '').trim();
-                    const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                    obj.items.push({ stageIndex: idx, text: line });
+                    // 每日回首：根据阶段标签落章
+                    if (tags.includes('每日回首')) {
+                      const idx = lifeStages.findIndex(s => tags.includes(s));
+                      if (idx < 0) return;
+                      const text = (m.text || '').toString();
+                      let q = '', a = '';
+                      const mq = text.match(/问题：([\s\S]*?)\n/);
+                      if (mq) q = (mq[1] || '').trim();
+                      const ma = text.match(/回答：([\s\S]*)/);
+                      if (ma) a = (ma[1] || '').trim();
+                      const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+                      obj.items.push({ stageIndex: idx, text: line });
+                    } else {
+                      // 普通随手记：第一个标签为阶段；默认当下
+                      let stageIdx = lifeStages.indexOf(tags[0] || '当下');
+                      if (stageIdx < 0) stageIdx = lifeStages.indexOf('当下');
+                      const line = (m.text || '').toString();
+                      const add = line ? `我：${line}` : '我：这是一条当下的记录。';
+                      obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
+                    }
                   });
                   localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
                   navigate('/create');

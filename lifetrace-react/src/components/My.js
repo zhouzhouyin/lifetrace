@@ -431,6 +431,7 @@ const My = () => {
                               localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
                               setMessage('已加入回忆');
                               setTimeout(() => setMessage(''), 1200);
+                              navigate('/create');
                             } catch (_) {}
                           }}
                         >
@@ -455,6 +456,7 @@ const My = () => {
                                 localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
                                 setMessage('已加入回忆');
                                 setTimeout(() => setMessage(''), 1200);
+                                navigate('/create');
                               } catch(_) {}
                             }}
                           >
