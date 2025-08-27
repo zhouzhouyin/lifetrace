@@ -24,8 +24,8 @@ const Memo = () => {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef(null);
 
-  // 标签到阶段的映射（含常见同义词）
-  const resolveStageIndexFromTags = (tagList = []) => {
+  // 标签到阶段映射：返回所有匹配到的阶段索引（若无匹配，默认当下）
+  const getStageIndicesFromTags = (tagList = []) => {
     const tags = (Array.isArray(tagList) ? tagList : []).map(String);
     const synonyms = [
       ['童年','小时候','孩提','童年时代','小学','幼年'],
@@ -36,13 +36,17 @@ const Memo = () => {
       ['当下','今天','此刻','现在','近期','每日回首'],
       ['未来愿望','愿望','未来','目标','计划','心愿']
     ];
+    const found = new Set();
+    // 精确命中
     for (let i = 0; i < lifeStages.length; i++) {
-      if (tags.includes(lifeStages[i])) return i;
+      if (tags.includes(lifeStages[i])) found.add(i);
     }
+    // 同义词命中
     for (let i = 0; i < synonyms.length; i++) {
-      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) return i;
+      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) found.add(i);
     }
-    return lifeStages.indexOf('当下');
+    if (found.size === 0) found.add(lifeStages.indexOf('当下'));
+    return Array.from(found.values()).sort((a,b)=>a-b);
   };
 
   const toggleSelected = (key) => {
@@ -54,7 +58,8 @@ const Memo = () => {
       const items = [];
       (list || []).forEach(m => {
         const tags = Array.isArray(m.tags) ? m.tags : [];
-        const stageIdx = resolveStageIndexFromTags(tags);
+        const stageIdxList = getStageIndicesFromTags(tags);
+        const ts = new Date(m.timestamp || Date.now()).getTime();
         if (tags.includes('每日回首')) {
           const text = (m.text || '').toString();
           let q = '', a = '';
@@ -63,14 +68,17 @@ const Memo = () => {
           const ma = text.match(/回答：([\s\S]*)/);
           if (ma) a = (ma[1] || '').trim();
           const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-          items.push({ stageIndex: Math.max(0, stageIdx), text: line });
+          stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: line, ts }));
         } else {
           const line = (m.text || '').toString();
           const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-          items.push({ stageIndex: Math.max(0, stageIdx), text: add });
+          stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: add, ts }));
         }
       });
-      navigate('/create', { state: { pasteItems: items } });
+      // 按时间先后（升序）落章
+      items.sort((a,b) => (a.ts||0) - (b.ts||0));
+      const clean = items.map(({ stageIndex, text }) => ({ stageIndex, text }));
+      navigate('/create', { state: { pasteItems: clean } });
     } catch (_) {
       navigate('/create');
     }

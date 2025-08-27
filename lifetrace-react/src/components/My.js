@@ -82,7 +82,7 @@ const My = () => {
   }, [isLoggedIn, setError, navigate]);
 
   // 标签到阶段解析（与 Memo.js 保持一致，含同义词）
-  const resolveStageIndexFromTags = (tagList = []) => {
+  const getStageIndicesFromTags = (tagList = []) => {
     const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
     const tags = (Array.isArray(tagList) ? tagList : []).map(String);
     const synonyms = [
@@ -94,13 +94,15 @@ const My = () => {
       ['当下','今天','此刻','现在','近期','每日回首'],
       ['未来愿望','愿望','未来','目标','计划','心愿']
     ];
+    const found = new Set();
     for (let i = 0; i < stages.length; i++) {
-      if (tags.includes(stages[i])) return i;
+      if (tags.includes(stages[i])) found.add(i);
     }
     for (let i = 0; i < synonyms.length; i++) {
-      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) return i;
+      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) found.add(i);
     }
-    return stages.indexOf('当下');
+    if (found.size === 0) found.add(stages.indexOf('当下'));
+    return Array.from(found.values()).sort((a,b)=>a-b);
   };
 
   // 获取用户笔记、传记和上传文件
@@ -455,7 +457,7 @@ const My = () => {
                           onClick={() => {
                             try {
                               const tags = Array.isArray(m.tags) ? m.tags : [];
-                              const stageIdx = resolveStageIndexFromTags(tags);
+                              const stageIdxList = getStageIndicesFromTags(tags);
                               const text = (m.text || '').toString();
                               let q = '', a = '';
                               const mq = text.match(/问题：([\s\S]*?)\n/);
@@ -463,7 +465,9 @@ const My = () => {
                               const ma = text.match(/回答：([\s\S]*)/);
                               if (ma) a = (ma[1] || '').trim();
                               const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                              navigate('/create', { state: { pasteItems: [{ stageIndex: Math.max(0, stageIdx), text: line }] } });
+                              const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: line, ts: new Date(m.timestamp||Date.now()).getTime() }));
+                              items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+                              navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
                             } catch (_) {}
                           }}
                         >
@@ -477,10 +481,12 @@ const My = () => {
                             onClick={() => {
                               try {
                                 const tags = Array.isArray(m.tags) ? m.tags : [];
-                                const stageIdx = resolveStageIndexFromTags(tags);
+                                const stageIdxList = getStageIndicesFromTags(tags);
                                 const line = (m.text || '').toString();
                                 const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-                                navigate('/create', { state: { pasteItems: [{ stageIndex: Math.max(0, stageIdx), text: add }] } });
+                                const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: add, ts: new Date(m.timestamp||Date.now()).getTime() }));
+                                items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+                                navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
                               } catch(_) {}
                             }}
                           >
