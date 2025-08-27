@@ -239,6 +239,63 @@ const paymentFailureSchema = new mongoose.Schema({
 paymentFailureSchema.index({ createdAt: -1 });
 const PaymentFailure = mongoose.model('PaymentFailure', paymentFailureSchema);
 
+// Memo schema: 轻量随手记
+const memoMediaSchema = new mongoose.Schema({
+  type: { type: String, enum: ['image', 'video', 'audio'], required: true },
+  url: { type: String, required: true },
+  desc: { type: String, default: '' }
+}, { _id: false });
+
+const memoSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  text: { type: String, default: '' },
+  tags: { type: [String], default: [] },
+  media: { type: [memoMediaSchema], default: [] },
+  stage: { type: String, default: '' }, // 用于按生命阶段整理
+  source: { type: String, default: '' }, // e.g. 'daily', 'manual'
+  subjectVersion: { type: Number, default: 1 },
+  timestamp: { type: Date, default: Date.now }
+});
+memoSchema.index({ userId: 1, subjectVersion: 1, timestamp: -1 });
+const Memo = mongoose.model('Memo', memoSchema);
+
+// RecordSubject schema: 记录对象（为自己/为他人）及其资料
+const recordSubjectSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  mode: { type: String, enum: ['self', 'other'], required: true },
+  profile: {
+    name: { type: String, default: '' },
+    gender: { type: String, default: '' },
+    birth: { type: String, default: '' },
+    origin: { type: String, default: '' },
+    residence: { type: String, default: '' },
+    relation: { type: String, default: '' }
+  },
+  subjectVersion: { type: Number, default: 1 },
+  updatedAt: { type: Date, default: Date.now }
+});
+const RecordSubject = mongoose.model('RecordSubject', recordSubjectSchema);
+
+// Daily pool schema: 每日回首的题库（按阶段）
+const dailyPoolSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  stage: { type: String, required: true },
+  list: { type: [String], default: [] },
+  updatedAt: { type: Date, default: Date.now }
+});
+dailyPoolSchema.index({ userId: 1, stage: 1 }, { unique: true });
+const DailyPool = mongoose.model('DailyPool', dailyPoolSchema);
+
+// Daily asked schema: 已经问过的问题（按阶段）
+const dailyAskedSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  stage: { type: String, required: true },
+  askedIds: { type: [String], default: [] },
+  updatedAt: { type: Date, default: Date.now }
+});
+dailyAskedSchema.index({ userId: 1, stage: 1 }, { unique: true });
+const DailyAsked = mongoose.model('DailyAsked', dailyAskedSchema);
+
 // Validate ObjectId
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -439,6 +496,18 @@ app.get('/api/public/notes', async (req, res) => {
   } catch (err) {
     logger.error('Get public notes error', { error: err.message, ip: req.ip });
     res.status(500).json({ message: '获取公开随笔失败：' + err.message });
+  }
+});
+
+// Server day-key for client to对齐“今天”
+app.get('/api/day-key', (req, res) => {
+  try {
+    const now = new Date();
+    const dayKey = now.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+    res.json({ dayKey });
+  } catch (err) {
+    logger.error('Get day-key error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取 day-key 失败：' + err.message });
   }
 });
 
@@ -870,6 +939,165 @@ app.post('/api/note', authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error('Create note error', { error: err.message, ip: req.ip });
     res.status(500).json({ message: '创建笔记失败：' + err.message });
+  }
+});
+
+// Memos: list
+app.get('/api/memos', authenticateToken, async (req, res) => {
+  try {
+    const { subjectVersion } = req.query;
+    const query = { userId: req.user.userId };
+    if (subjectVersion && Number(subjectVersion)) query.subjectVersion = Number(subjectVersion);
+    const memos = await Memo.find(query).sort({ timestamp: -1 }).lean();
+    res.json(memos.map(m => ({
+      id: m._id.toString(),
+      text: m.text || '',
+      tags: Array.isArray(m.tags) ? m.tags : [],
+      media: Array.isArray(m.media) ? m.media : [],
+      stage: m.stage || '',
+      source: m.source || '',
+      subjectVersion: m.subjectVersion || 1,
+      timestamp: m.timestamp
+    })));
+  } catch (err) {
+    logger.error('Get memos error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取随手记失败：' + err.message });
+  }
+});
+
+// Memos: create
+app.post('/api/memo', authenticateToken, async (req, res) => {
+  try {
+    const { text, tags, media, stage, source, subjectVersion } = req.body || {};
+    if (!text && !(Array.isArray(media) && media.length > 0)) {
+      return res.status(400).json({ message: '缺少内容' });
+    }
+    const memo = await Memo.create({
+      userId: req.user.userId,
+      text: String(text || ''),
+      tags: Array.isArray(tags) ? tags.slice(0, 12).map(String) : [],
+      media: Array.isArray(media) ? media.slice(0, 20).map(m => ({
+        type: m?.type || 'image', url: m?.url || '', desc: m?.desc || ''
+      })) : [],
+      stage: String(stage || ''),
+      source: String(source || ''),
+      subjectVersion: Number(subjectVersion) || 1,
+      timestamp: new Date()
+    });
+    logger.info('Memo created', { userId: req.user.userId, memoId: memo._id, ip: req.ip });
+    res.status(201).json({ id: memo._id.toString() });
+  } catch (err) {
+    logger.error('Create memo error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '保存随手记失败：' + err.message });
+  }
+});
+
+// Record Subject: get
+app.get('/api/record-subject', authenticateToken, async (req, res) => {
+  try {
+    const doc = await RecordSubject.findOne({ userId: req.user.userId }).lean();
+    if (!doc) return res.json({ mode: '', profile: {}, subjectVersion: 0 });
+    res.json({
+      mode: doc.mode,
+      profile: doc.profile || {},
+      subjectVersion: doc.subjectVersion || 1,
+      updatedAt: doc.updatedAt
+    });
+  } catch (err) {
+    logger.error('Get record-subject error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取记录对象失败：' + err.message });
+  }
+});
+
+// Record Subject: set/update
+app.post('/api/record-subject', authenticateToken, async (req, res) => {
+  try {
+    const { mode, profile, bumpVersion, reset } = req.body || {};
+    if (!mode || !['self', 'other'].includes(mode)) return res.status(400).json({ message: 'mode 需要为 self/other' });
+    const safeProfile = {
+      name: String(profile?.name || ''),
+      gender: String(profile?.gender || ''),
+      birth: String(profile?.birth || ''),
+      origin: String(profile?.origin || ''),
+      residence: String(profile?.residence || ''),
+      relation: String(profile?.relation || '')
+    };
+    const existing = await RecordSubject.findOne({ userId: req.user.userId });
+    if (!existing) {
+      const created = await RecordSubject.create({ userId: req.user.userId, mode, profile: safeProfile, subjectVersion: 1, updatedAt: new Date() });
+      return res.status(201).json({ mode: created.mode, profile: created.profile, subjectVersion: created.subjectVersion, updatedAt: created.updatedAt });
+    }
+    let subjectVersion = existing.subjectVersion || 1;
+    if (reset === true || bumpVersion === true) subjectVersion += 1;
+    const updated = await RecordSubject.findOneAndUpdate(
+      { userId: req.user.userId },
+      { mode, profile: safeProfile, subjectVersion, updatedAt: new Date() },
+      { new: true }
+    );
+    res.json({ mode: updated.mode, profile: updated.profile, subjectVersion: updated.subjectVersion, updatedAt: updated.updatedAt });
+  } catch (err) {
+    logger.error('Set record-subject error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '保存记录对象失败：' + err.message });
+  }
+});
+
+// Record Subject: delete (reset)
+app.delete('/api/record-subject', authenticateToken, async (req, res) => {
+  try {
+    await RecordSubject.deleteOne({ userId: req.user.userId });
+    res.json({ message: '已重置记录对象' });
+  } catch (err) {
+    logger.error('Delete record-subject error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '重置记录对象失败：' + err.message });
+  }
+});
+
+// Daily pool: get
+app.get('/api/daily/pool', authenticateToken, async (req, res) => {
+  try {
+    const { stage } = req.query;
+    if (!stage) return res.status(400).json({ message: '缺少 stage' });
+    const pool = await DailyPool.findOne({ userId: req.user.userId, stage }).lean();
+    const asked = await DailyAsked.findOne({ userId: req.user.userId, stage }).lean();
+    res.json({ list: pool?.list || [], askedIds: asked?.askedIds || [] });
+  } catch (err) {
+    logger.error('Get daily pool error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取每日回首题库失败：' + err.message });
+  }
+});
+
+// Daily pool: set/replace
+app.post('/api/daily/pool', authenticateToken, async (req, res) => {
+  try {
+    const { stage, list } = req.body || {};
+    if (!stage || !Array.isArray(list)) return res.status(400).json({ message: 'stage/list 参数不正确' });
+    const limited = list.slice(0, 50).map(String);
+    const updated = await DailyPool.findOneAndUpdate(
+      { userId: req.user.userId, stage },
+      { list: limited, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ list: updated.list });
+  } catch (err) {
+    logger.error('Set daily pool error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '保存每日回首题库失败：' + err.message });
+  }
+});
+
+// Daily asked: append
+app.post('/api/daily/asked', authenticateToken, async (req, res) => {
+  try {
+    const { stage, qid } = req.body || {};
+    if (!stage || !qid) return res.status(400).json({ message: '缺少 stage 或 qid' });
+    const updated = await DailyAsked.findOneAndUpdate(
+      { userId: req.user.userId, stage },
+      { $addToSet: { askedIds: String(qid) }, $set: { updatedAt: new Date() } },
+      { upsert: true, new: true }
+    );
+    res.json({ askedIds: updated.askedIds });
+  } catch (err) {
+    logger.error('Append daily asked error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '记录每日回首问过内容失败：' + err.message });
   }
 });
 

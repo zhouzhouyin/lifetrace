@@ -6,7 +6,7 @@ import { AppContext } from '../context/AppContext';
 
 // 轻量化“随手记”：文本/照片/视频/音频 + 标签，按时间线展示
 const Memo = () => {
-  const { isLoggedIn, setError, username, setMemos: setGlobalMemos } = useContext(AppContext);
+  const { isLoggedIn, setError, username, memos: memosCtx, setMemos: setGlobalMemos } = useContext(AppContext);
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [text, setText] = useState('');
@@ -30,23 +30,43 @@ const Memo = () => {
     }
   }, [isLoggedIn, setError, navigate]);
 
-  // 初始加载随手记（云端）
+  // 初始加载随手记（优先云端，失败回退到全局或本地）
   useEffect(() => {
     const fetchMemos = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
         const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
-        const list = Array.isArray(res.data) ? res.data : [];
-        // 兜底：按时间倒序
-        setMemos(list.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+        const serverList = Array.isArray(res.data) ? res.data : [];
+        // 合并本地离线的 local-* 记录，避免丢失
+        let offline = [];
+        try {
+          const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+          const subj = localStorage.getItem('subject_version') || '0';
+          offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+        } catch(_) {}
+        const merged = [
+          ...serverList,
+          ...offline.filter(o => !serverList.find(s => (s.id||s._id) === (o.id||o._id)))
+        ].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+        setMemos(merged);
       } catch (err) {
-        // 若接口不存在，则容错为空
+        // 若接口不存在：回退到全局或本地
         console.warn('Fetch memos failed or not implemented:', err?.response?.status, err?.message);
+        if (Array.isArray(memosCtx) && memosCtx.length > 0) {
+          setMemos(memosCtx);
+          return;
+        }
+        try {
+          const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+          const subj = localStorage.getItem('subject_version') || '0';
+          const offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+          setMemos(Array.isArray(offline) ? offline : []);
+        } catch(_) { setMemos([]); }
       }
     };
     fetchMemos();
-  }, []);
+  }, [memosCtx]);
 
   // 本地预览
   const handleFileChange = (e) => {
@@ -152,6 +172,14 @@ const Memo = () => {
       }
       setMemos(prev => [ created, ...prev ]);
       try { setGlobalMemos && setGlobalMemos(prev => [ created, ...(Array.isArray(prev)?prev:[]) ]); } catch (_) {}
+      // 离线持久化：避免返回后丢失（当后端 404 时仍可回显）
+      try {
+        const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+        const subj = localStorage.getItem('subject_version') || '0';
+        const curr = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+        const next = [ created, ...(Array.isArray(curr)?curr:[]) ];
+        localStorage.setItem(`memos_offline_${scope}_${subj}`, JSON.stringify(next));
+      } catch(_) {}
       setText(''); setTags([]); setTagsInput(''); setMediaFile(null); setMediaPreview('');
       setMessage('已记录');
       setTimeout(() => setMessage(''), 1500);
