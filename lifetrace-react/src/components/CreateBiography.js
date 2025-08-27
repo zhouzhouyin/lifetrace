@@ -159,6 +159,8 @@ const CreateBiography = () => {
       const state = location.state || {};
       if (Array.isArray(state.pasteItems) && state.pasteItems.length > 0) {
         const items = state.pasteItems;
+        let firstIdx = 0;
+        try { firstIdx = Math.max(0, Math.min(...items.map(it => Number(it.stageIndex)||0))); } catch(_) { firstIdx = 0; }
         setSections(prev => {
           const next = [...prev];
           for (const it of items) {
@@ -170,6 +172,19 @@ const CreateBiography = () => {
           }
           return next;
         });
+        // 跳到首个涉及的篇章，便于立刻看到粘贴结果
+        try {
+          setCurrentSectionIndex(firstIdx);
+          setStageIndex(firstIdx);
+          setTimeout(() => centerStageChip(firstIdx), 0);
+          setTimeout(() => {
+            try {
+              if (sectionTextareaRef.current) {
+                sectionTextareaRef.current.scrollTop = sectionTextareaRef.current.scrollHeight;
+              }
+            } catch (_) {}
+          }, 50);
+        } catch(_) {}
         setMessage('已把选中的随手记粘贴到对应篇章');
         setTimeout(() => setMessage(''), 1200);
         return; // 已处理则不再读本地板
