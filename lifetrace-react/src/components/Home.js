@@ -5,7 +5,7 @@ import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 
 const Home = () => {
-  const { isLoggedIn, t, lang, role, setIsLoggedIn } = useContext(AppContext);
+  const { isLoggedIn, t, lang, role, setIsLoggedIn, memos: memosCtx, setMemos: setMemosCtx } = useContext(AppContext);
   const navigate = useNavigate();
   // 每日回首设置
   const [dailyEnabled, setDailyEnabled] = useState(() => {
@@ -20,6 +20,7 @@ const Home = () => {
   const [currentQuestionId, setCurrentQuestionId] = useState(0);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [saveToMemoChecked, setSaveToMemoChecked] = useState(true);
   const [isLoadingQ, setIsLoadingQ] = useState(false);
   const lastShownRef = useRef('');
   const lifeStages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
@@ -201,14 +202,37 @@ const Home = () => {
   const handleSwap = async () => { await pickAndStoreQuestion(); };
   const handleSkip = () => { setShowDailyCard(false); setAnswer(''); };
   const handleSaveToMemo = async () => {
+    if (!saveToMemoChecked) { setShowDailyCard(false); setAnswer(''); return; }
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
     const label = currentQuestionId ? `Q${currentQuestionId}` : '';
     const content = `阶段：${lifeStages[currentStageIndex]}\n问题：${label ? (label + ' ') : ''}${currentQuestion}\n回答：${answer || '（未填写）'}`;
+    const authorMode = (localStorage.getItem('author_mode') || 'self');
+    let relation = '';
+    try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
+    const baseTags = ['每日回首', lifeStages[currentStageIndex]];
+    const tags = (authorMode === 'other' && relation) ? [...baseTags, relation] : baseTags;
     try {
-      await axios.post('/api/memo', { text: content, tags: ['每日回首', lifeStages[currentStageIndex]], media: [] }, { headers: { Authorization: `Bearer ${token}` } });
+      const resp = await axios.post('/api/memo', { text: content, tags, media: [] }, { headers: { Authorization: `Bearer ${token}` } });
+      const created = {
+        id: resp.data?.id || `local-${Date.now()}`,
+        text: content,
+        tags,
+        media: [],
+        timestamp: resp.data?.timestamp || new Date().toISOString(),
+      };
+      setMemosHome(prev => [created, ...(Array.isArray(prev)?prev:[])]);
+      try { setMemosCtx && setMemosCtx(prev => [created, ...(Array.isArray(prev)?prev:[])]); } catch(_) {}
     } catch (_) {
-      // 容错：忽略失败
+      const created = {
+        id: `local-${Date.now()}`,
+        text: content,
+        tags,
+        media: [],
+        timestamp: new Date().toISOString(),
+      };
+      setMemosHome(prev => [created, ...(Array.isArray(prev)?prev:[])]);
+      try { setMemosCtx && setMemosCtx(prev => [created, ...(Array.isArray(prev)?prev:[])]); } catch(_) {}
     }
     setShowDailyCard(false); setAnswer('');
   };
@@ -319,6 +343,29 @@ const Home = () => {
     setShowProfileForm(false);
     setNeedAuthorSelect(false);
   };
+
+  // 自动从后端同步记录对象（跨设备保持一致）
+  useEffect(() => {
+    const syncSubject = async () => {
+      if (!isLoggedIn) return;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/record-subject', { headers: { Authorization: `Bearer ${token}` } });
+        const mode = res.data?.mode;
+        const prof = res.data?.profile || {};
+        if (mode) {
+          try { localStorage.setItem('author_mode', mode); } catch (_) {}
+        }
+        try { localStorage.setItem('record_profile', JSON.stringify(prof)); } catch (_) {}
+        if (mode === 'other' && prof.relation) {
+          try { localStorage.setItem('author_relation', prof.relation); } catch (_) {}
+        }
+        if (mode) setNeedAuthorSelect(false);
+        if (prof && Object.keys(prof).length > 0) setProfile(prof);
+      } catch (_) { /* ignore */ }
+    };
+    syncSubject();
+  }, [isLoggedIn]);
   const zhSlogans = [
     '生而不灭于遗忘，生命故事永有人可读',
     '写下人生的故事，给未来的孩子一盏可以回望的灯',
@@ -425,11 +472,15 @@ const Home = () => {
                 rows={3}
                 maxLength={500}
               />
+              <label className="flex items-center gap-2 text-sm text-gray-800 mb-2">
+                <input type="checkbox" checked={saveToMemoChecked} onChange={(e)=>setSaveToMemoChecked(e.target.checked)} />
+                记为随手记
+              </label>
               <div className="flex flex-wrap gap-2">
                 <button className="btn btn-secondary" onClick={handleSwap}>换一个</button>
                 <button className="btn btn-secondary" onClick={handleSkip}>跳过</button>
                 <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
-                <button className="btn" onClick={handleSaveToMemo}>记为随手记</button>
+                <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
               </div>
             </div>
           )}
