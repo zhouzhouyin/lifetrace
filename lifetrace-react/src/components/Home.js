@@ -421,7 +421,9 @@ const Home = () => {
       <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12">
         <div className="max-w-5xl mx-auto text-center">
           {needAuthorSelect && (
-            <div className="card p-4 sm:p-5 mb-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+              <div className="relative z-10 card w-11/12 max-w-xl p-4 sm:p-5" role="dialog" aria-modal="true" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <div className="text-lg font-semibold text-gray-900 mb-2">请选择记录对象</div>
               <p className="text-sm text-gray-700 mb-3">为谁记录，会影响后续的问题风格与标签管理</p>
               <div className="flex gap-2 justify-center flex-wrap">
@@ -443,10 +445,10 @@ const Home = () => {
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button className="btn btn-primary" onClick={handleProfileSave}>保存</button>
-                    <button className="btn btn-secondary" onClick={()=>{ setShowProfileForm(false); try{ localStorage.removeItem('author_mode'); }catch(_){ } }}>返回</button>
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
