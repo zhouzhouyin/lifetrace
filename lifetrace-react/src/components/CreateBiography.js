@@ -170,8 +170,6 @@ const CreateBiography = () => {
           }
           return next;
         });
-        // 清除一次性 state，避免后退/重复进入再次粘贴
-        try { navigate('/create', { replace: true, state: {} }); } catch (_) {}
         setMessage('已把选中的随手记粘贴到对应篇章');
         setTimeout(() => setMessage(''), 1200);
         return; // 已处理则不再读本地板
@@ -249,11 +247,22 @@ const CreateBiography = () => {
           if (typeof d.bioTitle === 'string') setBioTitle(d.bioTitle);
           if (typeof d.bioSummary === 'string') setBioSummary(d.bioSummary);
           if (Array.isArray(d.sections)) {
-            setSections(d.sections.map((s = {}) => ({
+            const normalized = d.sections.map((s = {}) => ({
               title: (s && s.title) || '',
               text: (s && s.text) || '',
               media: Array.isArray(s && s.media) ? s.media : [],
-            })));
+            }));
+            // 合并草稿与现有（保留已存在文本，如来自随手记粘贴）
+            setSections(prev => {
+              const base = Array.isArray(prev) && prev.length === lifeStages.length ? prev : Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] }));
+              return base.map((p, i) => {
+                const src = normalized[i] || { title: '', text: '', media: [] };
+                const keepText = (p.text || '').trim().length > 0 ? p.text : src.text;
+                const keepTitle = (p.title || '').trim().length > 0 ? p.title : src.title;
+                const media = (p.media && p.media.length > 0) ? p.media : (src.media || []);
+                return { title: keepTitle, text: keepText, media };
+              });
+            });
           }
         }
       }
