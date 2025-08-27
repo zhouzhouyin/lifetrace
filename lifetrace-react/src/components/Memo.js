@@ -19,8 +19,64 @@ const Memo = () => {
   const subjectVersion = useMemo(() => { try { return Number(localStorage.getItem('subject_version') || '0') || 0; } catch(_) { return 0; } }, []);
   const [shareToFamily, setShareToFamily] = useState(false);
   const lifeStages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+  // 选择集用于批量落章
+  const [selected, setSelected] = useState({}); // key -> bool
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef(null);
+
+  // 标签到阶段的映射（含常见同义词）
+  const resolveStageIndexFromTags = (tagList = []) => {
+    const tags = (Array.isArray(tagList) ? tagList : []).map(String);
+    const synonyms = [
+      ['童年','小时候','孩提','童年时代','小学','幼年'],
+      ['少年','中学','初中','高中','少时','少年的'],
+      ['青年','大学','恋爱','工作初期','求职','毕业'],
+      ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
+      ['中年','孩子成长','转折','中年的'],
+      ['当下','今天','此刻','现在','近期','每日回首'],
+      ['未来愿望','愿望','未来','目标','计划','心愿']
+    ];
+    for (let i = 0; i < lifeStages.length; i++) {
+      if (tags.includes(lifeStages[i])) return i;
+    }
+    for (let i = 0; i < synonyms.length; i++) {
+      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) return i;
+    }
+    return lifeStages.indexOf('当下');
+  };
+
+  const toggleSelected = (key) => {
+    setSelected(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const pasteToCreate = (list) => {
+    try {
+      const raw = localStorage.getItem('dailyPasteboard');
+      const obj = raw ? JSON.parse(raw) : { items: [] };
+      (list || []).forEach(m => {
+        const tags = Array.isArray(m.tags) ? m.tags : [];
+        const stageIdx = resolveStageIndexFromTags(tags);
+        if (tags.includes('每日回首')) {
+          const text = (m.text || '').toString();
+          let q = '', a = '';
+          const mq = text.match(/问题：([\s\S]*?)\n/);
+          if (mq) q = (mq[1] || '').trim();
+          const ma = text.match(/回答：([\s\S]*)/);
+          if (ma) a = (ma[1] || '').trim();
+          const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+          obj.items.push({ stageIndex: Math.max(0, stageIdx), text: line });
+        } else {
+          const line = (m.text || '').toString();
+          const add = line ? `我：${line}` : '我：这是一条当下的记录。';
+          obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
+        }
+      });
+      localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
+      navigate('/create');
+    } catch (_) {
+      navigate('/create');
+    }
+  };
 
   // 登录校验
   useEffect(() => {
@@ -157,7 +213,16 @@ const Memo = () => {
           shareToFamily: !!shareToFamily,
           subjectVersion: String(subjectVersion),
         }, { headers: { Authorization: `Bearer ${token}` } });
-        created = resp.data;
+        const newId = resp.data?.id || `local-${Date.now()}`;
+        created = {
+          id: newId,
+          username: username || (localStorage.getItem('username') || 'unknown'),
+          text: text.trim(),
+          tags,
+          media: uploadedUrl ? [{ type: mediaType, url: uploadedUrl }] : [],
+          timestamp: new Date().toISOString(),
+          subjectVersion: String(subjectVersion),
+        };
       } catch (e) {
         // 容错：本地构造一条
         created = {
@@ -245,44 +310,16 @@ const Memo = () => {
             </label>
             <button className="btn btn-tertiary" onClick={handleVoiceInput}>{isRecording ? '停止录音' : '语音输入'}</button>
             <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || uploading}>{uploading ? '保存中…' : '保存'}</button>
+            <button className="btn btn-secondary" onClick={() => pasteToCreate(memos)}>整理成回忆</button>
             <button
-              className="btn btn-secondary"
+              className="btn btn-primary"
               onClick={() => {
-                try {
-                  const raw = localStorage.getItem('dailyPasteboard');
-                  const obj = raw ? JSON.parse(raw) : { items: [] };
-                  (memos || []).forEach(m => {
-                    const tags = Array.isArray(m.tags) ? m.tags : [];
-                    // 每日回首：根据阶段标签落章
-                    if (tags.includes('每日回首')) {
-                      const idx = lifeStages.findIndex(s => tags.includes(s));
-                      if (idx < 0) return;
-                      const text = (m.text || '').toString();
-                      let q = '', a = '';
-                      const mq = text.match(/问题：([\s\S]*?)\n/);
-                      if (mq) q = (mq[1] || '').trim();
-                      const ma = text.match(/回答：([\s\S]*)/);
-                      if (ma) a = (ma[1] || '').trim();
-                      const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                      obj.items.push({ stageIndex: idx, text: line });
-                    } else {
-                      // 普通随手记：第一个标签为阶段；默认当下
-                      let stageIdx = lifeStages.indexOf(tags[0] || '当下');
-                      if (stageIdx < 0) stageIdx = lifeStages.indexOf('当下');
-                      const line = (m.text || '').toString();
-                      const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-                      obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
-                    }
-                  });
-                  localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
-                  navigate('/create');
-                } catch (_) {
-                  navigate('/create');
-                }
+                const keys = Object.keys(selected).filter(k => selected[k]);
+                if (keys.length === 0) { setMessage('请先勾选要落章的卡片'); setTimeout(()=>setMessage(''), 1200); return; }
+                const chosen = (memos || []).filter(m => keys.includes(String(m.id || m._id)));
+                pasteToCreate(chosen);
               }}
-            >
-              整理成回忆
-            </button>
+            >仅落章所选</button>
           </div>
 
           {mediaPreview && (
@@ -303,7 +340,10 @@ const Memo = () => {
           {memos.map((m) => (
             <div key={m.id || m._id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <div className="flex items-center justify-between mb-2">
-                <div className="font-medium text-gray-800">{m.username || username || '我'}</div>
+                <div className="flex items-center gap-2 font-medium text-gray-800">
+                  <input type="checkbox" checked={!!selected[String(m.id || m._id)]} onChange={() => toggleSelected(String(m.id || m._id))} />
+                  <span>{m.username || username || '我'}</span>
+                </div>
                 <div className="text-sm text-gray-600">{new Date(m.timestamp || Date.now()).toLocaleString('zh-CN')}</div>
               </div>
               {(m.tags || []).length > 0 && (

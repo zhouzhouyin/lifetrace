@@ -219,7 +219,7 @@ const Register = () => {
             </button>
             <button
               type="button"
-              className="btn btn-secondary w-full"
+              className="btn btn-tertiary w-full"
               onClick={() => navigate('/login')}
               disabled={isLoading}
             >

@@ -157,7 +157,7 @@ const Login = () => {
             <span>忘记密码？</span>
             <a href="mailto:1056829015@qq.com" className="underline ml-1" style={{ color: '#2563eb' }}>联系管理员 1056829015@qq.com</a>
           </div>
-          <button type="submit" className="btn w-full mt-2" disabled={isLoading}>
+          <button type="submit" className="btn btn-primary w-full mt-2" disabled={isLoading}>
             {isLoading ? (lang === 'zh' ? '登录中...' : 'Logging in...') : (lang === 'zh' ? '登录' : 'Login')}
           </button>
           <div className="text-center text-sm" style={{ color: '#6b7280' }}>
@@ -177,7 +177,7 @@ const Login = () => {
             </button>
             <button
               type="button"
-              className="btn btn-secondary w-full"
+              className="btn btn-tertiary w-full"
               onClick={() => navigate('/')}
               disabled={isLoading}
             >

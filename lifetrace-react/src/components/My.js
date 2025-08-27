@@ -81,6 +81,28 @@ const My = () => {
     }
   }, [isLoggedIn, setError, navigate]);
 
+  // 标签到阶段解析（与 Memo.js 保持一致，含同义词）
+  const resolveStageIndexFromTags = (tagList = []) => {
+    const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+    const tags = (Array.isArray(tagList) ? tagList : []).map(String);
+    const synonyms = [
+      ['童年','小时候','孩提','童年时代','小学','幼年'],
+      ['少年','中学','初中','高中','少时','少年的'],
+      ['青年','大学','恋爱','工作初期','求职','毕业'],
+      ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
+      ['中年','孩子成长','转折','中年的'],
+      ['当下','今天','此刻','现在','近期','每日回首'],
+      ['未来愿望','愿望','未来','目标','计划','心愿']
+    ];
+    for (let i = 0; i < stages.length; i++) {
+      if (tags.includes(stages[i])) return i;
+    }
+    for (let i = 0; i < synonyms.length; i++) {
+      if (synonyms[i].some(s => tags.some(t => t.includes(s)))) return i;
+    }
+    return stages.indexOf('当下');
+  };
+
   // 获取用户笔记、传记和上传文件
   useEffect(() => {
     const fetchData = debounce(async () => {
@@ -155,16 +177,33 @@ const My = () => {
       }
 
       // 获取上传文件
-      // 获取我的随手记
+      // 获取我的随手记（云端优先，合并离线，避免返回后“清空”）
       try {
         const token2 = localStorage.getItem('token');
         const resMemos = await retry(() =>
           axios.get('/api/memos', { headers: { Authorization: `Bearer ${token2}` } })
         );
-        const list = Array.isArray(resMemos.data) ? resMemos.data : [];
-        setMemos(list.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+        const serverList = Array.isArray(resMemos.data) ? resMemos.data : [];
+        let offline = [];
+        try {
+          const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+          const subj = localStorage.getItem('subject_version') || '0';
+          offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+        } catch(_) {}
+        const merged = [
+          ...serverList,
+          ...offline.filter(o => !serverList.find(s => (s.id||s._id) === (o.id||o._id)))
+        ].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+        setMemos(merged);
       } catch (err) {
         console.error('My.js: Fetch memos error:', err);
+        // 回退离线
+        try {
+          const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+          const subj = localStorage.getItem('subject_version') || '0';
+          const offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+          if (Array.isArray(offline)) setMemos(offline);
+        } catch(_) {}
       }
       try {
         const response = await retry(() =>
@@ -418,8 +457,7 @@ const My = () => {
                               const raw = localStorage.getItem('dailyPasteboard');
                               const obj = raw ? JSON.parse(raw) : { items: [] };
                               const tags = Array.isArray(m.tags) ? m.tags : [];
-                              const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
-                              const stageIdx = stages.findIndex(s => tags.includes(s));
+                              const stageIdx = resolveStageIndexFromTags(tags);
                               const text = (m.text || '').toString();
                               let q = '', a = '';
                               const mq = text.match(/问题：([\s\S]*?)\n/);
@@ -446,10 +484,8 @@ const My = () => {
                               try {
                                 const raw = localStorage.getItem('dailyPasteboard');
                                 const obj = raw ? JSON.parse(raw) : { items: [] };
-                                const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
                                 const tags = Array.isArray(m.tags) ? m.tags : [];
-                                let stageIdx = stages.indexOf(tags[0] || '当下');
-                                if (stageIdx < 0) stageIdx = stages.indexOf('当下');
+                                const stageIdx = resolveStageIndexFromTags(tags);
                                 const line = (m.text || '').toString();
                                 const add = line ? `我：${line}` : '我：这是一条当下的记录。';
                                 obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
