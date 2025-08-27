@@ -229,6 +229,8 @@ const My = () => {
       localStorage.removeItem('author_mode');
       localStorage.removeItem('author_relation');
       localStorage.removeItem('record_profile');
+      // 后端同步重置
+      try { const token = localStorage.getItem('token'); axios.delete('/api/record-subject', { headers: { Authorization: `Bearer ${token}` } }).catch(()=>{}); } catch (_) {}
       setMessage('已重置记录对象。请返回首页重新选择。');
       setTimeout(() => setMessage(''), 1600);
     } catch (_) {}

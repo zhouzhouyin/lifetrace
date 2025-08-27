@@ -29,6 +29,19 @@ const Home = () => {
   const [needAuthorSelect, setNeedAuthorSelect] = useState(() => {
     try { return !(localStorage.getItem('author_mode')); } catch (_) { return true; }
   });
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('record_profile') || '{}'); } catch(_) { return {}; }
+  });
+
+  const isProfileComplete = (mode, p) => {
+    const baseOk = !!(p && p.name && p.gender && p.birth && p.origin && p.residence);
+    if (!baseOk) return false;
+    if ((mode || localStorage.getItem('author_mode')) === 'other') {
+      return !!(p && (p.relation || '').trim());
+    }
+    return true;
+  };
 
   const saveEnabled = (v) => {
     setDailyEnabled(v);
@@ -272,8 +285,26 @@ const Home = () => {
 
   const handleAuthorPick = (mode) => {
     try { localStorage.setItem('author_mode', mode); } catch (_) {}
+    setShowProfileForm(true);
+  };
+
+  const handleProfileSave = () => {
+    const mode = localStorage.getItem('author_mode') || 'self';
+    if (!isProfileComplete(mode, profile)) {
+      alert('请完整填写姓名、性别、出生年月、祖籍、现居住地' + (mode==='other' ? '，以及与被记录人的关系' : ''));
+      return;
+    }
+    try {
+      localStorage.setItem('record_profile', JSON.stringify(profile));
+      if (mode === 'other' && profile.relation) localStorage.setItem('author_relation', profile.relation);
+    } catch (_) {}
+    // 同步到后端，防止本地清理丢失
+    try {
+      const token = localStorage.getItem('token');
+      axios.post('/api/record-subject', { mode, profile }, { headers: { Authorization: `Bearer ${token}` } }).catch(()=>{});
+    } catch (_) {}
+    setShowProfileForm(false);
     setNeedAuthorSelect(false);
-    navigate('/create');
   };
   const zhSlogans = [
     '生而不灭于遗忘，生命故事永有人可读',
@@ -334,6 +365,25 @@ const Home = () => {
                 <button className="btn btn-primary" onClick={() => handleAuthorPick('self')}>为自己记录</button>
                 <button className="btn btn-secondary" onClick={() => handleAuthorPick('other')}>为他人记录</button>
               </div>
+              {showProfileForm && (
+                <div className="mt-4 text-left">
+                  <h4 className="font-semibold mb-2">请先填写基本资料</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input className="input" placeholder="姓名" value={profile.name||''} onChange={e=>setProfile(p=>({...(p||{}), name:e.target.value}))} />
+                    <input className="input" placeholder="性别" value={profile.gender||''} onChange={e=>setProfile(p=>({...(p||{}), gender:e.target.value}))} />
+                    <input className="input" placeholder="出生年月（如 1950-06）" value={profile.birth||''} onChange={e=>setProfile(p=>({...(p||{}), birth:e.target.value}))} />
+                    <input className="input" placeholder="祖籍" value={profile.origin||''} onChange={e=>setProfile(p=>({...(p||{}), origin:e.target.value}))} />
+                    <input className="input" placeholder="现居住地" value={profile.residence||''} onChange={e=>setProfile(p=>({...(p||{}), residence:e.target.value}))} />
+                    {(localStorage.getItem('author_mode')||'self')==='other' && (
+                      <input className="input" placeholder="与被记录人的关系（如 母亲）" value={profile.relation||''} onChange={e=>setProfile(p=>({...(p||{}), relation:e.target.value}))} />
+                    )}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <button className="btn btn-primary" onClick={handleProfileSave}>保存</button>
+                    <button className="btn btn-secondary" onClick={()=>{ setShowProfileForm(false); try{ localStorage.removeItem('author_mode'); }catch(_){ } }}>返回</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
