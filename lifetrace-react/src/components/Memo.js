@@ -98,7 +98,11 @@ const Memo = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get('/api/memos', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { subjectVersion: String(subjectVersion) },
+          timeout: 15000,
+        });
         const serverList = Array.isArray(res.data) ? res.data : [];
         // 合并本地离线的 local-* 记录，避免丢失
         let offline = [];

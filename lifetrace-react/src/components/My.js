@@ -182,14 +182,15 @@ const My = () => {
       // 获取我的随手记（云端优先，合并离线，避免返回后“清空”）
       try {
         const token2 = localStorage.getItem('token');
+        const sv = String(localStorage.getItem('subject_version') || '0');
         const resMemos = await retry(() =>
-          axios.get('/api/memos', { headers: { Authorization: `Bearer ${token2}` } })
+          axios.get('/api/memos', { headers: { Authorization: `Bearer ${token2}` }, params: { subjectVersion: sv }, timeout: 15000 })
         );
         const serverList = Array.isArray(resMemos.data) ? resMemos.data : [];
         let offline = [];
         try {
           const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
-          const subj = localStorage.getItem('subject_version') || '0';
+          const subj = sv;
           offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
         } catch(_) {}
         const merged = [
