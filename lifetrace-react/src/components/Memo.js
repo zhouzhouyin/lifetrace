@@ -278,6 +278,10 @@ const Memo = () => {
             <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>{message}</div>
           )}
 
+          <div className="mb-3">
+            <button className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
+          </div>
+
           <textarea
             className="input w-full mb-3"
             placeholder="此刻想说点什么……"
@@ -314,10 +318,11 @@ const Memo = () => {
               添加图片/视频/音频
               <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleFileChange} />
             </label>
-            <label className="flex items-center gap-2 text-sm text-gray-800">
-              <input type="checkbox" checked={shareToFamily} onChange={(e) => setShareToFamily(e.target.checked)} />
-              上传到家族档案
-            </label>
+            <button
+              type="button"
+              className={`btn ${shareToFamily ? 'btn-primary' : 'btn-tertiary'}`}
+              onClick={() => setShareToFamily(v => !v)}
+            >{shareToFamily ? '将保存并上传到家族档案' : '仅保存（点此改为上传到家族档案）'}</button>
             <button className="btn btn-tertiary" onClick={handleVoiceInput}>{isRecording ? '停止录音' : '语音输入'}</button>
             <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || uploading}>{uploading ? '保存中…' : '保存'}</button>
             <button className="btn btn-secondary" onClick={() => pasteToCreate(memos)}>整理成回忆</button>

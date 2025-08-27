@@ -10,6 +10,9 @@ const Family = () => {
   const [relationFromRequester, setRelationFromRequester] = useState('');
   const [relationFromTarget, setRelationFromTarget] = useState('');
   const [familyBiographies, setFamilyBiographies] = useState([]);
+  const [familyMemos, setFamilyMemos] = useState([]);
+  const [message, setMessage] = useState('');
+  const [updating, setUpdating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,10 +25,12 @@ const Family = () => {
       axios.get('/api/family', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
       axios.get('/api/family/requests', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
       axios.get('/api/family/biographies', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-    ]).then(([famRes, reqRes, bioRes]) => {
+      axios.get('/api/family/memos', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+    ]).then(([famRes, reqRes, bioRes, memRes]) => {
       setFamilyMembers(Array.isArray(famRes.data) ? famRes.data : []);
       setFamilyRequests(Array.isArray(reqRes.data) ? reqRes.data : []);
       setFamilyBiographies(Array.isArray(bioRes.data) ? bioRes.data : []);
+      setFamilyMemos(Array.isArray(memRes.data) ? memRes.data : []);
     });
   }, [isLoggedIn, navigate, setFamilyMembers, setFamilyRequests]);
 
@@ -33,6 +38,21 @@ const Family = () => {
     if (isOwnerFlag) return '我';
     const m = (familyMembers || []).find(x => String(x.userId) === String(ownerId));
     return m?.relation ? m.relation : '家人';
+  };
+
+  const updateVisibility = async (memoId, visibility, sharedWith) => {
+    try {
+      setUpdating(true);
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/memo/${memoId}/visibility`, { visibility, sharedWith }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 });
+      setFamilyMemos(prev => prev.map(m => m.id === memoId ? { ...m, visibility, sharedWith: Array.isArray(sharedWith)?sharedWith:[] } : m));
+      setMessage('已更新可见性');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (err) {
+      setMessage('更新失败：' + (err?.response?.data?.message || err?.message));
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const sendRequest = async () => {
@@ -109,6 +129,40 @@ const Family = () => {
             <span>{m.username}（UID: {m.uid}）：{m.relation}</span>
           </div>
         )) : <p>暂无家人</p>}
+      </div>
+
+      <div className="card p-4 mb-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+        <h3 className="font-semibold mb-2">家族随手记共享</h3>
+        {message && <div className="mb-2 p-2 rounded bg-blue-50 text-blue-800 border border-blue-200">{message}</div>}
+        {familyMemos && familyMemos.length > 0 ? (
+          familyMemos.map((m) => (
+            <div key={m.id} className="border rounded p-3 mb-2" style={{ borderColor: '#e5e7eb' }}>
+              <div className="text-sm text-gray-600 mb-1">{new Date(m.timestamp).toLocaleString('zh-CN')}</div>
+              {(Array.isArray(m.tags) && m.tags.length>0) && (
+                <div className="mb-2 flex flex-wrap gap-2">{m.tags.map(t => (<span key={t} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">#{t}</span>))}</div>
+              )}
+              {m.text && <p className="whitespace-pre-wrap text-gray-800 mb-2">{m.text}</p>}
+              {Array.isArray(m.media) && m.media.length>0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {m.media.map((mm, i) => (
+                    <div key={i} className="border rounded overflow-hidden">
+                      {mm.type === 'image' && <img src={mm.url} alt="" className="w-full h-32 object-cover" />}
+                      {mm.type === 'video' && <video src={mm.url} className="w-full h-32 object-cover" controls />}
+                      {mm.type === 'audio' && <audio src={mm.url} className="w-full" controls />}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 flex flex-wrap gap-2 items-center">
+                <button className={`btn ${m.visibility==='family'?'btn-primary':'btn-secondary'}`} disabled={updating} onClick={()=>updateVisibility(m.id,'family', m.sharedWith || [])}>家族可见</button>
+                <button className={`btn ${m.visibility==='private'?'btn-primary':'btn-secondary'}`} disabled={updating} onClick={()=>updateVisibility(m.id,'private', [])}>仅自己</button>
+                <button className={`btn ${m.visibility==='public'?'btn-primary':'btn-secondary'}`} disabled={updating} onClick={()=>updateVisibility(m.id,'public', [])}>公开</button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>暂无可见随手记</p>
+        )}
       </div>
 
       <div className="card p-4 mb-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>

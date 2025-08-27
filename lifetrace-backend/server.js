@@ -254,9 +254,13 @@ const memoSchema = new mongoose.Schema({
   stage: { type: String, default: '' }, // 用于按生命阶段整理
   source: { type: String, default: '' }, // e.g. 'daily', 'manual'
   subjectVersion: { type: Number, default: 1 },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
+  visibility: { type: String, enum: ['private', 'family', 'public'], default: 'private' },
+  sharedWith: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] }, // 空表示家族全部可见（当 visibility='family'）
+  updatedAt: { type: Date, default: Date.now }
 });
 memoSchema.index({ userId: 1, subjectVersion: 1, timestamp: -1 });
+memoSchema.index({ visibility: 1 });
 const Memo = mongoose.model('Memo', memoSchema);
 
 // RecordSubject schema: 记录对象（为自己/为他人）及其资料
@@ -968,7 +972,7 @@ app.get('/api/memos', authenticateToken, async (req, res) => {
 // Memos: create
 app.post('/api/memo', authenticateToken, async (req, res) => {
   try {
-    const { text, tags, media, stage, source, subjectVersion } = req.body || {};
+    const { text, tags, media, stage, source, subjectVersion, shareToFamily } = req.body || {};
     if (!text && !(Array.isArray(media) && media.length > 0)) {
       return res.status(400).json({ message: '缺少内容' });
     }
@@ -982,13 +986,67 @@ app.post('/api/memo', authenticateToken, async (req, res) => {
       stage: String(stage || ''),
       source: String(source || ''),
       subjectVersion: Number(subjectVersion) || 1,
-      timestamp: new Date()
+      timestamp: new Date(),
+      visibility: shareToFamily ? 'family' : 'private',
+      updatedAt: new Date()
     });
     logger.info('Memo created', { userId: req.user.userId, memoId: memo._id, ip: req.ip });
-    res.status(201).json({ id: memo._id.toString() });
+    res.status(201).json({ id: memo._id.toString(), visibility: memo.visibility });
   } catch (err) {
     logger.error('Create memo error', { error: err.message, ip: req.ip });
     res.status(500).json({ message: '保存随手记失败：' + err.message });
+  }
+});
+
+// Update memo visibility and sharing list (owner only)
+app.put('/api/memo/:id/visibility', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) return res.status(400).json({ message: '无效的随手记 ID' });
+    const { visibility, sharedWith } = req.body || {};
+    const vis = (visibility || '').toString();
+    if (!['private', 'family', 'public'].includes(vis)) return res.status(400).json({ message: '无效的可见性' });
+    let list = [];
+    if (Array.isArray(sharedWith)) {
+      list = sharedWith.filter(v => isValidObjectId(v)).slice(0, 50);
+    }
+    const memo = await Memo.findOne({ _id: id, userId: req.user.userId });
+    if (!memo) return res.status(404).json({ message: '随手记不存在' });
+    memo.visibility = vis;
+    memo.sharedWith = vis === 'family' ? list : [];
+    memo.updatedAt = new Date();
+    await memo.save();
+    res.json({ id: memo._id.toString(), visibility: memo.visibility, sharedWith: memo.sharedWith.map(v => v.toString()) });
+  } catch (err) {
+    logger.error('Update memo visibility error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '更新可见性失败：' + err.message });
+  }
+});
+
+// Family memos visible to current user
+app.get('/api/family/memos', authenticateToken, async (req, res) => {
+  try {
+    // find family peers
+    const pairs = await Family.find({ $or: [{ userAId: req.user.userId }, { userBId: req.user.userId }] }).lean();
+    const peerIds = pairs.map(p => String(p.userAId) === String(req.user.userId) ? p.userBId : p.userAId);
+    // memos by peers with visibility rules, and my own memos with visibility 'family'
+    const myId = req.user.userId;
+    const allowFromPeer = { userId: { $in: peerIds }, visibility: 'family', $or: [ { sharedWith: { $size: 0 } }, { sharedWith: { $in: [ myId ] } } ] };
+    const myShared = { userId: myId, visibility: 'family' };
+    const docs = await Memo.find({ $or: [ allowFromPeer, myShared ] }).sort({ timestamp: -1 }).lean();
+    res.json(docs.map(m => ({
+      id: m._id.toString(),
+      userId: m.userId?.toString?.() || '',
+      text: m.text || '',
+      tags: Array.isArray(m.tags) ? m.tags : [],
+      media: Array.isArray(m.media) ? m.media : [],
+      timestamp: m.timestamp,
+      visibility: m.visibility || 'private',
+      sharedWith: (m.sharedWith || []).map(v => v.toString()),
+    })));
+  } catch (err) {
+    logger.error('Get family memos error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '获取家族随手记失败：' + err.message });
   }
 });
 
