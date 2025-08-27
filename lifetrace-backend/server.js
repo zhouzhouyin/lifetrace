@@ -961,7 +961,9 @@ app.get('/api/memos', authenticateToken, async (req, res) => {
       stage: m.stage || '',
       source: m.source || '',
       subjectVersion: m.subjectVersion || 1,
-      timestamp: m.timestamp
+      timestamp: m.timestamp,
+      visibility: m.visibility || 'private',
+      sharedWith: Array.isArray(m.sharedWith) ? m.sharedWith.map(v => v.toString()) : []
     })));
   } catch (err) {
     logger.error('Get memos error', { error: err.message, ip: req.ip });

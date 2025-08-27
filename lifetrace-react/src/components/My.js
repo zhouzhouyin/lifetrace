@@ -452,47 +452,90 @@ const My = () => {
                         if (isolated) return (
                           <span className="text-xs text-gray-500">（已隔离，无法落章）</span>
                         );
+                        const vis = (m.visibility || 'private');
+                        const badge = vis==='public' ? '公开' : (vis==='family' ? '家族' : '仅自己');
+                        const badgeCls = vis==='public' ? 'bg-green-100 text-green-800 border-green-200' : (vis==='family' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200');
                         if (Array.isArray(m.tags) && m.tags.includes('每日回首')) return (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            try {
-                              const tags = Array.isArray(m.tags) ? m.tags : [];
-                              const stageIdxList = getStageIndicesFromTags(tags);
-                              const text = (m.text || '').toString();
-                              let q = '', a = '';
-                              const mq = text.match(/问题：([\s\S]*?)\n/);
-                              if (mq) q = (mq[1] || '').trim();
-                              const ma = text.match(/回答：([\s\S]*)/);
-                              if (ma) a = (ma[1] || '').trim();
-                              const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                              const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: line, ts: new Date(m.timestamp||Date.now()).getTime() }));
-                              items.sort((a,b)=>(a.ts||0)-(b.ts||0));
-                              navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
-                            } catch (_) {}
-                          }}
-                        >
-                          加入回忆
-                        </button>
-                        );
-                        // 非每日回首：以第一个标签作为目标阶段；默认“当下”
-                        return (
+                        <div className="flex gap-2 items-center">
+                          <span className={`px-2 py-1 rounded-full text-xs border ${badgeCls}`}>{badge}</span>
                           <button
                             className="btn btn-secondary"
                             onClick={() => {
                               try {
                                 const tags = Array.isArray(m.tags) ? m.tags : [];
                                 const stageIdxList = getStageIndicesFromTags(tags);
-                                const line = (m.text || '').toString();
-                                const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-                                const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: add, ts: new Date(m.timestamp||Date.now()).getTime() }));
+                                const text = (m.text || '').toString();
+                                let q = '', a = '';
+                                const mq = text.match(/问题：([\s\S]*?)\n/);
+                                if (mq) q = (mq[1] || '').trim();
+                                const ma = text.match(/回答：([\s\S]*)/);
+                                if (ma) a = (ma[1] || '').trim();
+                                const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+                                const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: line, ts: new Date(m.timestamp||Date.now()).getTime() }));
                                 items.sort((a,b)=>(a.ts||0)-(b.ts||0));
                                 navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
-                              } catch(_) {}
+                              } catch (_) {}
                             }}
                           >
-                            落到篇章
+                            加入回忆
                           </button>
+                          <button
+                            className="btn btn-primary"
+                            disabled={vis==='family'}
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('token');
+                                await axios.put(`/api/memo/${m.id || m._id}/visibility`, { visibility: 'family' }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 });
+                                setMemos(prev => prev.map(x => (x.id||x._id) === (m.id||m._id) ? { ...x, visibility: 'family' } : x));
+                                setMessage('已上传到家族档案');
+                                setTimeout(()=>setMessage(''), 1200);
+                              } catch (e) {
+                                setMessage('上传失败：' + (e?.response?.data?.message || e?.message));
+                              }
+                            }}
+                          >
+                            {vis==='family' ? '已上传' : '上传到家族档案'}
+                          </button>
+                        </div>
+                        );
+                        // 非每日回首：以第一个标签作为目标阶段；默认“当下”
+                        return (
+                          <div className="flex gap-2 items-center">
+                            <span className={`px-2 py-1 rounded-full text-xs border ${badgeCls}`}>{badge}</span>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => {
+                                try {
+                                  const tags = Array.isArray(m.tags) ? m.tags : [];
+                                  const stageIdxList = getStageIndicesFromTags(tags);
+                                  const line = (m.text || '').toString();
+                                  const add = line ? `我：${line}` : '我：这是一条当下的记录。';
+                                  const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: add, ts: new Date(m.timestamp||Date.now()).getTime() }));
+                                  items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+                                  navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
+                                } catch(_) {}
+                              }}
+                            >
+                              落到篇章
+                            </button>
+                            <button
+                              className="btn btn-primary"
+                              disabled={vis==='family'}
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(`/api/memo/${m.id || m._id}/visibility`, { visibility: 'family' }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 });
+                                  setMemos(prev => prev.map(x => (x.id||x._id) === (m.id||m._id) ? { ...x, visibility: 'family' } : x));
+                                  setMessage('已上传到家族档案');
+                                  setTimeout(()=>setMessage(''), 1200);
+                                } catch (e) {
+                                  setMessage('上传失败：' + (e?.response?.data?.message || e?.message));
+                                }
+                              }}
+                            >
+                              {vis==='family' ? '已上传' : '上传到家族档案'}
+                            </button>
+                          </div>
                         );
                       })()}
                     </div>
