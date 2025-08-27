@@ -396,6 +396,308 @@ const My = () => {
   );
   // 已移除“我的随笔”展示
 
+  // Tabs, pagination, and batch selection states
+  const [activeTab, setActiveTab] = useState('overview'); // overview | memos | biographies | photos | videos | audios | settings
+  const [pageMemos, setPageMemos] = useState(1);
+  const [sizeMemos, setSizeMemos] = useState(20);
+  const [pageBios, setPageBios] = useState(1);
+  const [sizeBios, setSizeBios] = useState(20);
+  const [pagePhotos, setPagePhotos] = useState(1);
+  const [sizePhotos, setSizePhotos] = useState(20);
+  const [pageVideos, setPageVideos] = useState(1);
+  const [sizeVideos, setSizeVideos] = useState(20);
+  const [pageAudios, setPageAudios] = useState(1);
+  const [sizeAudios, setSizeAudios] = useState(20);
+  const [selectedMemos, setSelectedMemos] = useState(new Set());
+  const [selectedBios, setSelectedBios] = useState(new Set());
+  const [selectedPhotos, setSelectedPhotos] = useState(new Set());
+  const [selectedVideos, setSelectedVideos] = useState(new Set());
+  const [selectedAudios, setSelectedAudios] = useState(new Set());
+
+  const paginate = (list, page, size) => {
+    const total = Array.isArray(list) ? list.length : 0;
+    const totalPages = Math.max(1, Math.ceil(total / size));
+    const clampedPage = Math.max(1, Math.min(page, totalPages));
+    const start = (clampedPage - 1) * size;
+    const end = start + size;
+    return { items: (list || []).slice(start, end), totalPages, page: clampedPage };
+  };
+
+  const Pagination = ({ page, totalPages, onPrev, onNext, size, onSize }) => (
+    <div className="flex items-center justify-between mt-3">
+      <div className="flex items-center gap-2">
+        <button className="btn btn-secondary" onClick={onPrev} disabled={page <= 1}>上一页</button>
+        <span className="text-sm text-gray-700">{page} / {totalPages}</span>
+        <button className="btn btn-secondary" onClick={onNext} disabled={page >= totalPages}>下一页</button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-700">每页</span>
+        <select className="input w-24" value={size} onChange={(e) => onSize(Number(e.target.value))}>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+    </div>
+  );
+
+  // Batch actions
+  const batchUploadMemosToFamily = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const ids = Array.from(selectedMemos);
+      await Promise.all(ids.map(id => axios.put(`/api/memo/${id}/visibility`, { visibility: 'family' }, { headers: { Authorization: `Bearer ${token}` } })));
+      setMemos(prev => prev.map(x => ids.includes(x.id||x._id) ? { ...x, visibility: 'family' } : x));
+      setSelectedMemos(new Set());
+      setMessage('已批量上传到家族档案');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (e) {
+      setMessage('批量上传失败：' + (e?.response?.data?.message || e?.message));
+    }
+  };
+  const batchDeleteMemos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const ids = Array.from(selectedMemos);
+      await Promise.all(ids.map(id => axios.delete(`/api/memo/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
+      setMemos(prev => prev.filter(x => !ids.includes(x.id||x._id)));
+      try {
+        const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
+        const subj = localStorage.getItem('subject_version') || '0';
+        const curr = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
+        const next = (Array.isArray(curr)?curr:[]).filter(x => !ids.includes(x.id||x._id));
+        localStorage.setItem(`memos_offline_${scope}_${subj}`, JSON.stringify(next));
+      } catch(_) {}
+      setSelectedMemos(new Set());
+      setMessage('已批量删除随手记');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (e) {
+      setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
+    }
+  };
+  const batchFallMemos = () => {
+    const ids = Array.from(selectedMemos);
+    const chosen = (memos || []).filter(m => ids.includes(m.id||m._id));
+    // 复用现有落章逻辑：按标签映射阶段、按时间排序
+    try {
+      const items = [];
+      chosen.forEach(m => {
+        const tags = Array.isArray(m.tags) ? m.tags : [];
+        const stageIdxList = getStageIndicesFromTags(tags);
+        const ts = new Date(m.timestamp || Date.now()).getTime();
+        if (tags.includes('每日回首')) {
+          const text = (m.text || '').toString();
+          let q = '', a = '';
+          const mq = text.match(/问题：([\s\S]*?)\n/);
+          if (mq) q = (mq[1] || '').trim();
+          const ma = text.match(/回答：([\s\S]*)/);
+          if (ma) a = (ma[1] || '').trim();
+          const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
+          stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: line, ts }));
+        } else {
+          const line = (m.text || '').toString();
+          const add = line ? `我：${line}` : '我：这是一条当下的记录。';
+          stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: add, ts }));
+        }
+      });
+      items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+      const clean = items.map(({stageIndex,text})=>({stageIndex,text}));
+      setSelectedMemos(new Set());
+      navigate('/create', { state: { pasteItems: clean } });
+    } catch (_) { navigate('/create'); }
+  };
+
+  const batchShareBios = async (shared) => {
+    try {
+      const token = localStorage.getItem('token');
+      const ids = Array.from(selectedBios);
+      await Promise.all(ids.map(id => axios.put(`/api/note/${id}/family-share`, { shared }, { headers: { Authorization: `Bearer ${token}` } })));
+      setCloudNotes(prev => prev.map(n => ids.includes(n.id) ? { ...n, sharedWithFamily: !!shared } : n));
+      setSelectedBios(new Set());
+      setMessage(shared ? '已批量上传到家族档案' : '已批量从家族撤销');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (e) {
+      setMessage('批量操作失败：' + (e?.response?.data?.message || e?.message));
+    }
+  };
+  const batchDeleteBios = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const ids = Array.from(selectedBios);
+      await Promise.all(ids.map(id => axios.delete(`/api/note/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
+      setCloudNotes(prev => prev.filter(n => !ids.includes(n.id)));
+      setSelectedBios(new Set());
+      setMessage('已批量删除传记');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (e) {
+      setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
+    }
+  };
+  const batchDeleteFiles = async (which) => {
+    try {
+      const token = localStorage.getItem('token');
+      const map = { photos: selectedPhotos, videos: selectedVideos, audios: selectedAudios };
+      const setMap = { photos: setSelectedPhotos, videos: setSelectedVideos, audios: setSelectedAudios };
+      const ids = Array.from(map[which] || new Set());
+      await Promise.all(ids.map(id => axios.delete(`/api/upload/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
+      if (which === 'photos') setFiles(prev => prev.filter(f => !(/\.(jpeg|jpg|png|gif)$/i).test(f.filePath) || !ids.includes(f.id)));
+      if (which === 'videos') setFiles(prev => prev.filter(f => !(/\.(mp4|webm|ogg)$/i).test(f.filePath) || !ids.includes(f.id)));
+      if (which === 'audios') setFiles(prev => prev.filter(f => !(/\.(mp3|wav|ogg|m4a|aac|flac)$/i).test(f.filePath) || !ids.includes(f.id)));
+      setMap[which](new Set());
+      setMessage('已批量删除');
+      setTimeout(()=>setMessage(''), 1200);
+    } catch (e) {
+      setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
+    }
+  };
+
+  const renderTabs = () => (
+    <div className="tabs mb-4">
+      {[
+        ['overview','总览'],
+        ['memos','随手记'],
+        ['biographies','传记'],
+        ['photos','照片'],
+        ['videos','视频'],
+        ['audios','音频'],
+        ['settings','设置'],
+      ].map(([key,label]) => (
+        <button key={key} className={`tab ${activeTab===key?'tab-active':''}`} onClick={()=>setActiveTab(key)}>{label}</button>
+      ))}
+    </div>
+  );
+
+  const renderOverview = () => (
+    <div className="space-y-6">
+      <div className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+        <h3 className="text-xl font-semibold mb-2">快速查看</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('memos')}>随手记（{memos.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>传记（{biographies.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('photos')}>照片（{photos.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('videos')}>视频（{videos.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('audios')}>音频（{audios.length}）</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMemos = () => {
+    const { items, totalPages, page } = paginate(memos, pageMemos, sizeMemos);
+    const toggle = (id) => setSelectedMemos(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+    return (
+      <div>
+        {selectedMemos.size > 0 && (
+          <div className="toolbar mb-3">
+            <button className="btn btn-primary" onClick={batchUploadMemosToFamily}>批量上传到家族</button>
+            <button className="btn btn-secondary" onClick={batchFallMemos}>批量落到篇章</button>
+            <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={batchDeleteMemos}>批量删除</button>
+          </div>
+        )}
+        {items.length === 0 ? <p>暂无随手记</p> : items.map((m) => {
+          const vis = (m.visibility || 'private');
+          const badge = vis==='public' ? '公开' : (vis==='family' ? '家族' : '仅自己');
+          const badgeCls = vis==='public' ? 'bg-green-100 text-green-800 border-green-200' : (vis==='family' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200');
+          return (
+            <div key={m.id || m._id} className="card p-4 mb-3" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center gap-2 text-gray-800">
+                  <input type="checkbox" checked={selectedMemos.has(m.id||m._id)} onChange={()=>toggle(m.id||m._id)} />
+                  <span className={`px-2 py-1 rounded-full text-xs border ${badgeCls}`}>{badge}</span>
+                </label>
+                <div className="text-sm text-gray-600">{new Date(m.timestamp || Date.now()).toLocaleString('zh-CN')}</div>
+              </div>
+              {m.text && <p className="whitespace-pre-wrap text-gray-800 truncate-3">{m.text}</p>}
+            </div>
+          );
+        })}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPrev={()=> setPageMemos(p => Math.max(1, p-1))}
+          onNext={()=> setPageMemos(p => Math.min(totalPages, p+1))}
+          size={sizeMemos}
+          onSize={(s)=> { setSizeMemos(s); setPageMemos(1); }}
+        />
+      </div>
+    );
+  };
+
+  const renderBios = () => {
+    const { items, totalPages, page } = paginate(biographies, pageBios, sizeBios);
+    const toggle = (id) => setSelectedBios(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+    return (
+      <div>
+        {selectedBios.size > 0 && (
+          <div className="toolbar mb-3">
+            <button className="btn btn-primary" onClick={()=>batchShareBios(true)}>批量上传到家族</button>
+            <button className="btn btn-secondary" onClick={()=>batchShareBios(false)}>批量撤销家族</button>
+            <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={batchDeleteBios}>批量删除</button>
+          </div>
+        )}
+        {items.length === 0 ? <p>暂无传记</p> : items.map(item => (
+          <div key={item.id} className="card p-4 mb-3" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 text-gray-800">
+                <input type="checkbox" checked={selectedBios.has(item.id)} onChange={()=>toggle(item.id)} />
+                <span className="text-sm text-gray-700">{new Date(item.timestamp).toLocaleString('zh-CN')}</span>
+              </label>
+              <div className="flex gap-2">
+                <button className="btn btn-secondary" onClick={()=>handleViewNote(item.id, item.type)} disabled={isLoading}>查看</button>
+              </div>
+            </div>
+            <div className="font-semibold">{item.title || '(无标题)'}</div>
+            <p className="whitespace-pre-wrap text-gray-800 line-clamp-3">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
+          </div>
+        ))}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPrev={()=> setPageBios(p => Math.max(1, p-1))}
+          onNext={()=> setPageBios(p => Math.min(totalPages, p+1))}
+          size={sizeBios}
+          onSize={(s)=> { setSizeBios(s); setPageBios(1); }}
+        />
+      </div>
+    );
+  };
+
+  const renderFiles = (which, list, pageState, sizeState, setPageState, setSizeState, selectedSet, setSelectedSet) => {
+    const { items, totalPages, page } = paginate(list, pageState, sizeState);
+    const toggle = (id) => setSelectedSet(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+    return (
+      <div>
+        {selectedSet.size > 0 && (
+          <div className="toolbar mb-3">
+            <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={()=>batchDeleteFiles(which)}>批量删除</button>
+          </div>
+        )}
+        {items.length === 0 ? <p>暂无</p> : items.map(file => (
+          <div key={file.id} className="card p-4 mb-3" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 text-gray-800">
+                <input type="checkbox" checked={selectedSet.has(file.id)} onChange={()=>toggle(file.id)} />
+                <span className="text-sm text-gray-700">{new Date(file.timestamp).toLocaleString('zh-CN')}</span>
+              </label>
+              <div className="flex gap-2">
+                <button className="btn btn-secondary" onClick={()=>handleViewFile(file.id)} disabled={isLoading}>查看</button>
+              </div>
+            </div>
+            <p className="text-gray-800">{file.desc || '无描述'}</p>
+          </div>
+        ))}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPrev={()=> setPageState(p => Math.max(1, p-1))}
+          onNext={()=> setPageState(p => Math.min(totalPages, p+1))}
+          size={sizeState}
+          onSize={(s)=> { setSizeState(s); setPageState(1); }}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen p-4">
       <div className="card max-w-2xl w-full p-6" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 40%)', borderColor: '#e5e7eb' }}>
@@ -413,405 +715,25 @@ const My = () => {
           <div className="text-center">加载中...</div>
         ) : (
           <div className="space-y-6">
+            {renderTabs()}
             <div className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <h3 className="text-xl font-semibold mb-2">记录对象</h3>
               <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前回忆整理，再重置以避免内容混淆。</p>
               <button className="btn btn-secondary" onClick={handleResetSubject}>重置记录对象</button>
             </div>
-            {/* 我的随手记 */}
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的随手记</h3>
-              {Array.isArray(memos) && memos.length > 0 ? (
-                memos.map((m) => (
-                  <div key={m.id || m._id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                    <p className="text-gray-800 whitespace-pre-wrap">{m.text || ''}</p>
-                    {(Array.isArray(m.tags) && m.tags.length > 0) && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {m.tags.map((t) => (
-                          <span key={t} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">#{t}</span>
-                        ))}
-                      </div>
-                    )}
-                    {Array.isArray(m.media) && m.media.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-                        {m.media.map((mm, i) => (
-                          <div key={i} className="border rounded overflow-hidden">
-                            {mm.type === 'image' && <img src={mm.url} alt="" className="w-full h-32 object-cover" />}
-                            {mm.type === 'video' && <video src={mm.url} className="w-full h-32 object-cover" controls />}
-                            {mm.type === 'audio' && <audio src={mm.url} className="w-full" controls />}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center justify-between">
-                      <p className="text-sm text-gray-600">{new Date(m.timestamp || Date.now()).toLocaleString('zh-CN')}</p>
-                      {(() => {
-                        const currentVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
-                        const memoVersion = Number(m.subjectVersion || '0') || 0;
-                        const isolated = memoVersion !== currentVersion; // 版本不一致则隔离
-                        if (isolated) return (
-                          <span className="text-xs text-gray-500">（已隔离，无法落章）</span>
-                        );
-                        const vis = (m.visibility || 'private');
-                        const badge = vis==='public' ? '公开' : (vis==='family' ? '家族' : '仅自己');
-                        const badgeCls = vis==='public' ? 'bg-green-100 text-green-800 border-green-200' : (vis==='family' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200');
-                        if (Array.isArray(m.tags) && m.tags.includes('每日回首')) return (
-                        <div className="flex gap-2 items-center">
-                          <span className={`px-2 py-1 rounded-full text-xs border ${badgeCls}`}>{badge}</span>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => {
-                              try {
-                                const tags = Array.isArray(m.tags) ? m.tags : [];
-                                const stageIdxList = getStageIndicesFromTags(tags);
-                                const text = (m.text || '').toString();
-                                let q = '', a = '';
-                                const mq = text.match(/问题：([\s\S]*?)\n/);
-                                if (mq) q = (mq[1] || '').trim();
-                                const ma = text.match(/回答：([\s\S]*)/);
-                                if (ma) a = (ma[1] || '').trim();
-                                const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
-                                const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: line, ts: new Date(m.timestamp||Date.now()).getTime() }));
-                                items.sort((a,b)=>(a.ts||0)-(b.ts||0));
-                                navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
-                              } catch (_) {}
-                            }}
-                          >
-                            加入回忆
-                          </button>
-                          <button
-                            className="btn btn-primary"
-                            disabled={vis==='family'}
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem('token');
-                                await axios.put(`/api/memo/${m.id || m._id}/visibility`, { visibility: 'family' }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 });
-                                setMemos(prev => prev.map(x => (x.id||x._id) === (m.id||m._id) ? { ...x, visibility: 'family' } : x));
-                                setMessage('已上传到家族档案');
-                                setTimeout(()=>setMessage(''), 1200);
-                              } catch (e) {
-                                setMessage('上传失败：' + (e?.response?.data?.message || e?.message));
-                              }
-                            }}
-                          >
-                            {vis==='family' ? '已上传' : '上传到家族档案'}
-                          </button>
-                        </div>
-                        );
-                        // 非每日回首：以第一个标签作为目标阶段；默认“当下”
-                        return (
-                          <div className="flex gap-2 items-center">
-                            <span className={`px-2 py-1 rounded-full text-xs border ${badgeCls}`}>{badge}</span>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => {
-                                try {
-                                  const tags = Array.isArray(m.tags) ? m.tags : [];
-                                  const stageIdxList = getStageIndicesFromTags(tags);
-                                  const line = (m.text || '').toString();
-                                  const add = line ? `我：${line}` : '我：这是一条当下的记录。';
-                                  const items = stageIdxList.map(si => ({ stageIndex: Math.max(0, si), text: add, ts: new Date(m.timestamp||Date.now()).getTime() }));
-                                  items.sort((a,b)=>(a.ts||0)-(b.ts||0));
-                                  navigate('/create', { state: { pasteItems: items.map(({stageIndex,text})=>({stageIndex,text})) } });
-                                } catch(_) {}
-                              }}
-                            >
-                              落到篇章
-                            </button>
-                            <button
-                              className="btn btn-primary"
-                              disabled={vis==='family'}
-                              onClick={async () => {
-                                try {
-                                  const token = localStorage.getItem('token');
-                                  await axios.put(`/api/memo/${m.id || m._id}/visibility`, { visibility: 'family' }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 });
-                                  setMemos(prev => prev.map(x => (x.id||x._id) === (m.id||m._id) ? { ...x, visibility: 'family' } : x));
-                                  setMessage('已上传到家族档案');
-                                  setTimeout(()=>setMessage(''), 1200);
-                                } catch (e) {
-                                  setMessage('上传失败：' + (e?.response?.data?.message || e?.message));
-                                }
-                              }}
-                            >
-                              {vis==='family' ? '已上传' : '上传到家族档案'}
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无随手记</p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的传记</h3>
-              {biographies.length > 0 ? (
-                biographies.map((item) => (
-                  <div key={item.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                    <h4 className="font-semibold">{item.title}</h4>
-                    <p className="whitespace-pre-wrap text-gray-800">{(item.summary || item.content || '').substring(0, 150)}{(item.summary || item.content || '').length>150?'...':''}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.username} | {new Date(item.timestamp).toLocaleString('zh-CN')} | {item.isPublic ? '(公开)' : '(私有)'} | {item.cloudStatus === 'Not Uploaded' ? '(本地)' : '(云端)'}
-                    </p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleViewNote(item.id, item.type)}
-                        disabled={isLoading}
-                      >
-                        查看
-                      </button>
-                      {item.isPublic ? (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.put(`/api/note/${item.id}/public`, { isPublic: false }, { headers: { Authorization: `Bearer ${token}` } });
-                              setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, isPublic: false } : n));
-                              setMessage('已从广场撤销');
-                            } catch (e) {
-                              setMessage('撤销失败：' + (e.response?.data?.message || e.message));
-                            }
-                          }}
-                          disabled={isLoading}
-                        >
-                          {/* 从广场撤销（隐藏） */}
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.put(`/api/note/${item.id}/public`, { isPublic: true }, { headers: { Authorization: `Bearer ${token}` } });
-                              setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, isPublic: true } : n));
-                              /* setMessage('已分享到广场'); */
-                            } catch (e) {
-                              setMessage('分享失败：' + (e.response?.data?.message || e.message));
-                            }
-                          }}
-                          disabled={isLoading}
-                        >
-                          {/* 分享到广场（隐藏） */}
-                        </button>
-                      )}
-                      {item.sharedWithFamily ? (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.put(`/api/note/${item.id}/family-share`, { shared: false }, { headers: { Authorization: `Bearer ${token}` } });
-                              setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, sharedWithFamily: false } : n));
-                              setMessage('已从家族撤销');
-                            } catch (e) {
-                              setMessage('撤销失败：' + (e.response?.data?.message || e.message));
-                            }
-                          }}
-                          disabled={isLoading}
-                        >
-                          从家族档案撤销
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.put(`/api/note/${item.id}/family-share`, { shared: true }, { headers: { Authorization: `Bearer ${token}` } });
-                              setCloudNotes(prev => prev.map(n => n.id === item.id ? { ...n, sharedWithFamily: true } : n));
-                              setMessage('已上传到家族档案');
-                            } catch (e) {
-                              setMessage('分享失败：' + (e.response?.data?.message || e.message));
-                            }
-                          }}
-                          disabled={isLoading}
-                        >
-                          上传到家族档案
-                        </button>
-                      )}
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleEditNote(item.id, item.type)}
-                        disabled={isLoading}
-                      >
-                        编辑
-                      </button>
-                      {/* 生成分享链接（在“我的”页隐藏，改在预览页进行） */}
-                      <button
-                        className="btn"
-                        onClick={() => handleDeleteNote(item.id)}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无传记</p>
-              )}
-            </div>
-            {/* 我的收藏（隐藏） */}
-            {/** “我的随笔”模块已移除 */}
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的相册</h3>
-              {photos.length > 0 ? (
-                photos.map(file => (
-                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                    <p>{file.desc || '无描述'}</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(file.timestamp).toLocaleString('zh-CN')}
-                    </p>
-                    <img
-                      src={mediaFallbackSrc[file.id] || file.filePath}
-                      alt={file.desc || '文件'}
-                      className="w-full h-32 object-cover rounded mt-2"
-                      onError={async () => {
-                        if (!mediaFallbackSrc[file.id]) {
-                          const blobUrl = await loadWithAuthAsBlob(file.filePath);
-                          if (blobUrl) {
-                            setMediaFallbackSrc((prev) => ({ ...prev, [file.id]: blobUrl }));
-                            return;
-                          }
-                        }
-                        setMessage('图片加载失败，请检查文件路径');
-                      }}
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleViewFile(file.id)}
-                        disabled={isLoading}
-                      >
-                        查看
-                      </button>
-                      <button
-                        className="btn"
-                        onClick={() => handleDeleteFile(file.id)}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无相册</p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的视频</h3>
-              {videos.length > 0 ? (
-                videos.map(file => (
-                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                    <p>{file.desc || '无描述'}</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(file.timestamp).toLocaleString('zh-CN')}
-                    </p>
-                    <video
-                      src={mediaFallbackSrc[file.id] || file.filePath}
-                      controls
-                      className="w-full h-32 object-cover rounded mt-2"
-                      onError={async () => {
-                        if (!mediaFallbackSrc[file.id]) {
-                          const blobUrl = await loadWithAuthAsBlob(file.filePath);
-                          if (blobUrl) {
-                            setMediaFallbackSrc((prev) => ({ ...prev, [file.id]: blobUrl }));
-                            return;
-                          }
-                        }
-                      }}
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleViewFile(file.id)}
-                        disabled={isLoading}
-                      >
-                        查看
-                      </button>
-                      <button
-                        className="btn"
-                        onClick={() => handleDeleteFile(file.id)}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无视频</p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">我的音频</h3>
-              {audios.length > 0 ? (
-                audios.map(file => (
-                  <div key={file.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                    <p>{file.desc || '无描述'}</p>
-                    <p className="text-sm" style={{ color: '#bfa366' }}>
-                      {new Date(file.timestamp).toLocaleString('zh-CN')}
-                    </p>
-                    <audio
-                      src={mediaFallbackSrc[file.id] || file.filePath}
-                      controls
-                      className="w-full mt-2"
-                      onError={async () => {
-                        if (!mediaFallbackSrc[file.id]) {
-                          const blobUrl = await loadWithAuthAsBlob(file.filePath);
-                          if (blobUrl) {
-                            setMediaFallbackSrc((prev) => ({ ...prev, [file.id]: blobUrl }));
-                            return;
-                          }
-                        }
-                      }}
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="btn bg-blue-600 hover:bg-blue-700"
-                        onClick={() => handleViewFile(file.id)}
-                        disabled={isLoading}
-                      >
-                        查看
-                      </button>
-                      <button
-                        className="btn"
-                        onClick={() => handleDeleteFile(file.id)}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>暂无音频</p>
-              )}
-            </div>
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'memos' && renderMemos()}
+            {activeTab === 'biographies' && renderBios()}
+            {activeTab === 'photos' && renderFiles('photos', photos, pagePhotos, sizePhotos, setPagePhotos, setSizePhotos, selectedPhotos, setSelectedPhotos)}
+            {activeTab === 'videos' && renderFiles('videos', videos, pageVideos, sizeVideos, setPageVideos, setSizeVideos, selectedVideos, setSelectedVideos)}
+            {activeTab === 'audios' && renderFiles('audios', audios, pageAudios, sizeAudios, setPageAudios, setSizeAudios, selectedAudios, setSelectedAudios)}
+            {activeTab === 'settings' && (
+              <div className="text-gray-700">
+                <p>在这里可以添加更多个性化设置。</p>
+              </div>
+            )}
             <div className="flex gap-4">
-              <button
-                className="btn btn-primary"
-                onClick={handleGenerateMark}
-                disabled={isLoading}
-              >
-                生成永恒印记
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => navigate('/')}
-                disabled={isLoading}
-              >
-                返回
-              </button>
+              <button className="btn btn-secondary" onClick={() => navigate('/')}>返回首页</button>
             </div>
           </div>
         )}

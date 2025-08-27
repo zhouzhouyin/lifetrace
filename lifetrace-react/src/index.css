@@ -76,6 +76,25 @@ a:hover { color: #1e40af; } /* blue-700 */
   transform: translateY(-1px);
 }
 
+/* Pills tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab { padding: 8px 12px; border-radius: 999px; border: 1px solid #2563eb; background: #fff; color: #2563eb; font-weight: 600; transition: all .15s ease; }
+.tab:hover { background: #f8fafc; }
+.tab-active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #e5e7eb; }
+
+/* Truncate multi-lines (no plugin) */
+.truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.truncate-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Compact toolbar for batch actions */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border: 1px solid #e5e7eb; background: #ffffff; border-radius: 10px; }
+
+/* Pagination bar */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
+
 .progress-container { @apply w-full rounded h-2; background: #e5e7eb; }
 
 .progress-bar { @apply h-full rounded transition-all; background: #2563eb; }

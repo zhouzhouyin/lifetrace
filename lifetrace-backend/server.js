@@ -1000,6 +1000,21 @@ app.post('/api/memo', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete memo (owner only)
+app.delete('/api/memo/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) return res.status(400).json({ message: '无效的随手记 ID' });
+    const memo = await Memo.findOne({ _id: id, userId: req.user.userId });
+    if (!memo) return res.status(404).json({ message: '随手记不存在' });
+    await Memo.deleteOne({ _id: id, userId: req.user.userId });
+    return res.json({ message: '已删除' });
+  } catch (err) {
+    logger.error('Delete memo error', { error: err.message, ip: req.ip });
+    res.status(500).json({ message: '删除随手记失败：' + err.message });
+  }
+});
+
 // Update memo visibility and sharing list (owner only)
 app.put('/api/memo/:id/visibility', authenticateToken, async (req, res) => {
   try {
