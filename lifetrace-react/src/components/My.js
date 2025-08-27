@@ -223,9 +223,11 @@ const My = () => {
 
   // 重置记录对象（防错提示）
   const handleResetSubject = () => {
-    const ok = window.confirm('重置记录对象将清空“记录对象信息”和“身份/关系”设定。请确保已完成当前对象的回忆整理，以避免不同对象的内容混淆。是否继续？');
+    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的回忆整理，再开始新的对象。是否继续？');
     if (!ok) return;
     try {
+      const oldVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
+      try { localStorage.setItem('subject_version', String(oldVersion + 1)); } catch(_) {}
       localStorage.removeItem('author_mode');
       localStorage.removeItem('author_relation');
       localStorage.removeItem('record_profile');
@@ -401,7 +403,14 @@ const My = () => {
                     )}
                     <div className="mt-2 flex items-center justify-between">
                       <p className="text-sm text-gray-600">{new Date(m.timestamp || Date.now()).toLocaleString('zh-CN')}</p>
-                      {(Array.isArray(m.tags) && m.tags.includes('每日回首')) && (
+                      {(() => {
+                        const currentVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
+                        const memoVersion = Number(m.subjectVersion || '0') || 0;
+                        const isolated = memoVersion !== currentVersion; // 版本不一致则隔离
+                        if (isolated) return (
+                          <span className="text-xs text-gray-500">（已隔离，无法落章）</span>
+                        );
+                        if (Array.isArray(m.tags) && m.tags.includes('每日回首')) return (
                         <button
                           className="btn btn-secondary"
                           onClick={() => {
@@ -427,7 +436,32 @@ const My = () => {
                         >
                           加入回忆
                         </button>
-                      )}
+                        );
+                        // 非每日回首：以第一个标签作为目标阶段；默认“当下”
+                        return (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              try {
+                                const raw = localStorage.getItem('dailyPasteboard');
+                                const obj = raw ? JSON.parse(raw) : { items: [] };
+                                const stages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+                                const tags = Array.isArray(m.tags) ? m.tags : [];
+                                let stageIdx = stages.indexOf(tags[0] || '当下');
+                                if (stageIdx < 0) stageIdx = stages.indexOf('当下');
+                                const line = (m.text || '').toString();
+                                const add = line ? `我：${line}` : '我：这是一条当下的记录。';
+                                obj.items.push({ stageIndex: Math.max(0, stageIdx), text: add });
+                                localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
+                                setMessage('已加入回忆');
+                                setTimeout(() => setMessage(''), 1200);
+                              } catch(_) {}
+                            }}
+                          >
+                            落到篇章
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))

@@ -16,6 +16,7 @@ const Memo = () => {
   const [mediaPreview, setMediaPreview] = useState('');
   const [uploading, setUploading] = useState(false);
   const [memos, setMemos] = useState([]);
+  const subjectVersion = useMemo(() => { try { return Number(localStorage.getItem('subject_version') || '0') || 0; } catch(_) { return 0; } }, []);
   const [shareToFamily, setShareToFamily] = useState(false);
   const lifeStages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
   const [isRecording, setIsRecording] = useState(false);
@@ -134,6 +135,7 @@ const Memo = () => {
           tags,
           media: uploadedUrl ? [{ type: mediaType, url: uploadedUrl }] : [],
           shareToFamily: !!shareToFamily,
+          subjectVersion: String(subjectVersion),
         }, { headers: { Authorization: `Bearer ${token}` } });
         created = resp.data;
       } catch (e) {
@@ -145,6 +147,7 @@ const Memo = () => {
           tags,
           media: uploadedUrl ? [{ type: mediaType, url: uploadedUrl }] : [],
           timestamp: new Date().toISOString(),
+          subjectVersion: String(subjectVersion),
         };
       }
       setMemos(prev => [ created, ...prev ]);

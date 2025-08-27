@@ -212,14 +212,16 @@ const Home = () => {
     try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
     const baseTags = ['每日回首', lifeStages[currentStageIndex]];
     const tags = (authorMode === 'other' && relation) ? [...baseTags, relation] : baseTags;
+    const subjectVersion = localStorage.getItem('subject_version') || '';
     try {
-      const resp = await axios.post('/api/memo', { text: content, tags, media: [] }, { headers: { Authorization: `Bearer ${token}` } });
+      const resp = await axios.post('/api/memo', { text: content, tags, media: [], subjectVersion }, { headers: { Authorization: `Bearer ${token}` } });
       const created = {
         id: resp.data?.id || `local-${Date.now()}`,
         text: content,
         tags,
         media: [],
         timestamp: resp.data?.timestamp || new Date().toISOString(),
+        subjectVersion,
       };
       setMemosHome(prev => [created, ...(Array.isArray(prev)?prev:[])]);
       try { setMemosCtx && setMemosCtx(prev => [created, ...(Array.isArray(prev)?prev:[])]); } catch(_) {}
@@ -230,6 +232,7 @@ const Home = () => {
         tags,
         media: [],
         timestamp: new Date().toISOString(),
+        subjectVersion,
       };
       setMemosHome(prev => [created, ...(Array.isArray(prev)?prev:[])]);
       try { setMemosCtx && setMemosCtx(prev => [created, ...(Array.isArray(prev)?prev:[])]); } catch(_) {}
