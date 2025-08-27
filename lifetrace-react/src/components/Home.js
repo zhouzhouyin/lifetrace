@@ -90,10 +90,10 @@ const Home = () => {
         const profileRaw = localStorage.getItem('record_profile');
         let relation = '';
         try { relation = (JSON.parse(profileRaw || '{}')?.relation || '').trim(); } catch(_) {}
-        const perspective = authorMode === 'other' ? `请使用第三人称，并结合关系（如：${relation || '家人'}）进行提问；` : '请使用第二人称与当事人对话；';
-        const system = `你是一位温柔且专业的回忆引导者。${perspective}为给定阶段生成5个触及人心的中文问题（不超过30字），口语化自然、真诚具体，无编号，仅以换行分隔问题。不要与已用问题重复。`;
+        const perspective = authorMode === 'other' ? `请使用第三人称，并结合关系（如：${relation || '家人'}），语气温柔真诚；` : '请使用第二人称与当事人对话，语气温柔真诚；';
+        const system = `你是一位温暖、耐心且得体的引导者。${perspective} 请为给定阶段生成5个问题，要求：触及人心、具体、有画面感；避免空泛；单句不超过30字；不要编号，仅以换行分隔；不要与历史重复。`;
         const stage = lifeStages[idx] || '童年';
-        const user = `阶段：${stage}\n已用问题（不要重复）：${usedTexts.join(' / ') || '无'}\n请生成5个全新的问题。`;
+        const user = `阶段：${stage}\n已用问题（不要重复）：${usedTexts.join(' / ') || '无'}\n还可参考资料：${(localStorage.getItem('record_profile')||'').slice(0,200)}\n请生成5个全新的问题。`;
         const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
         const text = (resp.data?.choices?.[0]?.message?.content || '').toString();
         const arr = text.split(/\n+/).map(s => s.replace(/^\d+[\.、\)]\s*/, '').trim()).filter(Boolean).slice(0,5);
@@ -163,7 +163,7 @@ const Home = () => {
     }
   };
 
-  // 每天首次进入展示 + 首次用户引导
+  // 每天首次进入展示 + 首次用户引导（开启开关则每日凌晨自动弹）
   useEffect(() => {
     const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
     try { lastShownRef.current = localStorage.getItem(`daily_last_shown_${scope}`) || ''; } catch (_) {}
@@ -200,7 +200,26 @@ const Home = () => {
   }, [dailyEnabled, lang]);
 
   const handleSwap = async () => { await pickAndStoreQuestion(); };
-  const handleSkip = () => { setShowDailyCard(false); setAnswer(''); };
+  const handleSkip = async () => {
+    // 跳过前，将当前问题（若有回答）按每日回首保存为随手记，便于连续回首形成轨迹
+    try {
+      if ((currentQuestion || '').trim()) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const label = currentQuestionId ? `Q${currentQuestionId}` : '';
+          const content = `阶段：${lifeStages[currentStageIndex]}\n问题：${label ? (label + ' ') : ''}${currentQuestion}\n回答：${answer || '（未填写）'}`;
+          const authorMode = (localStorage.getItem('author_mode') || 'self');
+          let relation = '';
+          try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
+          const baseTags = ['每日回首', lifeStages[currentStageIndex]];
+          const tags = (authorMode === 'other' && relation) ? [...baseTags, relation] : baseTags;
+          const subjectVersion = localStorage.getItem('subject_version') || '';
+          await axios.post('/api/memo', { text: content, tags, media: [], subjectVersion }, { headers: { Authorization: `Bearer ${token}` } }).catch(()=>{});
+        }
+      }
+    } catch (_) {}
+    setShowDailyCard(false); setAnswer('');
+  };
   const handleSaveToMemo = async () => {
     if (!saveToMemoChecked) { setShowDailyCard(false); setAnswer(''); return; }
     const token = localStorage.getItem('token');
@@ -256,7 +275,7 @@ const Home = () => {
       if (!isLoggedIn) return;
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get('/api/memos?todayKey=1', { headers: { Authorization: `Bearer ${token}` } });
         const list = Array.isArray(res.data) ? res.data : [];
         const authorMode = (localStorage.getItem('author_mode') || 'self');
         let relation = '';
@@ -464,28 +483,31 @@ const Home = () => {
           <p className="mt-4 text-base sm:text-lg text-gray-700">
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
-          {/* 每日回首卡片 */}
+          {/* 每日回首弹窗（默认弹出，可跳过当天） */}
           {showDailyCard && (
-            <div className="mt-6 card text-left p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-              <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]}</div>
-              <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : (currentQuestion || '...')}</div>
-              <textarea
-                className="input w-full mb-3"
-                placeholder={lang === 'zh' ? '在这里写下你的回答（可选）' : 'Write your brief answer (optional)'}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                rows={3}
-                maxLength={500}
-              />
-              <label className="flex items-center gap-2 text-sm text-gray-800 mb-2">
-                <input type="checkbox" checked={saveToMemoChecked} onChange={(e)=>setSaveToMemoChecked(e.target.checked)} />
-                记为随手记
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <button className="btn btn-secondary" onClick={handleSwap}>换一个</button>
-                <button className="btn btn-secondary" onClick={handleSkip}>跳过</button>
-                <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
-                <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+              <div className="relative z-50 card w-11/12 max-w-xl text-left p-4 sm:p-5" role="dialog" aria-modal="true" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+                <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]}</div>
+                <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : (currentQuestion || '...')}</div>
+                <textarea
+                  className="input w-full mb-3"
+                  placeholder={lang === 'zh' ? '在这里写下你的回答（可选）' : 'Write your brief answer (optional)'}
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                />
+                <label className="flex items-center gap-2 text-sm text-gray-800 mb-2">
+                  <input type="checkbox" checked={saveToMemoChecked} onChange={(e)=>setSaveToMemoChecked(e.target.checked)} />
+                  记为随手记
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button className="btn btn-secondary" onClick={handleSkip}>返回</button>
+                  <button className="btn btn-secondary" onClick={handleSwap}>继续回首</button>
+                  <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
+                  <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
+                </div>
               </div>
             </div>
           )}

@@ -11,7 +11,7 @@ const Memo = () => {
   const [message, setMessage] = useState('');
   const [text, setText] = useState('');
   const [tagsInput, setTagsInput] = useState(''); // 以空格或#分隔，回车添加
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState(['当下']);
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreview, setMediaPreview] = useState('');
   const [uploading, setUploading] = useState(false);
