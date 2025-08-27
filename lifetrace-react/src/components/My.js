@@ -221,6 +221,19 @@ const My = () => {
     setTimeout(() => navigate('/contact'), 1000);
   };
 
+  // 重置记录对象（防错提示）
+  const handleResetSubject = () => {
+    const ok = window.confirm('重置记录对象将清空“记录对象信息”和“身份/关系”设定。请确保已完成当前对象的回忆整理，以避免不同对象的内容混淆。是否继续？');
+    if (!ok) return;
+    try {
+      localStorage.removeItem('author_mode');
+      localStorage.removeItem('author_relation');
+      localStorage.removeItem('record_profile');
+      setMessage('已重置记录对象。请返回首页重新选择。');
+      setTimeout(() => setMessage(''), 1600);
+    } catch (_) {}
+  };
+
   // 删除笔记
   const handleDeleteNote = async (noteId) => {
     if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
@@ -354,6 +367,11 @@ const My = () => {
           <div className="text-center">加载中...</div>
         ) : (
           <div className="space-y-6">
+            <div className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+              <h3 className="text-xl font-semibold mb-2">记录对象</h3>
+              <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前回忆整理，再重置以避免内容混淆。</p>
+              <button className="btn btn-secondary" onClick={handleResetSubject}>重置记录对象</button>
+            </div>
             {/* 我的随手记 */}
             <div>
               <h3 className="text-xl font-semibold mb-2">我的随手记</h3>

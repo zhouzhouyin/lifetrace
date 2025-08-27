@@ -25,6 +25,10 @@ const Home = () => {
   const STAGE_THRESHOLD = 5;
   const snoozeUntilRef = useRef('');
   const [memosHome, setMemosHome] = useState([]);
+  // 首次强制选择记录对象
+  const [needAuthorSelect, setNeedAuthorSelect] = useState(() => {
+    try { return !(localStorage.getItem('author_mode')); } catch (_) { return true; }
+  });
 
   const saveEnabled = (v) => {
     setDailyEnabled(v);
@@ -61,7 +65,12 @@ const Home = () => {
       if (newList.length === 0) {
         const usedTexts = [];
         Object.values(pool).forEach(arr => { (arr || []).forEach(x => usedTexts.push(x.q)); });
-        const system = '你是一位温柔且专业的回忆引导者。请为给定阶段生成5个不重复的中文问题（不超过30字），口语化自然，无编号，仅以换行分隔问题。不要与已用问题重复。';
+        const authorMode = (localStorage.getItem('author_mode') || 'self');
+        const profileRaw = localStorage.getItem('record_profile');
+        let relation = '';
+        try { relation = (JSON.parse(profileRaw || '{}')?.relation || '').trim(); } catch(_) {}
+        const perspective = authorMode === 'other' ? `请使用第三人称，并结合关系（如：${relation || '家人'}）进行提问；` : '请使用第二人称与当事人对话；';
+        const system = `你是一位温柔且专业的回忆引导者。${perspective}为给定阶段生成5个触及人心的中文问题（不超过30字），口语化自然、真诚具体，无编号，仅以换行分隔问题。不要与已用问题重复。`;
         const stage = lifeStages[idx] || '童年';
         const user = `阶段：${stage}\n已用问题（不要重复）：${usedTexts.join(' / ') || '无'}\n请生成5个全新的问题。`;
         const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
@@ -196,7 +205,16 @@ const Home = () => {
         const token = localStorage.getItem('token');
         const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
         const list = Array.isArray(res.data) ? res.data : [];
-        setMemosHome(list);
+        const authorMode = (localStorage.getItem('author_mode') || 'self');
+        let relation = '';
+        try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
+        const mapped = list.map(m => {
+          if (authorMode === 'other' && relation && Array.isArray(m.tags) && m.tags.includes('每日回首') && !m.tags.includes(relation)) {
+            return { ...m, tags: [...m.tags, relation] };
+          }
+          return m;
+        });
+        setMemosHome(mapped);
       } catch (_) {}
     };
     loadMemos();
@@ -251,6 +269,12 @@ const Home = () => {
       navigate('/create');
     }
   };
+
+  const handleAuthorPick = (mode) => {
+    try { localStorage.setItem('author_mode', mode); } catch (_) {}
+    setNeedAuthorSelect(false);
+    navigate('/create');
+  };
   const zhSlogans = [
     '生而不灭于遗忘，生命故事永有人可读',
     '写下人生的故事，给未来的孩子一盏可以回望的灯',
@@ -302,6 +326,16 @@ const Home = () => {
       {/* Hero */}
       <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12">
         <div className="max-w-5xl mx-auto text-center">
+          {needAuthorSelect && (
+            <div className="card p-4 sm:p-5 mb-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
+              <div className="text-lg font-semibold text-gray-900 mb-2">请选择记录对象</div>
+              <p className="text-sm text-gray-700 mb-3">为谁记录，会影响后续的问题风格与标签管理</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <button className="btn btn-primary" onClick={() => handleAuthorPick('self')}>为自己记录</button>
+                <button className="btn btn-secondary" onClick={() => handleAuthorPick('other')}>为他人记录</button>
+              </div>
+            </div>
+          )}
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
             {lang === 'zh' ? '把一生好好写下，温柔地交给时间' : 'Write a life, gently handed to time'}
           </h1>
@@ -369,7 +403,7 @@ const Home = () => {
               <p className="text-sm opacity-90 mt-1 text-slate-900">
                 {lang === 'zh' ? '几句话、一张照片或一段语音，记录一个瞬间。' : 'A few words, a photo or voice to capture the moment.'}
               </p>
-            </button>
+        </button>
             <button
               aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
               onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
@@ -380,7 +414,7 @@ const Home = () => {
               <p className="text-sm mt-1 text-slate-900">
                 {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
               </p>
-            </button>
+        </button>
             <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
@@ -391,14 +425,14 @@ const Home = () => {
               <p className="text-sm mt-1 text-slate-900">
                 {lang === 'zh' ? '管理我已记录的篇章与媒体素材。' : 'Manage your chapters and media.'}
               </p>
-            </button>
+        </button>
           </div>
           {isLoggedIn && (
             <div className="mt-3 sm:hidden">
               <button className="btn w-full" onClick={handleMobileLogout}>
                 {lang === 'zh' ? '登出' : 'Logout'}
-              </button>
-            </div>
+        </button>
+      </div>
           )}
           {isLoggedIn && role === 'admin' && (
             <div className="mt-3 flex gap-3 justify-center">

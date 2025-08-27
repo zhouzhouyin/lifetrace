@@ -569,6 +569,9 @@ const CreateBiography = () => {
   const [authorRelation, setAuthorRelation] = useState(() => {
     try { return localStorage.getItem('author_relation') || ''; } catch(_) { return ''; }
   }); // 如 父亲/母亲/爷爷 等
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('record_profile') || '{}'); } catch(_) { return {}; }
+  }); // { name, gender, birth, origin, residence, relation? }
 
   const startInterview = () => {
     const idx = Math.min(currentSectionIndex, lifeStages.length - 1);
@@ -580,37 +583,13 @@ const CreateBiography = () => {
     if (isSmallScreen()) {
       setIsFocusMode(true);
     }
-    // 若为全新草稿（无对话且各篇章均为空），重置身份设定以确保先询问"为谁创作"
-    try {
-      const noChat = (chatMessages || []).length === 0;
-      const noContent = (sections || []).every(s => !((s?.text || '').toString().trim().length > 0));
-      if (noChat && noContent) {
-        if (authorMode) { setAuthorMode(''); try { localStorage.removeItem('author_mode'); } catch(_){} }
-        if (authorRelation) { setAuthorRelation(''); try { localStorage.removeItem('author_relation'); } catch(_){} }
-      }
-    } catch (_) {}
+    // 不再在此询问身份与关系，统一由首页选择
     setStageIndex(idx);
     setCurrentSectionIndex(idx);
     try { if (isFocusEditing) setIsFocusEditing(false); } catch(_){}
     // 首次仅给基础资料开场，之后不再重复
     if (!hasShownOpening) {
-      // 身份设定引导
-      if (!authorMode) {
-        const q1 = '这次记录是为谁创作？请选择：1. 为我自己  2. 为他人（如父母/亲人）  3. 暂不确定（可稍后再选）。请仅回复 1/2/3 的编号。';
-        setChatMessages(prev => [...prev, { role: 'assistant', content: q1 }]);
-        appendLineToSection(idx, `陪伴师：${q1}`);
-        setHasShownOpening(true);
-        if (!isSmallScreen()) scrollAnswerIntoView();
-        return;
-      }
-      if (authorMode === 'other' && !authorRelation) {
-        const askRel = '请问与您记录的这位之间的关系是什么？例如：父亲/母亲/爷爷/奶奶/外公/外婆/妻子/丈夫/朋友等。（请直接回复关系称谓）';
-        setChatMessages(prev => [...prev, { role: 'assistant', content: askRel }]);
-        appendLineToSection(idx, `陪伴师：${askRel}`);
-        setHasShownOpening(true);
-        if (!isSmallScreen()) scrollAnswerIntoView();
-        return;
-      }
+      // 身份与关系已在首页设定，不再重复
       // 已具备身份与（如需）关系信息：直接进入阶段开场，不再询问基础资料
       setHasShownOpening(true);
       askStageKickoff(idx, true);
@@ -694,7 +673,9 @@ const CreateBiography = () => {
 
     const perspective = (authorMode === 'other') ? '请使用第三人称（他/她/父亲/母亲/爷爷/奶奶等），避免"您/我"。' : '请使用第二人称"您/你"，避免第三人称。';
     const tone = (authorMode === 'other') ? '你现在是"引导者/助手"，与记录者一起梳理对方的人生经历，强调"整理与梳理"，避免闲聊感。' : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
+    const p = profile || {};
+    const profileText = `基本资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，关系${authorRelation||p.relation||'（未填）'}`:''}。`;
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -1682,6 +1663,20 @@ const CreateBiography = () => {
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
         </Helmet>
+        {/* 记录对象基本信息表单 */}
+        <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
+          <h3 className="text-lg font-semibold mb-2">记录对象信息</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input className="input" placeholder="姓名" value={profile.name||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), name:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+            <input className="input" placeholder="性别" value={profile.gender||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), gender:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+            <input className="input" placeholder="出生年月（如 1950-06）" value={profile.birth||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), birth:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+            <input className="input" placeholder="祖籍" value={profile.origin||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), origin:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+            <input className="input" placeholder="现居住地" value={profile.residence||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), residence:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+            {authorMode==='other' && (
+              <input className="input" placeholder="与被记录人的关系（如 母亲）" value={authorRelation||profile.relation||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setAuthorRelation(v); setProfile(p=>{ const n={...(p||{}), relation:v}; try{localStorage.setItem('record_profile', JSON.stringify(n)); localStorage.setItem('author_relation', v);}catch(_){ } return n; }); }} />
+            )}
+          </div>
+        </div>
         <div className="mb-4">
           <input
             type="text"
