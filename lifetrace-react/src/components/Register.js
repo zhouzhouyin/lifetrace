@@ -214,12 +214,12 @@ const Register = () => {
           </div>
 
           <div className="flex gap-4">
-            <button type="submit" className="btn w-full" disabled={isLoading || !(viewedPrivacy && viewedTerms && agreedPolicies)}>
+            <button type="submit" className="btn btn-primary w-full" disabled={isLoading || !(viewedPrivacy && viewedTerms && agreedPolicies)}>
               {isLoading ? (lang === 'zh' ? '注册中...' : 'Registering...') : (lang === 'zh' ? '注册' : 'Register')}
             </button>
             <button
               type="button"
-              className="btn bg-gray-500 hover:bg-gray-600 w-full"
+              className="btn btn-secondary w-full"
               onClick={() => navigate('/login')}
               disabled={isLoading}
             >

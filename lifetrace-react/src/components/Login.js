@@ -169,7 +169,7 @@ const Login = () => {
           <div className="mt-2 flex gap-2">
             <button
               type="button"
-              className="btn bg-gray-500 hover:bg-gray-600 w-full"
+              className="btn btn-secondary w-full"
               onClick={() => navigate('/register')}
               disabled={isLoading}
             >
@@ -177,7 +177,7 @@ const Login = () => {
             </button>
             <button
               type="button"
-              className="btn w-full"
+              className="btn btn-secondary w-full"
               onClick={() => navigate('/')}
               disabled={isLoading}
             >
