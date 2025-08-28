@@ -92,7 +92,7 @@ const Home = () => {
         let relation = '';
         try { relation = (JSON.parse(profileRaw || '{}')?.relation || '').trim(); } catch(_) {}
         const perspective = authorMode === 'other'
-          ? `第三人称提问，围绕被记录人，并体现与“${relation || '家人'}”的关系；`
+          ? `采用“关系视角”并使用第二人称“你”与写作者对话：问题聚焦“你与${relation || '这位亲人'}”的互动细节与影响（而非对方的自述）；`
           : '以第二人称与当事人对话；';
         const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}为给定阶段生成5个问题：
 要求：

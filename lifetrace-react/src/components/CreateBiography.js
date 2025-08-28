@@ -534,15 +534,15 @@ const CreateBiography = () => {
     setMessage('正在生成本阶段问题…');
     try {
       const perspectiveKick = (authorMode === 'other')
-        ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免"您/我"。`
-        : '请使用第二人称"您/你"。';
+        ? `请使用第二人称“你”，但采用“关系视角”提问：围绕你与“${authorRelation || '这位亲人'}”的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
+        : '请使用第二人称“您/你”。';
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现"下一个问题"字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
-        ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
-        : `请面向"您"提出本阶段的第一个暖心问题。`;
+        ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，例如“在你的记忆里，${authorRelation || '这位亲人'}……”开头，给出一个本阶段的第一个暖心问题（仅一句）。`
+        : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
@@ -568,15 +568,15 @@ const CreateBiography = () => {
       // 短上下文重试
       try {
         const perspectiveKick2 = (authorMode === 'other')
-          ? `请使用第三人称（他/她/${authorRelation || '这位亲人'}），避免"您/我"。`
-          : '请使用第二人称"您/你"。';
+          ? `请使用第二人称“你”，但采用“关系视角”提问：围绕你与“${authorRelation || '这位亲人'}”的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
+          : '请使用第二人称“您/你”。';
         const toneKick2 = (authorMode === 'other')
           ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
           : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现"下一个问题"字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
-          ? `请面向${authorRelation || '这位亲人'}提出本阶段的第一个暖心问题，并用第三人称表述。`
-          : `请面向"您"提出本阶段的第一个暖心问题。`;
+          ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
+          : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
@@ -718,11 +718,11 @@ const CreateBiography = () => {
     // 同步素材文本可选，如不再使用素材区可注释
     // setMaterialsText(prev => (prev ? prev + '\n' + trimmed : trimmed));
 
-    const perspective = (authorMode === 'other') ? '请使用第三人称（他/她/父亲/母亲/爷爷/奶奶等），避免"您/我"。' : '请使用第二人称"您/你"，避免第三人称。';
-    const tone = (authorMode === 'other') ? '你现在是"引导者/助手"，与记录者一起梳理对方的人生经历，强调"整理与梳理"，避免闲聊感。' : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
+    const perspective = (authorMode === 'other') ? `请使用第二人称“你”，并采用“关系视角”与写作者对话：围绕写作者与“${authorRelation || profile?.relation || '这位亲人'}”的互动细节与影响来提问；不要使用第三人称。` : '请使用第二人称“您/你”，避免第三人称。';
+    const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理被记录者的人生经历，强调“整理与梳理”，避免空泛与闲聊。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
     const p = profile || {};
     const profileText = `基本资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
