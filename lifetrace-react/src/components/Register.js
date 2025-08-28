@@ -166,7 +166,7 @@ const Register = () => {
               />
               <button
                 type="button"
-                className="btn bg-gray-500 hover:bg-gray-600 whitespace-nowrap"
+                className="btn btn-tertiary whitespace-nowrap"
                 onClick={() => setShowPassword((v) => !v)}
                 disabled={isLoading}
                 aria-label={showPassword ? (lang === 'zh' ? '隐藏密码' : 'Hide password') : (lang === 'zh' ? '显示密码' : 'Show password')}
@@ -191,7 +191,7 @@ const Register = () => {
               />
               <button
                 type="button"
-                className="btn bg-gray-500 hover:bg-gray-600 whitespace-nowrap"
+                className="btn btn-tertiary whitespace-nowrap"
                 onClick={() => setShowConfirm((v) => !v)}
                 disabled={isLoading}
                 aria-label={showConfirm ? (lang === 'zh' ? '隐藏密码' : 'Hide password') : (lang === 'zh' ? '显示密码' : 'Show password')}
