@@ -144,7 +144,7 @@ const Login = () => {
               />
               <button
                 type="button"
-                className="btn bg-gray-500 hover:bg-gray-600 whitespace-nowrap"
+                className="btn btn-tertiary whitespace-nowrap"
                 onClick={() => setShowPassword((v) => !v)}
                 disabled={isLoading}
                 aria-label={showPassword ? (lang === 'zh' ? '隐藏密码' : 'Hide password') : (lang === 'zh' ? '显示密码' : 'Show password')}
@@ -166,24 +166,7 @@ const Login = () => {
               {lang === 'zh' ? '去注册' : 'Register now'}
             </button>
           </div>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className="btn btn-secondary w-full"
-              onClick={() => navigate('/register')}
-              disabled={isLoading}
-            >
-              {lang === 'zh' ? '去注册' : 'Go to Register'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-tertiary w-full"
-              onClick={() => navigate('/')}
-              disabled={isLoading}
-            >
-              {lang === 'zh' ? '返回首页' : 'Back Home'}
-            </button>
-          </div>
+          {/* 仅保留上面的“去注册”链接，去除多余按钮与返回首页入口 */}
         </form>
       </div>
     </div>

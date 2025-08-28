@@ -78,7 +78,8 @@ const Home = () => {
         const poolRes = await axios.get(`/api/daily/pool?stage=${idx}`, { headers: { Authorization: `Bearer ${token}` } });
         const serverList = Array.isArray(poolRes.data?.list) ? poolRes.data.list : [];
         if (serverList.length >= 1) {
-          newList = serverList.map(it => ({ id: it.id, q: it.q }));
+          // 后端仅返回字符串问题，前端为其分配连续本地ID，便于去重标记
+          newList = serverList.map(q => ({ id: ++counter, q }));
         }
       } catch (_) { /* ignore */ }
 
@@ -90,18 +91,32 @@ const Home = () => {
         const profileRaw = localStorage.getItem('record_profile');
         let relation = '';
         try { relation = (JSON.parse(profileRaw || '{}')?.relation || '').trim(); } catch(_) {}
-        const perspective = authorMode === 'other' ? `请使用第三人称，并结合关系（如：${relation || '家人'}），语气温柔真诚；` : '请使用第二人称与当事人对话，语气温柔真诚；';
-        const system = `你是一位温暖、耐心且得体的引导者。${perspective} 请为给定阶段生成5个问题，要求：触及人心、具体、有画面感；避免空泛；单句不超过30字；不要编号，仅以换行分隔；不要与历史重复。`;
+        const perspective = authorMode === 'other'
+          ? `第三人称提问，围绕被记录人，并体现与“${relation || '家人'}”的关系；`
+          : '以第二人称与当事人对话；';
+        const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}为给定阶段生成5个问题：
+要求：
+- 具体可回忆，有画面感（谁/何时/在哪/当时感觉/细节）
+- 触及情绪与关系，不做空泛哲思，不用抽象词（如“内核”“力量来源”）
+- 避免“为什么重要/意义是什么”等宏大哲学
+- 单句≤28字；每题一行；不编号；不加前后缀
+- 结合已知基础资料（若有），但不重复历史问题
+输出：仅5行问题文本。`;
         const stage = lifeStages[idx] || '童年';
-        const user = `阶段：${stage}\n已用问题（不要重复）：${usedTexts.join(' / ') || '无'}\n还可参考资料：${(localStorage.getItem('record_profile')||'').slice(0,200)}\n请生成5个全新的问题。`;
-        const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
+        const profileShort = (() => { try { return JSON.parse(localStorage.getItem('record_profile')||'{}'); } catch(_) { return {}; } })();
+        const profileHints = [profileShort.name, profileShort.gender, profileShort.birth, profileShort.origin, profileShort.residence, profileShort.relation].filter(Boolean).join('、');
+        const user = `阶段：${stage}
+已用问题（避免重复）：${usedTexts.join(' / ') || '无'}
+可参考资料：${profileHints || '无'}
+请生成5个全新且更具温度的问题。`;
+        const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 320, temperature: 0.7, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
         const text = (resp.data?.choices?.[0]?.message?.content || '').toString();
         const arr = text.split(/\n+/).map(s => s.replace(/^\d+[\.、\)]\s*/, '').trim()).filter(Boolean).slice(0,5);
         try {
-          const saveRes = await axios.post('/api/daily/pool', { stage: idx, questions: arr }, { headers: { Authorization: `Bearer ${token}` } });
+          const saveRes = await axios.post('/api/daily/pool', { stage: idx, list: arr }, { headers: { Authorization: `Bearer ${token}` } });
           const serverList = Array.isArray(saveRes.data?.list) ? saveRes.data.list : [];
           if (serverList.length >= 1) {
-            newList = serverList.map(it => ({ id: it.id, q: it.q }));
+            newList = serverList.map(q => ({ id: ++counter, q }));
           } else {
             newList = arr.map(q => ({ id: ++counter, q }));
           }
@@ -111,13 +126,13 @@ const Home = () => {
       }
     } catch (_) {
       const fallback = {
-        0: ['儿时最好的玩伴是谁？','童年让你会心一笑的瞬间？','当时最爱的玩具或游戏？','第一次被鼓励的记忆？','童年最暖的一顿饭？'],
-        1: ['少年时代最勇敢的一次？','和同学最难忘的小事？','那时最喜欢的歌或书？','你偷偷在意过的一句话？','最常去的地方？'],
-        2: ['青年时期改变你的决定？','第一次独立完成的一件事？','谈谈一段友情或爱情？','你坚持下来的热爱？','你学到的最重要的道理？'],
-        3: ['成年后最骄傲的时刻？','一次重要的选择？','你如何照顾家人与自己？','工作里被理解的瞬间？','最稳定的力量来自哪里？'],
-        4: ['中年后对家人的新理解？','你给孩子或晚辈的一句话？','你如何与自己和解？','最近一次被感动？','你想留住的日常？'],
-        5: ['当下最想感谢的人？为什么？','今天最令你微笑的小事？','你最近在学习什么？','让你安心的一件事？','现在的你最想对谁说句话？'],
-        6: ['未来你最想留下的是什么？','想去的地方和原因？','有想修复的关系吗？','你期待怎样的晚年？','给未来的家人一句话？'],
+        0: ['小时候谁常带你玩？在哪里？','记得一次雨后的玩耍吗？当时多开心？','家里第一件让你着迷的小玩具？','被夸奖的一刻，谁说了什么？','冬天最想念的一道家常菜？'],
+        1: ['和同桌一起做过的“小坏事”？','运动会那天，你最想起的画面？','放学路上常去的那家店是什么味？','那时有让你安静下来的歌吗？','一次觉得被理解的瞬间？'],
+        2: ['第一次独自出远门的站台与心跳？','你们常去的那家小店，现在还在吗？','最难的一个决定，当时谁在身边？','深夜赶路时，你在想谁？','改变你的书或电影是哪一部？'],
+        3: ['一顿匆忙却温暖的晚饭，谁在？','第一次被叫“爸爸/妈妈”的那天呢？','工作里被善意照亮的细节？','你照顾家人的一个小习惯？','搬家那晚，你最舍不得的是什么？'],
+        4: ['孩子说过一句让你心软的话？','与父母的一次和解，是何时何地？','你开始学会慢下来的那个瞬间？','一次与老友久别重逢的画面？','厨房里你最拿手的那道菜？'],
+        5: ['今天哪一刻让你突然松了口气？','你想对谁道一声“辛苦了”？','散步看到的风景里，有谁的影子？','此刻桌上有什么味道与声音？','今天最想留住的一张小照片是什么？'],
+        6: ['你想和谁一起去的地方？','想给未来的他/她一句怎样的叮嘱？','有一段关系，你想温柔地修复吗？','五年后，家里的晚饭会是什么样？','未来某天，你希望被怎样记起？'],
       };
       const arr = fallback[idx] || fallback[0];
       newList = arr.map(q => ({ id: ++counter, q }));
@@ -156,7 +171,8 @@ const Home = () => {
       // 后端记录“已问”，用于跨设备去重
       try {
         const token = localStorage.getItem('token');
-        await axios.post('/api/daily/asked', { stage: pick.stageIndex, id: pick.id }, { headers: { Authorization: `Bearer ${token}` } });
+        // 用问题文本作为 qid，便于服务端跨设备去重
+        await axios.post('/api/daily/asked', { stage: pick.stageIndex, qid: pick.q }, { headers: { Authorization: `Bearer ${token}` } });
       } catch (_) {}
     } finally {
       setIsLoadingQ(false);
