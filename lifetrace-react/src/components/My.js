@@ -560,7 +560,6 @@ const My = () => {
         ['photos','照片'],
         ['videos','视频'],
         ['audios','音频'],
-        ['settings','设置'],
       ].map(([key,label]) => (
         <button key={key} className={`tab ${activeTab===key?'tab-active':''}`} onClick={()=>setActiveTab(key)}>{label}</button>
       ))}
@@ -578,6 +577,11 @@ const My = () => {
           <button className="btn btn-secondary" onClick={()=>setActiveTab('videos')}>视频（{videos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('audios')}>音频（{audios.length}）</button>
         </div>
+      </div>
+      <div className="card p-4" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 50%)', borderColor: '#e5e7eb' }}>
+        <h3 className="text-xl font-semibold mb-2">永恒印记</h3>
+        <p className="text-sm text-gray-700 mb-3">需要帮助把资料整理成册、影集或时光胶囊？联系我协助您完成“永恒印记”。</p>
+        <button className="btn btn-primary" onClick={()=>navigate('/contact')}>联系与服务说明</button>
       </div>
     </div>
   );
@@ -727,11 +731,6 @@ const My = () => {
             {activeTab === 'photos' && renderFiles('photos', photos, pagePhotos, sizePhotos, setPagePhotos, setSizePhotos, selectedPhotos, setSelectedPhotos)}
             {activeTab === 'videos' && renderFiles('videos', videos, pageVideos, sizeVideos, setPageVideos, setSizeVideos, selectedVideos, setSelectedVideos)}
             {activeTab === 'audios' && renderFiles('audios', audios, pageAudios, sizeAudios, setPageAudios, setSizeAudios, selectedAudios, setSelectedAudios)}
-            {activeTab === 'settings' && (
-              <div className="text-gray-700">
-                <p>在这里可以添加更多个性化设置。</p>
-              </div>
-            )}
             <div className="flex gap-4">
               <button className="btn btn-secondary" onClick={() => navigate('/')}>返回首页</button>
             </div>

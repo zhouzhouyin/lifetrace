@@ -1132,6 +1132,13 @@ const CreateBiography = () => {
   };
   const handleUploadMediaToSection = async (sectionIndex, file, desc = '') => {
     if (!file) return;
+    try {
+      const sizeMB = (file.size || 0) / (1024 * 1024);
+      if (sizeMB > 25) {
+        setMessage('当前版本不支持超过 25MB 的大文件上传。未来版本将提供大文件存储服务。');
+        return;
+      }
+    } catch(_) {}
     const token = localStorage.getItem('token');
     if (!token) {
       setMessage('请先登录');

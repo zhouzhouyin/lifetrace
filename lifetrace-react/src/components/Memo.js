@@ -315,8 +315,24 @@ const Memo = () => {
 
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <label className="btn btn-secondary inline-flex items-center justify-center">
-              添加图片/视频/音频
-              <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleFileChange} />
+              添加图片/视频/音频（≤ 25MB）
+              <input
+                type="file"
+                accept="image/*,video/*,audio/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) {
+                    const sizeMB = f.size / (1024 * 1024);
+                    if (sizeMB > 25) {
+                      setMessage('当前版本不支持超过 25MB 的大文件上传。未来版本将提供大文件存储服务。');
+                      e.target.value = '';
+                      return;
+                    }
+                  }
+                  handleFileChange(e);
+                }}
+              />
             </label>
             <button
               type="button"

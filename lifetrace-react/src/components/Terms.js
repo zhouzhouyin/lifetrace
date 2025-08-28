@@ -43,6 +43,11 @@ const Terms = () => {
         </ul>
 
         <h2 className="text-xl font-semibold mt-6 mb-4">二、用户权利与义务</h2>
+        <h3 className="text-lg font-medium mt-4 mb-2">合规使用</h3>
+        <ul className="list-disc list-inside text-gray-700 mb-4">
+          <li>您承诺不制作、复制、发布、传播含有法律法规禁止的内容，包括但不限于：危害国家安全、泄露国家秘密、颠覆国家政权、破坏国家统一，宣扬恐怖主义、极端主义，煽动民族仇恨、民族歧视，淫秽色情、赌博、暴力、教唆犯罪，侮辱或诽谤他人，侵害他人名誉、隐私、知识产权和其他合法权益的内容。</li>
+          <li>不得用于任何违法犯罪活动、不得上传非法或受管制的内容与文件。</li>
+        </ul>
         <h3 className="text-lg font-medium mt-4 mb-2">账户安全</h3>
         <p className="text-gray-700 mb-4">
           您应对您的账户信息及密码负全部责任。任何使用您账户进行的活动，均视为您本人的行为，由此产生的责任由您承担。
@@ -58,20 +63,13 @@ const Terms = () => {
           <li>您不得上传任何违反法律法规、违反社会公德、或含有不良信息的资料。若因此导致任何纠纷或损失，您将承担全部责任。</li>
         </ul>
 
+        <h3 className="text-lg font-medium mt-4 mb-2">未成年人使用</h3>
+        <p className="text-gray-700 mb-4">若您未满14周岁，请在监护人同意并指导下使用本服务；若涉及未成年人信息的上传与分享，应确保已获得监护人合法授权。</p>
+
         <h2 className="text-xl font-semibold mt-6 mb-4">三、服务费用与支付</h2>
-        <h3 className="text-lg font-medium mt-4 mb-2">收费服务</h3>
         <p className="text-gray-700 mb-4">
-          本公司将对特定服务收取费用，包括但不限于“永恒计划”（用户资料存储）、AI服务、实体产品制作、时光胶囊、私人专访等。具体费用以服务页面公布的价格为准。
+          本服务当前<strong>免费使用</strong>，不向用户收取任何费用。如将来提供增值服务或调整收费政策，我们会提前以适当方式通知，并征得您的同意。
         </p>
-        <h3 className="text-lg font-medium mt-4 mb-2">价格调整</h3>
-        <p className="text-gray-700 mb-4">
-          本公司保留在不时调整服务价格的权利，并将在调整前以适当方式通知您。
-        </p>
-        <h3 className="text-lg font-medium mt-4 mb-2">支付与退款</h3>
-        <ul className="list-disc list-inside text-gray-700 mb-4">
-          <li>所有定制化服务（包括实体出版物、实体纪念碑、专访等）因其个性化特点，一旦开始制作，原则上不支持退款。</li>
-          <li>若因本公司原因导致服务无法履行，我们将退还相应费用。</li>
-        </ul>
 
         <h2 className="text-xl font-semibold mt-6 mb-4">四、AI与数字遗产</h2>
         <h3 className="text-lg font-medium mt-4 mb-2">单独授权</h3>
@@ -87,17 +85,7 @@ const Terms = () => {
           您理解并同意，您授权我们使用您的数据生成AI模型，仅用于为您提供本服务所约定的目的，即供您指定的后代在您逝世后进行了解和交互。我们承诺，不会将您的AI模型用于任何其他商业目的，也不会将其出售给任何第三方。
         </p>
 
-        <h2 className="text-xl font-semibold mt-6 mb-4">五、实体产品与时光胶囊</h2>
-        <h3 className="text-lg font-medium mt-4 mb-2">实体产品</h3>
-        <ul className="list-disc list-inside text-gray-700 mb-4">
-          <li><strong>产品制作</strong>：您需对提交的设计稿或草稿进行最终确认，一经确认，本公司将按照该稿件进行制作，由此产生的任何修改责任由您承担。</li>
-          <li><strong>运输风险</strong>：实体产品交付给物流公司后，所有权和风险即转移给您。</li>
-        </ul>
-        <h3 className="text-lg font-medium mt-4 mb-2">时光胶囊</h3>
-        <ul className="list-disc list-inside text-gray-700 mb-4">
-          <li><strong>物品责任</strong>：您应对时光胶囊内物品的合法性、安全性负责。我们不接受任何违禁品、易燃易爆品及其他危险物品。</li>
-          <li><strong>不可抗力</strong>：尽管我们承诺妥善保管，但对于因自然灾害、战争、或本公司不可控制的因素导致的物品丢失或损坏，我们不承担责任。</li>
-        </ul>
+        {/* 实体产品与时光胶囊章节暂不提供，后续如上线将另行通知 */}
 
         <h2 className="text-xl font-semibold mt-6 mb-4">六、服务的终止与数据处理</h2>
         <h3 className="text-lg font-medium mt-4 mb-2">用户终止</h3>
@@ -109,10 +97,7 @@ const Terms = () => {
           若您违反本服务条款，我们有权随时暂停或终止向您提供服务，并有权删除您的相关数据。
         </p>
         <h3 className="text-lg font-medium mt-4 mb-2">数据处理</h3>
-        <ul className="list-disc list-inside text-gray-700 mb-4">
-          <li><strong>免费用户</strong>：您的数据将按照《隐私政策》中约定的期限进行保存。期限届满后，我们保留删除的权利。</li>
-          <li><strong>“永恒计划”用户</strong>：您的数据将按照您所购买的服务承诺进行长期保存。</li>
-        </ul>
+        <p className="text-gray-700 mb-4">您的数据将按照《隐私政策》中约定的期限进行保存。期限届满后，我们保留删除的权利。</p>
 
         <h2 className="text-xl font-semibold mt-6 mb-4">七、责任限制</h2>
         <p className="text-gray-700 mb-4">

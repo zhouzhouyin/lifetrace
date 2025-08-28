@@ -40,6 +40,12 @@ const Layout = ({ children }) => {
       <main className="container mx-auto px-3 sm:px-4 py-4">{children}</main>
       <footer className="p-4 text-center" style={{ backgroundColor: '#f7f0dc', borderTop: '1px solid #e5e7eb', color: '#6b7280' }}>
         <p>&copy; 2025 永念. 保留所有权利。</p>
+        <div className="mt-1 text-xs">
+          <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer" className="underline">ICP备案号（示例）：京ICP备00000000号</a>
+          <span className="mx-2">|</span>
+          <a href="https://www.beian.gov.cn" target="_blank" rel="noreferrer" className="underline">公安备案号（示例）：京公网安备00000000000000号</a>
+          <span className="block mt-1">投诉与举报：<a href="mailto:1056829015@qq.com" className="underline">1056829015@qq.com</a></span>
+        </div>
       </footer>
     </div>
   );

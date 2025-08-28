@@ -911,6 +911,9 @@ app.post('/api/note', authenticateToken, async (req, res) => {
     logger.warn('Missing note content', { userId: req.user.userId, ip: req.ip });
     return res.status(400).json({ message: '笔记内容为必填项' });
   }
+  if (containsIllegalContent(title) || containsIllegalContent(content)) {
+    return res.status(400).json({ message: '内容包含不合规信息，请修改后再提交' });
+  }
   try {
     const note = new Note({
       userId: req.user.userId,
@@ -977,6 +980,9 @@ app.post('/api/memo', authenticateToken, async (req, res) => {
     const { text, tags, media, stage, source, subjectVersion, shareToFamily } = req.body || {};
     if (!text && !(Array.isArray(media) && media.length > 0)) {
       return res.status(400).json({ message: '缺少内容' });
+    }
+    if (containsIllegalContent(text)) {
+      return res.status(400).json({ message: '内容包含不合规信息，请修改后再提交' });
     }
     const memo = await Memo.create({
       userId: req.user.userId,
@@ -1256,6 +1262,9 @@ app.put('/api/note/:id', authenticateToken, async (req, res) => {
     logger.warn('Missing note content', { noteId: id, userId: req.user.userId, ip: req.ip });
     return res.status(400).json({ message: '笔记内容为必填项' });
   }
+  if (containsIllegalContent(title) || containsIllegalContent(content)) {
+    return res.status(400).json({ message: '内容包含不合规信息，请修改后再提交' });
+  }
   try {
     const note = await Note.findOneAndUpdate(
       { _id: id, userId: req.user.userId },
@@ -1325,7 +1334,7 @@ const allowedMimes = [
 const allowedExts = new Set(['.png','.jpg','.jpeg','.gif','.webp','.bmp','.mp4','.webm','.ogg','.mov','.avi','.mkv','.mp3','.wav','.opus','.m4a','.aac','.flac','.3gp','.amr','.wma']);
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB per China-friendly default; larger files not supported
   fileFilter: (req, file, cb) => {
     try {
       const mime = (file.mimetype || '').toLowerCase();
@@ -1340,6 +1349,23 @@ const upload = multer({
     }
   }
 });
+
+// Simple content moderation (keyword-based). This is a basic safeguard and should be
+// replaced with a more robust service if needed.
+const ILLEGAL_KEYWORDS = [
+  '涉黄','淫秽','色情','招嫖','卖淫','迷奸','强奸','儿童色情','未成年性',
+  '恐怖','暴恐','极端主义','恐袭','自杀教程','自残',
+  '爆炸物','炸弹制作','枪支','弹药','军火','毒品','制毒',
+  '赌博','博彩','私彩','六合彩',
+  '诈骗','钓鱼网站','黑客教程','木马',
+  '分裂国家','颠覆国家政权','煽动叛乱','邪教',
+];
+const containsIllegalContent = (text = '') => {
+  try {
+    const s = String(text || '').toLowerCase();
+    return ILLEGAL_KEYWORDS.some(k => s.includes(String(k).toLowerCase()));
+  } catch(_) { return false; }
+};
 
 
 // Upload file
@@ -1562,123 +1588,7 @@ app.post('/api/note/upload', authenticateToken, async (req, res) => {
   }
 });
 
-// Create order for Eternal Guard (Hupijiao/XunhuPay unified order)
-app.post('/api/pay/eternal-order', authenticateToken, async (req, res) => {
-  try {
-    const { noteId } = req.body || {};
-    if (!isValidObjectId(noteId)) return res.status(400).json({ message: '无效的传记 ID' });
-    const note = await Note.findOne({ _id: noteId, userId: req.user.userId, type: 'Biography' });
-    if (!note) return res.status(404).json({ message: '传记不存在' });
-    if (note.eternalGuard === true) {
-      return res.status(409).json({ message: '已加入永恒计划，无需重复支付' });
-    }
-
-    const appid = process.env.XUNHU_APPID || '';
-    const appsecret = process.env.XUNHU_SECRET || '';
-    const gateway = process.env.XUNHU_GATEWAY || 'https://api.xunhupay.com/payment/do.html';
-    if (!appid || !appsecret) return res.status(500).json({ message: '支付未配置：缺少 APPID/SECRET' });
-
-    const out_trade_no = `${Date.now()}_${Math.floor(Math.random()*1e6)}`;
-    const publicBackend = (process.env.PUBLIC_BACKEND || process.env.PUBLIC_BASE || '').replace(/\/$/,'');
-    const publicFrontend = (process.env.PUBLIC_FRONTEND || process.env.PUBLIC_BASE || '').replace(/\/$/,'');
-    const notify_url = publicBackend ? `${publicBackend}/api/pay/eternal-notify` : '';
-    const return_url = publicFrontend ? `${publicFrontend}/preview` : '';
-    // 金额以字符串提交，避免浮点精度问题
-    const amount = (process.env.XUNHU_PRICE || '500');
-    const name = `永恒守护-传记(${note.title || '无标题'})`;
-    const param = {
-      appid,
-      version: '1.1',
-      trade_order_id: out_trade_no,
-      total_fee: amount,
-      title: name,
-      time: Math.floor(Date.now()/1000),
-      notify_url,
-      return_url,
-      nonce_str: Math.random().toString(36).slice(2),
-      type: 'WAP',
-      // attach 可带上 noteId 用于回调识别
-      attach: JSON.stringify({ noteId: note._id.toString(), userId: req.user.userId })
-    };
-    const signStr = Object.keys(param).sort().map(k => `${k}=${param[k]}`).join('&') + `&key=${appsecret}`;
-    const sign = md5(signStr).toUpperCase();
-    let payload = { ...param, sign };
-    // Use form-encoded to improve compatibility with gateway
-    const body = querystring.stringify(payload);
-    const r = await axios.post(
-      gateway,
-      body,
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json, text/plain, */*', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', 'Connection': 'close' }, timeout: 25000, httpsAgent }
-    );
-    if (r && r.data && (r.data.url || r.data.pay_url)) {
-      return res.json({ payUrl: r.data.url || r.data.pay_url, orderId: out_trade_no });
-    }
-    return res.status(500).json({ message: r?.data?.errMsg || r?.data?.message || '下单失败' });
-  } catch (err) {
-    let detail = err?.message;
-    try {
-      if (err?.response) {
-        detail = `status=${err.response.status} data=${typeof err.response.data === 'string' ? err.response.data.slice(0,200) : JSON.stringify(err.response.data).slice(0,200)}`;
-      }
-    } catch (_) {}
-    logger.error('Create eternal order error', { error: detail, ip: req.ip });
-    try {
-      await PaymentFailure.create({ userId: req.user.userId, noteId: req.body?.noteId, message: String(detail || err.message || 'error') });
-    } catch (_) {}
-    try {
-      // Fallback: let client submit a form directly to gateway
-      return res.json({ clientPost: true, postUrl: process.env.XUNHU_GATEWAY || 'https://api.xunhupay.com/payment/do.html', fields: payload || {} });
-    } catch (_) {
-      return res.status(500).json({ message: '创建订单失败：' + err.message });
-    }
-  }
-});
-
-// Admin: list payment failures (requires admin)
-app.get('/api/admin/payment-failures', authenticateToken, async (req, res) => {
-  try {
-    if ((req.user?.role || 'user') !== 'admin') return res.status(403).json({ message: '仅管理员可访问' });
-    const items = await PaymentFailure.find({}).sort({ createdAt: -1 }).limit(200).populate('userId','username uid').populate('noteId','title').lean();
-    res.json(items.map(i => ({
-      id: i._id.toString(), user: { id: i.userId?._id?.toString?.() || '', username: i.userId?.username || '', uid: i.userId?.uid || '' },
-      note: { id: i.noteId?._id?.toString?.() || '', title: i.noteId?.title || '' }, message: i.message, createdAt: i.createdAt,
-    })));
-  } catch (err) {
-    logger.error('List payment failures error', { error: err.message, ip: req.ip });
-    res.status(500).json({ message: '获取支付失败记录失败：' + err.message });
-  }
-});
-
-// Payment notify (XunhuPay)
-app.post('/api/pay/eternal-notify', async (req, res) => {
-  try {
-    const appsecret = process.env.XUNHU_SECRET || '';
-    const data = req.body || {};
-    // 验签
-    const sign = data.sign;
-    const copy = { ...data };
-    delete copy.sign;
-    const signStr = Object.keys(copy).sort().map(k => `${k}=${copy[k]}`).join('&') + `&key=${appsecret}`;
-    const mySign = md5(signStr).toUpperCase();
-    if (mySign !== sign) {
-      logger.warn('Notify invalid sign', { ip: req.ip });
-      return res.status(400).send('sign error');
-    }
-    // 业务处理
-    const attach = JSON.parse(data.attach || '{}');
-    const noteId = attach.noteId;
-    if (isValidObjectId(noteId)) {
-      await Note.updateOne({ _id: noteId }, { $set: { eternalGuard: true, retentionYears: 20 } });
-    }
-    // 返回纯文本 success 给网关
-    res.set('Content-Type', 'text/plain; charset=utf-8');
-    res.send('success');
-  } catch (err) {
-    logger.error('Eternal notify error', { error: err.message, ip: req.ip });
-    res.set('Content-Type', 'text/plain; charset=utf-8');
-    res.status(500).send('error');
-  }
-});
+// (payment endpoints removed)
 // WebSocket server
 const server = app.listen(process.env.PORT || 5002, () => {
   logger.info(`Server running on port ${process.env.PORT || 5002}`);
