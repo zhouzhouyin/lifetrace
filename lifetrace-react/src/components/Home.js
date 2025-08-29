@@ -246,14 +246,20 @@ const Home = () => {
 
   // 新增：线性10问流程（使用后端 daily/session 接口）
   const [linearMode, setLinearMode] = useState(true);
-  const [linearProgress, setLinearProgress] = useState({ idx: 0, total: 10, stageIndex: 0, completed: false });
+  const [linearProgress, setLinearProgress] = useState(() => {
+    let stageIndex = 0;
+    try { stageIndex = Number(localStorage.getItem('daily_stage_idx') || '0') || 0; } catch(_) {}
+    return { idx: 0, total: 10, stageIndex, completed: false };
+  });
   const startLinear = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
-      const res = await axios.get(`/api/daily/session?stage=${linearProgress.stageIndex}`, { headers: { Authorization: `Bearer ${token}` } });
+      const persistedStage = (()=>{ try{ return Number(localStorage.getItem('daily_stage_idx')||linearProgress.stageIndex)||0 }catch(_){ return linearProgress.stageIndex } })();
+      const res = await axios.get(`/api/daily/session?stage=${persistedStage}`, { headers: { Authorization: `Bearer ${token}` } });
       const { stageIndex, currentIndex, total, completed, question } = res.data || {};
       setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
+      try { localStorage.setItem('daily_stage_idx', String(stageIndex || 0)); } catch(_) {}
       if (!completed) {
         setCurrentStageIndex(stageIndex || 0);
         setCurrentQuestion(question || '...');
@@ -273,6 +279,7 @@ const Home = () => {
       const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer }, { headers: { Authorization: `Bearer ${token}` } });
       const { stageIndex, currentIndex, total, completed, question } = res.data || {};
       setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
+      try { localStorage.setItem('daily_stage_idx', String(stageIndex || 0)); } catch(_) {}
       if (completed) {
         // 切到下一阶段
         const next = await axios.post('/api/daily/session/next', { stage: stageIndex }, { headers: { Authorization: `Bearer ${token}` } });
@@ -280,6 +287,7 @@ const Home = () => {
         const suggest = !!next.data?.suggestGenerate;
         if (suggest) setShowSuggestCard(true);
         setLinearProgress({ idx: 0, total: 10, stageIndex: nextStageIndex, completed: false });
+        try { localStorage.setItem('daily_stage_idx', String(nextStageIndex)); } catch(_) {}
         setShowDailyCard(false);
         setAnswer('');
       } else {
