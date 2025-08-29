@@ -472,8 +472,8 @@ app.post('/api/daily/session/next', authenticateToken, async (req, res) => {
 });
 
 
-// JWT authentication middleware
-const authenticateToken = (req, res, next) => {
+// JWT authentication middleware (function declaration to allow hoisting)
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
@@ -488,7 +488,7 @@ const authenticateToken = (req, res, next) => {
     req.user = user;
     next();
   });
-};
+}
 
 // iFLYTEK IAT sign endpoint (returns a signed wss url; secrets stay on server)
 app.get('/api/asr/sign', authenticateToken, (req, res) => {
