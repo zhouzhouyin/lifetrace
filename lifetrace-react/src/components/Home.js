@@ -7,14 +7,7 @@ import axios from 'axios';
 const Home = () => {
   const { isLoggedIn, t, lang, role, setIsLoggedIn, memos: memosCtx, setMemos: setMemosCtx } = useContext(AppContext);
   const navigate = useNavigate();
-  // 每日回首设置
-  const [dailyEnabled, setDailyEnabled] = useState(() => {
-    try {
-      const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
-      const v = localStorage.getItem(`daily_reflection_enabled_${scope}`);
-      return v == null ? true : v !== '0';
-    } catch (_) { return true; }
-  });
+  // 每日回首：改为手动触发
   const [showDailyCard, setShowDailyCard] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentQuestionId, setCurrentQuestionId] = useState(0);
@@ -50,13 +43,7 @@ const Home = () => {
     return true;
   };
 
-  const saveEnabled = (v) => {
-    setDailyEnabled(v);
-    try {
-      const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
-      localStorage.setItem(`daily_reflection_enabled_${scope}`, v ? '1' : '0');
-    } catch (_) {}
-  };
+  
 
   // 确保每阶段存在5题的池（带全局编号），并按历史ID去重
   const ensureStagePool = async (idx) => {
@@ -172,17 +159,21 @@ const Home = () => {
   const pickAndStoreQuestion = async () => {
     setIsLoadingQ(true);
     try {
-      const pools = await Promise.all(lifeStages.map((_, i) => ensureStagePool(i)));
-      let items = [];
-      pools.forEach((p, i) => { (p.remaining || []).forEach(it => items.push({ stageIndex: i, ...it })); });
-      if (items.length === 0) {
-        localStorage.removeItem('daily_history_ids_v2');
-        const pools2 = await Promise.all(lifeStages.map((_, i) => ensureStagePool(i)));
-        items = [];
-        pools2.forEach((p, i) => { (p.remaining || []).forEach(it => items.push({ stageIndex: i, ...it })); });
-        if (items.length === 0) { setShowDailyCard(false); setIsLoadingQ(false); return; }
+      // 顺序尝试单个阶段，避免一次加载所有阶段导致等待
+      let order = [...lifeStages.keys()].map(i => i);
+      const start = Math.floor(Math.random() * lifeStages.length);
+      order = order.slice(start).concat(order.slice(0, start));
+      let pick = null;
+      for (const i of order) {
+        const pool = await ensureStagePool(i);
+        const remaining = pool?.remaining || [];
+        if (remaining.length > 0) {
+          const it = remaining[Math.floor(Math.random() * remaining.length)];
+          pick = { stageIndex: i, ...it };
+          break;
+        }
       }
-      const pick = items[Math.floor(Math.random() * items.length)];
+      if (!pick) { setShowDailyCard(false); setIsLoadingQ(false); return; }
       setCurrentStageIndex(pick.stageIndex);
       setCurrentQuestion(pick.q);
       setCurrentQuestionId(pick.id);
@@ -202,43 +193,34 @@ const Home = () => {
     }
   };
 
-  // 每天首次进入展示 + 首次用户引导（开启开关则每日凌晨自动弹）
+  // 每日00:00或当日重新登录时，仅刷新“已问”记录（不自动弹出卡片）
   useEffect(() => {
     const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
-    try { lastShownRef.current = localStorage.getItem(`daily_last_shown_${scope}`) || ''; } catch (_) {}
-    try { snoozeUntilRef.current = localStorage.getItem(`daily_generate_snooze_until_${scope}`) || ''; } catch (_) {}
     const today = new Date().toISOString().slice(0,10);
-    const snoozed = snoozeUntilRef.current && new Date(snoozeUntilRef.current) > new Date();
-    // 首次注册/登录后如无 author_mode，优先触发身份选择与资料卡
+    const lastReset = localStorage.getItem(`daily_last_reset_${scope}`) || '';
+    const lastLogin = localStorage.getItem(`last_login_at_${scope}`) || '';
+    const lastLoginDay = lastLogin ? new Date(lastLogin).toISOString().slice(0,10) : '';
+    const needReset = (!lastReset || lastReset !== today || lastLoginDay === today);
+    if (needReset) {
+      try { localStorage.removeItem('daily_history_ids_v2'); } catch(_) {}
+      try { localStorage.setItem(`daily_last_reset_${scope}`, today); } catch(_) {}
+    }
+    // 若未设定记录对象，引导先设定
     const needPick = !localStorage.getItem('author_mode');
-    if (needPick) {
-      setNeedAuthorSelect(true);
-      setShowProfileForm(false);
-    }
-    // 触发条件：1) 今天第一次进入 2) 或检测到刚登录（last_login_at_scope 是今日）
-    let shouldShow = false;
-    if (dailyEnabled && !snoozed) {
-      if (lastShownRef.current !== today) {
-        shouldShow = true;
-      } else {
-        try {
-          const lastLogin = localStorage.getItem(`last_login_at_${scope}`) || '';
-          if (lastLogin) {
-            const d = new Date(lastLogin).toISOString().slice(0,10);
-            if (d === today) shouldShow = true;
-          }
-        } catch (_) {}
-      }
-    }
-    // 若路由返回首页时误触发，依赖 today 只弹一次；确保我们不在已弹当天重复弹
-    if (lastShownRef.current === today) shouldShow = false;
-    if (shouldShow) {
-      setShowDailyCard(true);
-      pickAndStoreQuestion();
-      try { localStorage.setItem(`daily_last_shown_${scope}`, today); } catch (_) {}
-    }
+    if (needPick) { setNeedAuthorSelect(true); setShowProfileForm(false); }
+  }, [lang]);
+
+  // 预热：后台先为随机阶段准备题库一小份，减少点击后的等待
+  useEffect(() => {
+    const rnd = Math.floor(Math.random() * lifeStages.length);
+    ensureStagePool(rnd).catch(()=>{});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyEnabled, lang]);
+  }, []);
+
+  const handleOpenDaily = async () => {
+    setShowDailyCard(true);
+    await pickAndStoreQuestion();
+  };
 
   const handleSwap = async () => { await pickAndStoreQuestion(); };
   const handleSkip = async () => {
@@ -260,6 +242,56 @@ const Home = () => {
       }
     } catch (_) {}
     setShowDailyCard(false); setAnswer('');
+  };
+
+  // 新增：线性10问流程（使用后端 daily/session 接口）
+  const [linearMode, setLinearMode] = useState(true);
+  const [linearProgress, setLinearProgress] = useState({ idx: 0, total: 10, stageIndex: 0, completed: false });
+  const startLinear = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) { navigate('/login'); return; }
+      const res = await axios.get(`/api/daily/session?stage=${linearProgress.stageIndex}`, { headers: { Authorization: `Bearer ${token}` } });
+      const { stageIndex, currentIndex, total, completed, question } = res.data || {};
+      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
+      if (!completed) {
+        setCurrentStageIndex(stageIndex || 0);
+        setCurrentQuestion(question || '...');
+        setCurrentQuestionId((currentIndex || 0) + 1);
+        setShowDailyCard(true);
+      }
+    } catch (_) {
+      // 回退到旧模式
+      setLinearMode(false);
+      handleOpenDaily();
+    }
+  };
+  const answerAndNext = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) { navigate('/login'); return; }
+      const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer }, { headers: { Authorization: `Bearer ${token}` } });
+      const { stageIndex, currentIndex, total, completed, question } = res.data || {};
+      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
+      if (completed) {
+        // 切到下一阶段
+        const next = await axios.post('/api/daily/session/next', { stage: stageIndex }, { headers: { Authorization: `Bearer ${token}` } });
+        const nextStageIndex = next.data?.nextStageIndex ?? ((stageIndex + 1) % lifeStages.length);
+        const suggest = !!next.data?.suggestGenerate;
+        if (suggest) setShowSuggestCard(true);
+        setLinearProgress({ idx: 0, total: 10, stageIndex: nextStageIndex, completed: false });
+        setShowDailyCard(false);
+        setAnswer('');
+      } else {
+        setCurrentStageIndex(stageIndex || 0);
+        setCurrentQuestion(question || '...');
+        setCurrentQuestionId((currentIndex || 0) + 1);
+        setAnswer('');
+      }
+    } catch (_) {
+      // 回退单步刷新
+      await pickAndStoreQuestion();
+    }
   };
   const handleSaveToMemo = async () => {
     if (!saveToMemoChecked) { setShowDailyCard(false); setAnswer(''); return; }
@@ -514,12 +546,15 @@ const Home = () => {
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
             {lang === 'zh' ? '把一生好好写下，温柔地交给时间' : 'Write a life, gently handed to time'}
           </h1>
-          {/* 每日回首：开关 */}
-          <div className="mt-3 flex items-center justify-center gap-2 text-sm">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={dailyEnabled} onChange={(e) => saveEnabled(e.target.checked)} />
-              {lang === 'zh' ? '每日回首' : 'Daily Reflection'}
-            </label>
+          {/* 每日回首：按钮触发 */}
+          <div className="mt-3 flex items-center justify-center">
+            <button
+              onClick={() => (linearMode ? startLinear() : handleOpenDaily())}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
+            >
+              <span>🕯️</span>
+              <span className="font-medium">{lang === 'zh' ? '每日回首' : 'Daily Reflection'}</span>
+            </button>
           </div>
           <p className="mt-4 text-base sm:text-lg text-gray-700">
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
@@ -529,7 +564,7 @@ const Home = () => {
             <div className="fixed inset-0 z-40 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
               <div className="relative z-50 card w-11/12 max-w-xl text-left p-4 sm:p-5" role="dialog" aria-modal="true" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]}</div>
+                <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]} {linearMode ? `（${Math.min(linearProgress.idx+1, linearProgress.total)}/${linearProgress.total}）` : ''}</div>
                 <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : (currentQuestion || '...')}</div>
                 <textarea
                   className="input w-full mb-3"
@@ -545,7 +580,7 @@ const Home = () => {
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button className="btn btn-secondary" onClick={handleSkip}>返回</button>
-                  <button className="btn btn-secondary" onClick={handleSwap}>继续回首</button>
+                  <button className="btn btn-secondary" onClick={linearMode ? answerAndNext : handleSwap}>{linearMode ? '提交并继续' : '继续回首'}</button>
                   <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
                   <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
                 </div>

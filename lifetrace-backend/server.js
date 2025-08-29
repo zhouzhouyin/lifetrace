@@ -300,8 +300,162 @@ const dailyAskedSchema = new mongoose.Schema({
 dailyAskedSchema.index({ userId: 1, stage: 1 }, { unique: true });
 const DailyAsked = mongoose.model('DailyAsked', dailyAskedSchema);
 
+// Daily session schema: linear 10 Q per stage with QA history
+const dailySessionQASchema = new mongoose.Schema({ q: String, a: { type: String, default: '' } }, { _id: false });
+const dailySessionSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  stageIndex: { type: Number, required: true },
+  qas: { type: [dailySessionQASchema], default: [] },
+  currentIndex: { type: Number, default: 0 },
+  completed: { type: Boolean, default: false },
+  updatedAt: { type: Date, default: Date.now }
+});
+dailySessionSchema.index({ userId: 1, stageIndex: 1 }, { unique: true });
+const DailySession = mongoose.model('DailySession', dailySessionSchema);
+
 // Validate ObjectId
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
+// Warm-question filter to avoid abstract/awkward prompts
+const isWarmQuestion = (q) => {
+  try {
+    const s = (q || '').toString().trim();
+    if (!s) return false;
+    const banned = ['力量', '意义', '内核', '本质', '价值观', '如何看待', '稳定的力量', '精神内核'];
+    return !banned.some(k => s.includes(k)) && /[？?]$/.test(s);
+  } catch (_) { return false; }
+};
+
+// Generate one warm question for a stage with relationship perspective
+async function generateWarmStageQuestion(userId, stageIndex, qas) {
+  const user = await User.findById(userId).lean();
+  const subject = await RecordSubject.findOne({ userId }).lean();
+  const mode = subject?.mode || (subject?.profile?.relation ? 'other' : 'self');
+  const relation = subject?.profile?.relation || '';
+  const profileHints = [subject?.profile?.name, subject?.profile?.gender, subject?.profile?.birth, subject?.profile?.origin, subject?.profile?.residence, relation].filter(Boolean).join('、');
+  const lifeStagesArr = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+  const stage = lifeStagesArr[stageIndex] || '童年';
+  const perspective = mode === 'other'
+    ? `采用“关系视角”并使用第二人称“你”与写作者对话：问题聚焦“你与${relation || '这位亲人'}”的互动细节与影响（而非对方的自述）；`
+    : '以第二人称与当事人对话；';
+  const historyText = (Array.isArray(qas) ? qas : []).map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${(p.a||'').toString().slice(0,300)}`).join('\n');
+  const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}为阶段“${stage}”提供下一个问题：
+要求：
+- 具体可回忆，有画面感（谁/何时/在哪/当时感觉/细节）
+- 触及情绪与关系，避免空泛哲思（如“意义/力量/内核”等词）
+- 单句≤26字；仅输出一句中文问题；不编号，不加前后缀。`;
+  const userMsg = `若有历史问答，请延续上下文，不要重复：\n${historyText || '（无历史）'}\n资料参考：${profileHints || '无'}\n请给出下一题。`;
+  try {
+    const resp = await axios.post(
+      'https://spark-api-open.xf-yun.com/v2/chat/completions',
+      { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: userMsg } ], max_tokens: 200, temperature: 0.7 },
+      { headers: { Authorization: `Bearer ${process.env.SPARK_API_PASSWORD}`, 'Content-Type': 'application/json' }, httpsAgent }
+    );
+    let q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+    // 清洗编号
+    q = q.replace(/^\d+[\.、\)]\s*/, '').trim();
+    if (!isWarmQuestion(q)) {
+      // 简短兜底，不生成抽象描述
+      const fallbacks = {
+        0: '你还记得小时候被谁温柔拥抱过？当时在哪里？',
+        1: '少年时和谁并肩走在放学路上？聊了些什么？',
+        2: '青年时期，你和谁在一家小店坐很久？那晚发生了什么？',
+        3: '成年后，一次让你感到被理解的瞬间是什么？',
+        4: '这些年，有谁的一句话让你突然想通了？',
+        5: '今天哪个小片段让你心里变得安静？',
+        6: '未来里你想和谁坐在餐桌边，聊一会儿？',
+      };
+      q = fallbacks[stageIndex] || '回想一个让你变得柔软的瞬间，可以说说吗？';
+    }
+    return q;
+  } catch (err) {
+    logger.error('generateWarmStageQuestion error', { error: err.message, userId, stageIndex });
+    return '回想一个让你变得柔软的瞬间，可以说说吗？';
+  }
+}
+
+// Daily session: get or create and return current question
+app.get('/api/daily/session', authenticateToken, async (req, res) => {
+  try {
+    const stageIndex = Number(req.query.stage);
+    if (!Number.isFinite(stageIndex) || stageIndex < 0 || stageIndex > 6) return res.status(400).json({ message: '无效的阶段' });
+    let sess = await DailySession.findOne({ userId: req.user.userId, stageIndex });
+    if (!sess) {
+      sess = await DailySession.create({ userId: req.user.userId, stageIndex, qas: [], currentIndex: 0, completed: false, updatedAt: new Date() });
+    }
+    if (sess.completed) {
+      return res.json({ stageIndex, currentIndex: 10, total: 10, completed: true, question: '' });
+    }
+    // Ensure current question exists
+    if (sess.qas.length <= sess.currentIndex) {
+      const q = await generateWarmStageQuestion(req.user.userId, stageIndex, sess.qas);
+      sess.qas.push({ q, a: '' });
+      sess.updatedAt = new Date();
+      await sess.save();
+    }
+    const curr = sess.qas[sess.currentIndex] || { q: '' };
+    res.json({ stageIndex, currentIndex: sess.currentIndex, total: 10, completed: false, question: curr.q });
+  } catch (err) {
+    logger.error('daily session get error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '获取每日回首会话失败：' + err.message });
+  }
+});
+
+// Daily session: submit answer and advance
+app.post('/api/daily/session/answer', authenticateToken, async (req, res) => {
+  try {
+    const { stage, answer } = req.body || {};
+    const stageIndex = Number(stage);
+    if (!Number.isFinite(stageIndex) || stageIndex < 0 || stageIndex > 6) return res.status(400).json({ message: '无效的阶段' });
+    let sess = await DailySession.findOne({ userId: req.user.userId, stageIndex });
+    if (!sess) return res.status(404).json({ message: '会话不存在，请先获取当前问题' });
+    if (sess.completed) return res.json({ stageIndex, currentIndex: 10, total: 10, completed: true, question: '' });
+    const idx = sess.currentIndex;
+    if (!sess.qas[idx]) return res.status(400).json({ message: '无当前问题' });
+    sess.qas[idx].a = String(answer || '（未填写）');
+    sess.currentIndex = idx + 1;
+    // If finished 10, mark completed
+    if (sess.currentIndex >= 10) {
+      sess.completed = true;
+      sess.updatedAt = new Date();
+      await sess.save();
+      return res.json({ stageIndex, currentIndex: 10, total: 10, completed: true, question: '' });
+    }
+    // Otherwise, generate next question
+    const q = await generateWarmStageQuestion(req.user.userId, stageIndex, sess.qas);
+    sess.qas.push({ q, a: '' });
+    sess.updatedAt = new Date();
+    await sess.save();
+    res.json({ stageIndex, currentIndex: sess.currentIndex, total: 10, completed: false, question: q });
+  } catch (err) {
+    logger.error('daily session answer error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '提交答案失败：' + err.message });
+  }
+});
+
+// Daily session: move to next stage after completion; if last stage done, loop and indicate suggest
+app.post('/api/daily/session/next', authenticateToken, async (req, res) => {
+  try {
+    const { stage } = req.body || {};
+    const stageIndex = Number(stage);
+    if (!Number.isFinite(stageIndex) || stageIndex < 0 || stageIndex > 6) return res.status(400).json({ message: '无效的阶段' });
+    const lifeStagesArr = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+    const last = stageIndex >= lifeStagesArr.length - 1;
+    const nextStageIndex = last ? 0 : (stageIndex + 1);
+    // Optionally clear previous session to avoid growth
+    await DailySession.deleteOne({ userId: req.user.userId, stageIndex });
+    // Create/reset next session starter (question will be generated on GET)
+    await DailySession.updateOne(
+      { userId: req.user.userId, stageIndex: nextStageIndex },
+      { $setOnInsert: { qas: [], currentIndex: 0, completed: false, updatedAt: new Date() } },
+      { upsert: true }
+    );
+    res.json({ nextStageIndex, suggestGenerate: last });
+  } catch (err) {
+    logger.error('daily session next error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '切换阶段失败：' + err.message });
+  }
+});
+
 
 // JWT authentication middleware
 const authenticateToken = (req, res, next) => {
