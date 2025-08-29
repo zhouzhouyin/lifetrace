@@ -30,6 +30,8 @@ const Home = () => {
   const STAGE_THRESHOLD = 5;
   const snoozeUntilRef = useRef('');
   const [memosHome, setMemosHome] = useState([]);
+  // 题库版本：当提示词策略升级时，强制刷新本地池与历史
+  const POOL_VERSION = '3';
   // 首次强制选择记录对象
   const [needAuthorSelect, setNeedAuthorSelect] = useState(() => {
     try { return !(localStorage.getItem('author_mode')); } catch (_) { return true; }
@@ -58,6 +60,23 @@ const Home = () => {
 
   // 确保每阶段存在5题的池（带全局编号），并按历史ID去重
   const ensureStagePool = async (idx) => {
+    // 版本校验：若版本变更，清理旧池与历史
+    try {
+      const ver = localStorage.getItem('daily_pool_version');
+      if (ver !== POOL_VERSION) {
+        localStorage.removeItem('daily_pool_v2');
+        localStorage.removeItem('daily_history_ids_v2');
+        localStorage.setItem('daily_pool_version', POOL_VERSION);
+      }
+    } catch (_) {}
+
+    const isWarmQuestion = (q) => {
+      const s = (q || '').toString().trim();
+      if (!s) return false;
+      // 拒绝抽象/空泛措辞，偏向具体可回忆
+      const banned = ['力量', '意义', '内核', '本质', '价值观', '如何看待', '稳定的力量', '精神内核'];
+      return !banned.some(k => s.includes(k)) && /[？?]$/.test(s);
+    };
     const key = String(idx);
     const poolRaw = localStorage.getItem('daily_pool_v2');
     const pool = poolRaw ? JSON.parse(poolRaw) : {};
@@ -79,7 +98,9 @@ const Home = () => {
         const serverList = Array.isArray(poolRes.data?.list) ? poolRes.data.list : [];
         if (serverList.length >= 1) {
           // 后端仅返回字符串问题，前端为其分配连续本地ID，便于去重标记
-          newList = serverList.map(q => ({ id: ++counter, q }));
+          newList = serverList
+            .map(q => ({ id: ++counter, q }))
+            .filter(it => isWarmQuestion(it.q));
         }
       } catch (_) { /* ignore */ }
 
@@ -87,10 +108,11 @@ const Home = () => {
       if (newList.length === 0) {
         const usedTexts = [];
         Object.values(pool).forEach(arr => { (arr || []).forEach(x => usedTexts.push(x.q)); });
-        const authorMode = (localStorage.getItem('author_mode') || 'self');
+        let authorMode = (localStorage.getItem('author_mode') || '');
         const profileRaw = localStorage.getItem('record_profile');
         let relation = '';
         try { relation = (JSON.parse(profileRaw || '{}')?.relation || '').trim(); } catch(_) {}
+        if (!authorMode) authorMode = relation ? 'other' : 'self';
         const perspective = authorMode === 'other'
           ? `采用“关系视角”并使用第二人称“你”与写作者对话：问题聚焦“你与${relation || '这位亲人'}”的互动细节与影响（而非对方的自述）；`
           : '以第二人称与当事人对话；';
@@ -109,19 +131,20 @@ const Home = () => {
 已用问题（避免重复）：${usedTexts.join(' / ') || '无'}
 可参考资料：${profileHints || '无'}
 请生成5个全新且更具温度的问题。`;
-        const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 320, temperature: 0.7, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
+        const resp = await axios.post('/api/spark', { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: user } ], max_tokens: 320, temperature: 0.75, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, { headers: { Authorization: `Bearer ${token}` } });
         const text = (resp.data?.choices?.[0]?.message?.content || '').toString();
-        const arr = text.split(/\n+/).map(s => s.replace(/^\d+[\.、\)]\s*/, '').trim()).filter(Boolean).slice(0,5);
+        let arr = text.split(/\n+/).map(s => s.replace(/^\d+[\.、\)]\s*/, '').trim()).filter(Boolean).slice(0,5);
+        arr = arr.filter(isWarmQuestion);
         try {
           const saveRes = await axios.post('/api/daily/pool', { stage: idx, list: arr }, { headers: { Authorization: `Bearer ${token}` } });
           const serverList = Array.isArray(saveRes.data?.list) ? saveRes.data.list : [];
           if (serverList.length >= 1) {
-            newList = serverList.map(q => ({ id: ++counter, q }));
+            newList = serverList.map(q => ({ id: ++counter, q })).filter(it => isWarmQuestion(it.q));
           } else {
-            newList = arr.map(q => ({ id: ++counter, q }));
+            newList = arr.map(q => ({ id: ++counter, q })).filter(it => isWarmQuestion(it.q));
           }
         } catch (_) {
-          newList = arr.map(q => ({ id: ++counter, q }));
+          newList = arr.map(q => ({ id: ++counter, q })).filter(it => isWarmQuestion(it.q));
         }
       }
     } catch (_) {
