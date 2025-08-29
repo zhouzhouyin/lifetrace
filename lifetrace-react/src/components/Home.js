@@ -552,7 +552,7 @@ const Home = () => {
               onClick={() => (linearMode ? startLinear() : handleOpenDaily())}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
             >
-              <span>🕯️</span>
+              <span>📝</span>
               <span className="font-medium">{lang === 'zh' ? '每日回首' : 'Daily Reflection'}</span>
             </button>
           </div>
