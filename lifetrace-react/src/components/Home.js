@@ -258,11 +258,11 @@ const Home = () => {
       if (!token) { navigate('/login'); return; }
       const persistedStage = (()=>{ try{ return Number(localStorage.getItem('daily_stage_idx')||linearProgress.stageIndex)||0 }catch(_){ return linearProgress.stageIndex } })();
       const res = await axios.get(`/api/daily/session?stage=${persistedStage}`, { headers: { Authorization: `Bearer ${token}` } });
-      const { stageIndex, currentIndex, total, completed, question } = res.data || {};
-      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
-      try { localStorage.setItem('daily_stage_idx', String(stageIndex || 0)); } catch(_) {}
+      const { currentIndex, total, completed, question } = res.data || {};
+      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: persistedStage, completed: !!completed });
+      try { localStorage.setItem('daily_stage_idx', String(persistedStage)); } catch(_) {}
       if (!completed) {
-        setCurrentStageIndex(stageIndex || 0);
+        setCurrentStageIndex(persistedStage);
         setCurrentQuestion(question || '...');
         setCurrentQuestionId((currentIndex || 0) + 1);
         setAnswer('');
@@ -280,21 +280,22 @@ const Home = () => {
       setAnswer('');
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
-      const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer: prevAnswer }, { headers: { Authorization: `Bearer ${token}` } });
-      const { stageIndex, currentIndex, total, completed, question } = res.data || {};
-      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
-      try { localStorage.setItem('daily_stage_idx', String(stageIndex || 0)); } catch(_) {}
+      const persistedStage = (()=>{ try{ return Number(localStorage.getItem('daily_stage_idx')||linearProgress.stageIndex)||0 }catch(_){ return linearProgress.stageIndex } })();
+      const res = await axios.post('/api/daily/session/answer', { stage: persistedStage, answer: prevAnswer }, { headers: { Authorization: `Bearer ${token}` } });
+      const { currentIndex, total, completed, question } = res.data || {};
+      setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: persistedStage, completed: !!completed });
+      try { localStorage.setItem('daily_stage_idx', String(persistedStage)); } catch(_) {}
       if (completed) {
         // 切到下一阶段
-        const next = await axios.post('/api/daily/session/next', { stage: stageIndex }, { headers: { Authorization: `Bearer ${token}` } });
-        const nextStageIndex = next.data?.nextStageIndex ?? ((stageIndex + 1) % lifeStages.length);
+        const next = await axios.post('/api/daily/session/next', { stage: persistedStage }, { headers: { Authorization: `Bearer ${token}` } });
+        const nextStageIndex = next.data?.nextStageIndex ?? ((persistedStage + 1) % lifeStages.length);
         const suggest = !!next.data?.suggestGenerate;
         if (suggest) setShowSuggestCard(true);
         setLinearProgress({ idx: 0, total: 10, stageIndex: nextStageIndex, completed: false });
         try { localStorage.setItem('daily_stage_idx', String(nextStageIndex)); } catch(_) {}
         setShowDailyCard(false);
       } else {
-        setCurrentStageIndex(stageIndex || 0);
+        setCurrentStageIndex(persistedStage);
         setCurrentQuestion(question || '...');
         setCurrentQuestionId((currentIndex || 0) + 1);
       }
@@ -596,7 +597,7 @@ const Home = () => {
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button className="btn btn-secondary" onClick={handleSkip}>返回</button>
-                  <button className="btn btn-secondary" onClick={linearMode ? answerAndNext : handleSwap}>{linearMode ? '提交并继续' : '继续回首'}</button>
+                  <button className="btn btn-secondary" onClick={answerAndNext}>提交并继续</button>
                   <button className="btn btn-primary" onClick={() => {
                     // 按随手记相同格式，携带Q&A并精确落到对应阶段
                     try {
