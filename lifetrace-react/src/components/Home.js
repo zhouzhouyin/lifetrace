@@ -218,6 +218,7 @@ const Home = () => {
   }, []);
 
   const handleOpenDaily = async () => {
+    setAnswer('');
     setShowDailyCard(true);
     await pickAndStoreQuestion();
   };
@@ -264,6 +265,7 @@ const Home = () => {
         setCurrentStageIndex(stageIndex || 0);
         setCurrentQuestion(question || '...');
         setCurrentQuestionId((currentIndex || 0) + 1);
+        setAnswer('');
         setShowDailyCard(true);
       }
     } catch (_) {
@@ -274,9 +276,11 @@ const Home = () => {
   };
   const answerAndNext = async () => {
     try {
+      // 先保存当前答案，再清空输入，避免丢失
+      const prevAnswer = answer;
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
-      const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer: prevAnswer }, { headers: { Authorization: `Bearer ${token}` } });
       const { stageIndex, currentIndex, total, completed, question } = res.data || {};
       setLinearProgress({ idx: currentIndex || 0, total: total || 10, stageIndex: stageIndex || 0, completed: !!completed });
       try { localStorage.setItem('daily_stage_idx', String(stageIndex || 0)); } catch(_) {}
@@ -300,6 +304,13 @@ const Home = () => {
       // 回退单步刷新
       await pickAndStoreQuestion();
     }
+  };
+
+  // 非线性备用：换题时清空答案
+  const handleSwap = async () => {
+    setAnswer('');
+    await pickAndStoreQuestion();
+    setAnswer('');
   };
   const handleSaveToMemo = async () => {
     if (!saveToMemoChecked) { setShowDailyCard(false); setAnswer(''); return; }
@@ -598,7 +609,8 @@ const Home = () => {
                       const line = `陪伴师：${label ? (label + ' ') : ''}${currentQuestion}\n我：${answer || ''}`;
                       obj.items.push({ stageIndex: currentStageIndex, text: line });
                       localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
-                      navigate('/create', { state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } });
+                      // 双通道：既写 localStorage，又通过路由 state 传输，确保一定落章
+                      navigate('/create', { replace: false, state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } });
                       setShowDailyCard(false); setAnswer('');
                     } catch (_) {
                       navigate('/create');
