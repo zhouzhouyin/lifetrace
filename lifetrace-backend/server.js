@@ -338,38 +338,53 @@ async function generateWarmStageQuestion(userId, stageIndex, qas) {
     ? `采用“关系视角”并使用第二人称“你”与写作者对话：问题聚焦“你与${relation || '这位亲人'}”的互动细节与影响（而非对方的自述）；`
     : '以第二人称与当事人对话；';
   const historyText = (Array.isArray(qas) ? qas : []).map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${(p.a||'').toString().slice(0,300)}`).join('\n');
-  const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}为阶段“${stage}”提供下一个问题：
-要求：
-- 具体可回忆，有画面感（谁/何时/在哪/当时感觉/细节）
-- 触及情绪与关系，避免空泛哲思（如“意义/力量/内核”等词）
-- 单句≤26字；仅输出一句中文问题；不编号，不加前后缀。`;
-  const userMsg = `若有历史问答，请延续上下文，不要重复：\n${historyText || '（无历史）'}\n资料参考：${profileHints || '无'}\n请给出下一题。`;
+  const lastAnswer = Array.isArray(qas) && qas.length > 0 ? (qas[qas.length - 1].a || '') : '';
+  const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}当前阶段：“${stage}”。
+目标：提出下一问前，先给出1-2句真诚、具体的共情反馈，再给出一个具象、情感饱满的下一问。
+硬性要求：
+- 共情反馈需引用可感知的细节（声音/气味/动作/表情/氛围等），避免空泛词（如“意义/力量/内核”等）。
+- 下一问必须具体、可回忆，指向人物与场景；仅一句中文且以问号结尾；不编号、不加前后缀。
+输出格式：
+第一行：简短共情反馈（1-2句）。
+第二行：仅一行问题句（以问号结尾）。`;
+  const userMsg = `若有历史问答，请延续上下文，不要重复：\n${historyText || '（无历史）'}\n上一轮回答摘要：${(lastAnswer || '（无）').toString().slice(0,200)}\n资料参考：${profileHints || '无'}\n请按“输出格式”生成。`;
   try {
     const resp = await axios.post(
       'https://spark-api-open.xf-yun.com/v2/chat/completions',
       { model: 'x1', messages: [ { role: 'system', content: system }, { role: 'user', content: userMsg } ], max_tokens: 200, temperature: 0.7 },
       { headers: { Authorization: `Bearer ${process.env.SPARK_API_PASSWORD}`, 'Content-Type': 'application/json' }, httpsAgent }
     );
-    let q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-    // 清洗编号
-    q = q.replace(/^\d+[\.、\)]\s*/, '').trim();
-    if (!isWarmQuestion(q)) {
-      // 简短兜底，不生成抽象描述
-      const fallbacks = {
-        0: '你还记得小时候被谁温柔拥抱过？当时在哪里？',
-        1: '少年时和谁并肩走在放学路上？聊了些什么？',
-        2: '青年时期，你和谁在一家小店坐很久？那晚发生了什么？',
-        3: '成年后，一次让你感到被理解的瞬间是什么？',
-        4: '这些年，有谁的一句话让你突然想通了？',
-        5: '今天哪个小片段让你心里变得安静？',
-        6: '未来里你想和谁坐在餐桌边，聊一会儿？',
-      };
-      q = fallbacks[stageIndex] || '回想一个让你变得柔软的瞬间，可以说说吗？';
+    let text = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+    // 清洗编号、确保两行输出
+    text = text.replace(/^\d+[\.、\)]\s*/gm, '').trim();
+    let lines = text.split(/\n+/).map(s => s.trim()).filter(Boolean);
+    if (lines.length === 1) {
+      // 缺少反馈行时，自动补一行反馈
+      const qline = lines[0];
+      const fb = lastAnswer ? '你刚刚提到的那一幕很动人，我能感到当时的呼吸与安静。' : '我们先从一个不着急的小片段开始，好吗？';
+      lines = [fb, qline];
     }
-    return q;
+    const combined = lines.slice(0,2).join('\n');
+    // 校验问题行是否合规，若不合规则兜底
+    const qOnly = lines[1] || '';
+    if (!isWarmQuestion(qOnly)) {
+      const fb = lastAnswer ? '我能从你的描述里听见那种稳稳的安定感。' : '别急，我们慢慢来。';
+      const fallbacks = {
+        0: `${fb}\n在你小的时候，有没有一次被他（她）悄悄照顾的瞬间？`,
+        1: `${fb}\n读书那几年，你和谁一起在走廊里笑到停不下来？`,
+        2: `${fb}\n青年时期，有一晚你们在街角停下脚步谈了很久吗？`,
+        3: `${fb}\n工作或家庭里，谁的一句轻声安慰让你释怀？`,
+        4: `${fb}\n这些年里，有没有一顿饭让你突然觉得心安？`,
+        5: `${fb}\n今天哪一刻让你意识到被认真地在乎着？`,
+        6: `${fb}\n想起未来时，你最想与谁共享一杯热汤？`,
+      };
+      return fallbacks[stageIndex] || `${fb}\n能回想一个让你变得柔软的瞬间吗？`;
+    }
+    return combined;
   } catch (err) {
     logger.error('generateWarmStageQuestion error', { error: err.message, userId, stageIndex });
-    return '回想一个让你变得柔软的瞬间，可以说说吗？';
+    const fb = '我们先从一件不着急的小事开始。';
+    return `${fb}\n能回想一个让你变得柔软的瞬间吗？`;
   }
 }
 

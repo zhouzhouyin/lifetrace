@@ -581,7 +581,21 @@ const Home = () => {
                 <div className="flex flex-wrap gap-2">
                   <button className="btn btn-secondary" onClick={handleSkip}>返回</button>
                   <button className="btn btn-secondary" onClick={linearMode ? answerAndNext : handleSwap}>{linearMode ? '提交并继续' : '继续回首'}</button>
-                  <button className="btn btn-primary" onClick={handlePasteToCreate}>粘贴到记录</button>
+                  <button className="btn btn-primary" onClick={() => {
+                    // 按随手记相同格式，携带Q&A并精确落到对应阶段
+                    try {
+                      const raw = localStorage.getItem('dailyPasteboard');
+                      const obj = raw ? JSON.parse(raw) : { items: [] };
+                      const label = currentQuestionId ? `Q${currentQuestionId}` : '';
+                      const line = `陪伴师：${label ? (label + ' ') : ''}${currentQuestion}\n我：${answer || ''}`;
+                      obj.items.push({ stageIndex: currentStageIndex, text: line });
+                      localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
+                      navigate('/create', { state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } });
+                      setShowDailyCard(false); setAnswer('');
+                    } catch (_) {
+                      navigate('/create');
+                    }
+                  }}>粘贴到记录</button>
                   <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
                 </div>
               </div>
