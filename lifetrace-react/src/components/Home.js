@@ -223,6 +223,7 @@ const Home = () => {
     await pickAndStoreQuestion();
   };
 
+  // 非线性旧方法已不使用；保留名称以免引用报错
   const handleSwap = async () => { await pickAndStoreQuestion(); };
   const handleSkip = async () => {
     // 跳过前，将当前问题（若有回答）按每日回首保存为随手记，便于连续回首形成轨迹
@@ -304,12 +305,8 @@ const Home = () => {
     }
   };
 
-  // 非线性备用：换题时清空答案
-  const handleSwap = async () => {
-    setAnswer('');
-    await pickAndStoreQuestion();
-    setAnswer('');
-  };
+  // 非线性备用：换题时清空答案（合并至同名函数）
+  // 注意：线性模式下不调用此函数
   const handleSaveToMemo = async () => {
     if (!saveToMemoChecked) { setShowDailyCard(false); setAnswer(''); return; }
     const token = localStorage.getItem('token');
