@@ -269,15 +269,15 @@ const Home = () => {
         setShowDailyCard(true);
       }
     } catch (_) {
-      // 回退到旧模式
-      setLinearMode(false);
-      handleOpenDaily();
+      // 保持线性模式，提示稍后再试
+      setShowDailyCard(false);
     }
   };
   const answerAndNext = async () => {
     try {
-      // 先保存当前答案，再清空输入，避免丢失
+      // 先保存当前答案，再立即清空输入，避免残留
       const prevAnswer = answer;
+      setAnswer('');
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
       const res = await axios.post('/api/daily/session/answer', { stage: linearProgress.stageIndex, answer: prevAnswer }, { headers: { Authorization: `Bearer ${token}` } });
@@ -293,16 +293,13 @@ const Home = () => {
         setLinearProgress({ idx: 0, total: 10, stageIndex: nextStageIndex, completed: false });
         try { localStorage.setItem('daily_stage_idx', String(nextStageIndex)); } catch(_) {}
         setShowDailyCard(false);
-        setAnswer('');
       } else {
         setCurrentStageIndex(stageIndex || 0);
         setCurrentQuestion(question || '...');
         setCurrentQuestionId((currentIndex || 0) + 1);
-        setAnswer('');
       }
     } catch (_) {
-      // 回退单步刷新
-      await pickAndStoreQuestion();
+      // 保持线性模式，避免跳段
     }
   };
 
@@ -610,7 +607,7 @@ const Home = () => {
                       obj.items.push({ stageIndex: currentStageIndex, text: line });
                       localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
                       // 双通道：既写 localStorage，又通过路由 state 传输，确保一定落章
-                      navigate('/create', { replace: false, state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } });
+                      setTimeout(() => navigate('/create', { replace: false, state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } }), 0);
                       setShowDailyCard(false); setAnswer('');
                     } catch (_) {
                       navigate('/create');
