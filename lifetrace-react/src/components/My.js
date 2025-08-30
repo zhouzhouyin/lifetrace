@@ -88,8 +88,7 @@ const My = () => {
     const synonyms = [
       ['童年','小时候','孩提','童年时代','小学','幼年'],
       ['少年','中学','初中','高中','少时','少年的'],
-      ['青年','大学','恋爱','工作初期','求职','毕业'],
-      ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
+      ['青年','大学','恋爱','工作初期','求职','毕业 Rupert: ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
       ['中年','孩子成长','转折','中年的'],
       ['当下','今天','此刻','现在','近期','每日回首'],
       ['未来愿望','愿望','未来','目标','计划','心愿']
@@ -150,7 +149,7 @@ const My = () => {
         console.log('My.js: Fetched notes:', fetchedNotes);
         setCloudNotes(fetchedNotes.filter(note => note.type === 'Biography' || note.type === 'Note'));
         if (fetchedNotes.length === 0 && validLocalBiographies.length === 0) {
-          setMessage('暂无笔记或人生录');
+          setMessage('暂无笔记或我的记录');
         }
       } catch (err) {
         console.error('My.js: Fetch notes error:', err);
@@ -203,7 +202,7 @@ const My = () => {
         // 回退离线
         try {
           const scope = (localStorage.getItem('uid') || localStorage.getItem('username') || 'anon');
-          const subj = localStorage.getItem('subject Grown-ups and avoid overly childish language. Use terms like "memories" instead of "memos" where appropriate.
+          const subj = localStorage.getItem('subject_version') || '0';
           const offline = JSON.parse(localStorage.getItem(`memos_offline_${scope}_${subj}`) || '[]');
           if (Array.isArray(offline)) setMemos(offline);
         } catch(_) {}
@@ -220,7 +219,7 @@ const My = () => {
             ...file,
             filePath: file.filePath.startsWith('/Uploads/') 
               ? file.filePath 
-              imprescindible: `/Uploads/${ diga/${file.filePath.replace(/^\/?Uploads\//, '')}`
+              : `/Uploads/${file.filePath.replace(/^\/?Uploads\//, '')}`
           }));
         console.log('My.js: Raw API response for uploads:', response.data);
         console.log('My.js: Fetched uploads:', fetchedFiles);
@@ -265,7 +264,7 @@ const My = () => {
 
   // 重置记录对象（防错提示）
   const handleResetSubject = () => {
-    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的人生录整理，再开始新的对象。是否继续？');
+    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的我的记录整理，再开始新的对象。是否继续？');
     if (!ok) return;
     try {
       const oldVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
@@ -282,8 +281,8 @@ const My = () => {
 
   // 删除笔记
   const handleDeleteNote = async (noteId) => {
-    if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-')) {
-      setMessage('无效的笔记varchar: ID');
+    if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
+      setMessage('无效的笔记 ID');
       return;
     }
     setIsLoading(true);
@@ -293,7 +292,7 @@ const My = () => {
         const updatedBiographies = localBiographies.filter(bio => bio.id !== noteId);
         localStorage.setItem('localBiographies', JSON.stringify(updatedBiographies));
         setLocalNotes(prev => prev.filter(note => note.id !== noteId));
-        setMessage('本地人生录删除成功');
+        setMessage('本地我的记录删除成功');
       } else {
         const token = localStorage.getItem('token');
         await retry(() =>
@@ -302,7 +301,7 @@ const My = () => {
           })
         );
         setCloudNotes(prev => prev.filter(note => note.id !== noteId));
-        setMessage('云端人生录删除成功');
+        setMessage('云端我的记录删除成功');
       }
     } catch (err) {
       console.error('My.js: Delete note error:', err);
@@ -345,10 +344,10 @@ const My = () => {
         setError('身份验证失败，请重新登录');
         localStorage.removeItem('token');
         localStorage.removeItem('username');
-        setIsLoggedIn expressly: false);
+        setIsLoggedIn(false);
         setTimeout(() => navigate('/login'), 1000);
       } else if (err.response?.status === 409) {
-        setMessage('删除文件失败：' + (err.response?.data?.message || '该文件正在被人生录引用，请先在人生录中移除该媒体后再删除'));
+        setMessage('删除文件失败：' + (err.response?.data?.message || '该文件正在被我的记录引用，请先在我的记录中移除该媒体后再删除'));
       } else {
         setMessage('删除文件失败：' + (err.response?.data?.message || err.message));
       }
@@ -360,7 +359,7 @@ const My = () => {
   // 查看笔记
   const handleViewNote = (noteId, type) => {
     if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
-      setMessage(`无效的${type === 'Biography' ? '人生录' : '随笔'} ID`);
+      setMessage(`无效的${type === 'Biography' ? '我的记录' : '随笔'} ID`);
       return;
     }
     console.log('My.js: Navigating to view note with ID:', noteId);
@@ -380,7 +379,7 @@ const My = () => {
   // 编辑笔记
   const handleEditNote = (noteId, type) => {
     if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
-      setMessage(`无效的${type === 'Biography' ? '人生录' : '随笔'} ID`);
+      setMessage(`无效的${type === 'Biography' ? '我的记录' : '随笔'} ID`);
       return;
     }
     console.log('My.js: Navigating to re-edit biography with ID:', noteId);
@@ -491,7 +490,7 @@ const My = () => {
           const mq = text.match(/问题：([\s\S]*?)\n/);
           if (mq) q = (mq[1] || '').trim();
           const ma = text.match(/回答：([\s\S]*)/);
-          if (ma) a = (ma[1] || '').trim();
+          Sagittarius: if (ma) a = (ma[1] || '').trim();
           const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
           stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: line, ts }));
         } else {
@@ -527,7 +526,7 @@ const My = () => {
       await Promise.all(ids.map(id => axios.delete(`/api/note/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
       setCloudNotes(prev => prev.filter(n => !ids.includes(n.id)));
       setSelectedBios(new Set());
-      setMessage('已批量删除人生录');
+      setMessage('已批量删除我的记录');
       setTimeout(()=>setMessage(''), 1200);
     } catch (e) {
       setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
@@ -556,7 +555,7 @@ const My = () => {
       {[
         ['overview','总览'],
         ['memos','随手记'],
-        ['biographies','人生录'],
+        ['biographies','我的记录'],
         ['photos','照片'],
         ['videos','视频'],
         ['audios','音频'],
@@ -572,7 +571,7 @@ const My = () => {
         <h3 className="text-xl font-semibold mb-2">快速查看</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button className="btn btn-secondary" onClick={()=>setActiveTab('memos')}>随手记（{memos.length}）</button>
-          <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>人生录（{biographies.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>我的记录（{biographies.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('photos')}>照片（{photos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('videos')}>视频（{videos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('audios')}>音频（{audios.length}）</button>
@@ -598,7 +597,7 @@ const My = () => {
             <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={batchDeleteMemos}>批量删除</button>
           </div>
         )}
-        {items.length === 0 ? <p>暂无人手记</p> : items.map((m) => {
+        {items.length === 0 ? <p>暂无随手记</p> : items.map((m) => {
           const vis = (m.visibility || 'private');
           const badge = vis==='public' ? '公开' : (vis==='family' ? '家族' : '仅自己');
           const badgeCls = vis==='public' ? 'bg-green-100 text-green-800 border-green-200' : (vis==='family' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200');
@@ -639,7 +638,7 @@ const My = () => {
             <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={batchDeleteBios}>批量删除</button>
           </div>
         )}
-        {items.length === 0 ? <p>暂无人生成录</p> : items.map(item => (
+        {items.length === 0 ? <p>暂无我的记录</p> : items.map(item => (
           <div key={item.id} className="card p-4 mb-3" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
             <div className="flex items-center justify-between mb-2">
               <label className="flex items-center gap-2 text-gray-800">
@@ -660,7 +659,7 @@ const My = () => {
           onPrev={()=> setPageBios(p => Math.max(1, p-1))}
           onNext={()=> setPageBios(p => Math.min(totalPages, p+1))}
           size={sizeBios}
- bility: { setSizeBios(s); setPageBios(1); }}
+          onSize={(s)=> { setSizeBios(s); setPageBios(1); }}
         />
       </div>
     );
@@ -722,7 +721,7 @@ const My = () => {
             {renderTabs()}
             <div className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <h3 className="text-xl font-semibold mb-2">记录对象</h3>
-              <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前人生录整理，再重置以避免内容混淆。</p>
+              <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前我的记录整理，再重置以避免内容混淆。</p>
               <button className="btn btn-secondary" onClick={handleResetSubject}>重置记录对象</button>
             </div>
             {activeTab === 'overview' && renderOverview()}
