@@ -556,7 +556,7 @@ const My = () => {
       {[
         ['overview','总览'],
         ['memos','随手记'],
-        ['biographies','传记'],
+        ['biographies','记录人生'],
         ['photos','照片'],
         ['videos','视频'],
         ['audios','音频'],
@@ -572,7 +572,7 @@ const My = () => {
         <h3 className="text-xl font-semibold mb-2">快速查看</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button className="btn btn-secondary" onClick={()=>setActiveTab('memos')}>随手记（{memos.length}）</button>
-          <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>传记（{biographies.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>记录人生（{biographies.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('photos')}>照片（{photos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('videos')}>视频（{videos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('audios')}>音频（{audios.length}）</button>
@@ -639,7 +639,7 @@ const My = () => {
             <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={batchDeleteBios}>批量删除</button>
           </div>
         )}
-        {items.length === 0 ? <p>暂无传记</p> : items.map(item => (
+        {items.length === 0 ? <p>暂无记录人生</p> : items.map(item => (
           <div key={item.id} className="card p-4 mb-3" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
             <div className="flex items-center justify-between mb-2">
               <label className="flex items-center gap-2 text-gray-800">
