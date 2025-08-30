@@ -88,7 +88,8 @@ const My = () => {
     const synonyms = [
       ['童年','小时候','孩提','童年时代','小学','幼年'],
       ['少年','中学','初中','高中','少时','少年的'],
-      ['青年','大学','恋爱','工作初期','求职','毕业 Rupert: ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
+      ['青年','大学','恋爱','工作初期','求职','毕业'],
+      ['成年','成家','婚后','事业','职场','为人父母','婚姻'],
       ['中年','孩子成长','转折','中年的'],
       ['当下','今天','此刻','现在','近期','每日回首'],
       ['未来愿望','愿望','未来','目标','计划','心愿']
@@ -149,7 +150,7 @@ const My = () => {
         console.log('My.js: Fetched notes:', fetchedNotes);
         setCloudNotes(fetchedNotes.filter(note => note.type === 'Biography' || note.type === 'Note'));
         if (fetchedNotes.length === 0 && validLocalBiographies.length === 0) {
-          setMessage('暂无笔记或我的记录');
+          setMessage('暂无笔记或传记');
         }
       } catch (err) {
         console.error('My.js: Fetch notes error:', err);
@@ -264,7 +265,7 @@ const My = () => {
 
   // 重置记录对象（防错提示）
   const handleResetSubject = () => {
-    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的我的记录整理，再开始新的对象。是否继续？');
+    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的回忆整理，再开始新的对象。是否继续？');
     if (!ok) return;
     try {
       const oldVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
@@ -292,7 +293,7 @@ const My = () => {
         const updatedBiographies = localBiographies.filter(bio => bio.id !== noteId);
         localStorage.setItem('localBiographies', JSON.stringify(updatedBiographies));
         setLocalNotes(prev => prev.filter(note => note.id !== noteId));
-        setMessage('本地我的记录删除成功');
+        setMessage('本地传记删除成功');
       } else {
         const token = localStorage.getItem('token');
         await retry(() =>
@@ -301,7 +302,7 @@ const My = () => {
           })
         );
         setCloudNotes(prev => prev.filter(note => note.id !== noteId));
-        setMessage('云端我的记录删除成功');
+        setMessage('云端传记删除成功');
       }
     } catch (err) {
       console.error('My.js: Delete note error:', err);
@@ -347,7 +348,7 @@ const My = () => {
         setIsLoggedIn(false);
         setTimeout(() => navigate('/login'), 1000);
       } else if (err.response?.status === 409) {
-        setMessage('删除文件失败：' + (err.response?.data?.message || '该文件正在被我的记录引用，请先在我的记录中移除该媒体后再删除'));
+        setMessage('删除文件失败：' + (err.response?.data?.message || '该文件正在被传记引用，请先在传记中移除该媒体后再删除'));
       } else {
         setMessage('删除文件失败：' + (err.response?.data?.message || err.message));
       }
@@ -359,7 +360,7 @@ const My = () => {
   // 查看笔记
   const handleViewNote = (noteId, type) => {
     if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
-      setMessage(`无效的${type === 'Biography' ? '我的记录' : '随笔'} ID`);
+      setMessage(`无效的${type === 'Biography' ? '传记' : '随笔'} ID`);
       return;
     }
     console.log('My.js: Navigating to view note with ID:', noteId);
@@ -379,7 +380,7 @@ const My = () => {
   // 编辑笔记
   const handleEditNote = (noteId, type) => {
     if (!noteId || (!/^[0-9a-fA-F]{24}$/.test(noteId) && !noteId.startsWith('local-'))) {
-      setMessage(`无效的${type === 'Biography' ? '我的记录' : '随笔'} ID`);
+      setMessage(`无效的${type === 'Biography' ? '传记' : '随笔'} ID`);
       return;
     }
     console.log('My.js: Navigating to re-edit biography with ID:', noteId);
@@ -490,7 +491,7 @@ const My = () => {
           const mq = text.match(/问题：([\s\S]*?)\n/);
           if (mq) q = (mq[1] || '').trim();
           const ma = text.match(/回答：([\s\S]*)/);
-          Sagittarius: if (ma) a = (ma[1] || '').trim();
+          if (ma) a = (ma[1] || '').trim();
           const line = `陪伴师：${q || '（每日回首）'}\n我：${a || ''}`;
           stageIdxList.forEach(si => items.push({ stageIndex: Math.max(0, si), text: line, ts }));
         } else {
@@ -526,7 +527,7 @@ const My = () => {
       await Promise.all(ids.map(id => axios.delete(`/api/note/${id}`, { headers: { Authorization: `Bearer ${token}` } })));
       setCloudNotes(prev => prev.filter(n => !ids.includes(n.id)));
       setSelectedBios(new Set());
-      setMessage('已批量删除我的记录');
+      setMessage('已批量删除传记');
       setTimeout(()=>setMessage(''), 1200);
     } catch (e) {
       setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
@@ -721,7 +722,7 @@ const My = () => {
             {renderTabs()}
             <div className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
               <h3 className="text-xl font-semibold mb-2">记录对象</h3>
-              <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前我的记录整理，再重置以避免内容混淆。</p>
+              <p className="text-sm text-gray-700 mb-2">若要为另一位亲人记录，请先完成当前回忆整理，再重置以避免内容混淆。</p>
               <button className="btn btn-secondary" onClick={handleResetSubject}>重置记录对象</button>
             </div>
             {activeTab === 'overview' && renderOverview()}
