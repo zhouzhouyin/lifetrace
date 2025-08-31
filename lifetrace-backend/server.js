@@ -340,7 +340,7 @@ async function generateWarmStageQuestion(userId, stageIndex, qas) {
   const historyText = (Array.isArray(qas) ? qas : []).map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${(p.a||'').toString().slice(0,300)}`).join('\n');
   const lastAnswer = Array.isArray(qas) && qas.length > 0 ? (qas[qas.length - 1].a || '') : '';
   const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}当前阶段：“${stage}”。
-目标：提出下一问前，先给出1-2句真诚、具体的共情反馈，再给出一个具象、情感饱满的下一问。
+目标：提出下一问前，先给出1-2句真诚、具体的共情反馈，再给出一个具象、给写作者温暖回忆的下一问。
 硬性要求：
 - 共情反馈需引用可感知的细节（声音/气味/动作/表情/氛围等），避免空泛词（如“意义/力量/内核”等）。
 - 下一问必须具体、可回忆，指向人物与场景；仅一句中文且以问号结尾；不编号、不加前后缀。
