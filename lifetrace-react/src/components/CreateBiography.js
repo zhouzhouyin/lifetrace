@@ -589,13 +589,19 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
+      const p = profile || {};
+      const writerName = (localStorage.getItem('username') || username || '').toString();
+      const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
+      const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
+      const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
+      const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，例如“在你的记忆里，${authorRelation || '这位亲人'}……”开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
-      const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+      const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
       const ai = normalizeAssistant(raw) || (
         authorMode === 'other'
@@ -623,13 +629,13 @@ const CreateBiography = () => {
         const toneKick2 = (authorMode === 'other')
           ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
           : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，,不要过度煽情，给写作者一种温暖的回忆感觉，不要出现“下一个问题”字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
           : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
-        const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
+        const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
         const raw2 = resp2.data?.choices?.[0]?.message?.content;
         const ai2 = normalizeAssistant(raw2) || (
           authorMode === 'other'
@@ -768,11 +774,15 @@ const CreateBiography = () => {
     // 同步素材文本可选，如不再使用素材区可注释
     // setMaterialsText(prev => (prev ? prev + '\n' + trimmed : trimmed));
 
-    const perspective = (authorMode === 'other') ? `请使用第二人称“你”，并采用“关系视角”与写作者对话：围绕写作者与“${authorRelation || profile?.relation || '这位亲人'}”的互动细节与影响来提问；明确写作和与被记录者的身份，不要过度煽情，不要使用第三人称。` : '请使用第二人称“您/你”，避免第三人称。';
+    const perspective = (authorMode === 'other') ? `请使用第二人称“你”，并采用“关系视角”与写作者对话：围绕写作者与“${authorRelation || profile?.relation || '这位亲人'}”的互动细节与影响来提问；明确写作者与被记录者身份，不要过度煽情，不要使用第三人称。` : '请使用第二人称“您/你”，避免第三人称。';
     const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理被记录者的人生经历，强调“整理与梳理”，避免空泛与闲聊。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
     const p = profile || {};
-    const profileText = `基本资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
+    const writerName = (localStorage.getItem('username') || username || '').toString();
+    const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
+    const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
+    const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
+    const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -784,7 +794,7 @@ const CreateBiography = () => {
     setIsAsking(true);
     try {
       const resp = await retry(() => callSparkThrottled({
-        model: 'x1', messages: messagesToSend, max_tokens: 600, temperature: 0.5,
+        model: 'x1', messages: messagesToSend, max_tokens: 520, temperature: 0.3,
         user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
       }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
@@ -817,7 +827,7 @@ const CreateBiography = () => {
           setMessage('获取失败，正以短上下文自动重试…');
           const shortHistory = chatMessages.slice(-5);
           const messagesShort = [ { role: 'system', content: systemPrompt }, ...shortHistory, { role: 'user', content: trimmed } ];
-          const resp2 = await callSparkThrottled({ model: 'x1', messages: messagesShort, max_tokens: 600, temperature: 0.5,
+          const resp2 = await callSparkThrottled({ model: 'x1', messages: messagesShort, max_tokens: 520, temperature: 0.3,
             user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
           const raw2 = resp2.data?.choices?.[0]?.message?.content;
           let ai2Base = normalizeAssistant(raw2) || '谢谢您的分享。';
