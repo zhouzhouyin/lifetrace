@@ -373,6 +373,56 @@ const CreateBiography = () => {
     return `${feedback ? feedback + ' ' : ''}${question}`.trim();
   };
 
+  // 陪伴师输出后处理：降温、限长、关系称谓替换与问句规范
+  const finalizeAssistant = (text) => {
+    let s = (text || '').toString().trim();
+    // 删除明显煽情/抽象词
+    const banned = ['伟大', '崇高', '灵魂', '使命', '精神内核', '力量', '澎湃', '震撼', '永恒', '史诗', '注定', '宿命', '意义'];
+    for (const w of banned) s = s.replace(new RegExp(w, 'g'), '');
+    // 去掉“下一个问题”等提示词
+    s = s.replace(/下一个问题[:：]?/g, '').trim();
+    // 他/她 → 关系称谓（仅在为他人模式）
+    try {
+      if (authorMode === 'other' && (authorRelation || profile?.relation)) {
+        const rel = authorRelation || profile?.relation || '这位亲人';
+        s = s.replace(/(?<![你您])[他她]\b/g, rel);
+      }
+    } catch (_) {}
+    // 限长：反馈+问题不宜过长
+    if (s.length > 140) s = s.slice(0, 140);
+    // 结尾若无问号且语气是提问，则补问号
+    if (/[你您]/.test(s) && !/[?？]$/.test(s)) s = s.replace(/。?$/, '') + '？';
+    return s.trim();
+  };
+
+  // 叙述后处理：
+  // - 为他人模式时，将可能的“在他的/她的记忆…”改为“在我的记忆…”，
+  // - 优先使用关系称谓替换含“他的/她的”的指代，
+  // - 若全文缺少“我/我的”，补充一个“在我的记忆里，”作为开场以确保第一人称视角。
+  const finalizeNarrative = (rawText) => {
+    let s = (rawText || '').toString().trim();
+    try {
+      if (authorMode === 'other') {
+        const rel = (authorRelation || profile?.relation || '这位亲人').toString();
+        // 关系称谓优先，避免“他/她”的模糊指代（仅在所有格场景下替换）
+        s = s.replace(/(?<![你您我])[他她]的/g, `${rel}的`);
+        // 记忆/印象类常见短语统一改为“我的”
+        s = s.replace(/在[他她]的记忆深处/g, '在我的记忆深处');
+        s = s.replace(/在[他她]的记忆里/g, '在我的记忆里');
+        s = s.replace(/在[他她]的记忆中/g, '在我的记忆中');
+        s = s.replace(/在[他她]的印象里/g, '在我的印象里');
+        s = s.replace(/在[他她]的印象中/g, '在我的印象中');
+        // 诸如“他/她”“她/他”“他（她）”“她（他）” → 关系称谓
+        s = s.replace(/他\/她|她\/他|他（她）|她（他）|他\(她\)|她\(他\)/g, rel);
+        // 若几乎没有第一人称痕迹，则补一个柔和的第一句前缀
+        if (!/[\b我\b]|我的/.test(s)) {
+          s = `在我的记忆里，${s}`;
+        }
+      }
+    } catch (_) {}
+    return s;
+  };
+
   // 是否包含问号
   const hasQuestionMark = (text) => /[?？]/.test((text || '').toString());
 
@@ -740,7 +790,7 @@ const CreateBiography = () => {
       const raw = resp.data?.choices?.[0]?.message?.content;
       let aiBase = normalizeAssistant(raw) || '谢谢您的分享。';
       const historyForAsk = chatMessages.slice(-5);
-      const ai = await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token);
+      const ai = finalizeAssistant(await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token));
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 将陪伴师问题写入当前阶段篇章（只保留反馈+问题的一行）
       appendLineToSection(currentSectionIndex, `陪伴师：${ai}`);
@@ -771,7 +821,7 @@ const CreateBiography = () => {
             user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
           const raw2 = resp2.data?.choices?.[0]?.message?.content;
           let ai2Base = normalizeAssistant(raw2) || '谢谢您的分享。';
-          const ai2 = await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token);
+          const ai2 = finalizeAssistant(await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token));
           setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${ai2}`);
           if (autoSpeakAssistant) speakText(ai2);
@@ -802,7 +852,7 @@ const CreateBiography = () => {
         5: '现在的您，最想感谢的人是谁？原因是什么？',
         6: '对于未来，您最想留下或实现的一件愿望是什么？'
       };
-      const ai = (fallbackByStage[stageIndex] || '我们换个角度聊聊：有没有一段让您心里柔软起来的回忆？');
+      const ai = finalizeAssistant(fallbackByStage[stageIndex] || '我们换个角度聊聊：有没有一段让您心里柔软起来的回忆？');
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${ai}`);
       if (autoSpeakAssistant) speakText(ai);
@@ -1873,8 +1923,10 @@ const CreateBiography = () => {
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                          const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
+                          const perspectiveHint = (authorMode === 'other')
+                            ? `请使用第一人称“我”的叙述，从写作者视角回忆与“${authorRelation || profile?.relation || '这位亲人'}”的互动；尽量使用关系称谓（如“${authorRelation || profile?.relation || '这位亲人'}”）而非“他/她”；避免出现“在他的记忆里/深处”等表达，若需表达记忆请用“在我的记忆里/深处”。`
+                            : '请使用第一人称“我”的表述方式。';
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -1883,7 +1935,8 @@ const CreateBiography = () => {
                             { role: 'user', content: userPayload },
                           ];
                           const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                          const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          const polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          const polished = finalizeNarrative(polishedRaw);
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                             const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
@@ -2084,8 +2137,10 @@ const CreateBiography = () => {
                   try {
                     const token = localStorage.getItem('token');
                     if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                    const perspectiveHint = (authorMode === 'other') ? '请用第三人称（他/她/TA）叙述，避免使用"我/我们"。' : '请使用第一人称"我"的表述方式。';
-                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），不编造事实，不使用列表/编号/标题，不加入总结或点评，仅输出润色后的正文。不要包含身份设定与基础资料引导类语句。`;
+                    const perspectiveHint = (authorMode === 'other')
+                      ? `请使用第一人称“我”的叙述，从写作者视角回忆与“${authorRelation || profile?.relation || '这位亲人'}”的互动；尽量使用关系称谓（如“${authorRelation || profile?.relation || '这位亲人'}”）而非“他/她”；避免出现“在他的记忆里/深处”等表达，若需表达记忆请用“在我的记忆里/深处”。`
+                      : '请使用第一人称“我”的表述方式。';
+                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。`;
                     const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                     const qaSource = filterPolishSource(qaSourceRaw);
                     const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\\n\\n${qaSource}\\n\\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -2094,7 +2149,8 @@ const CreateBiography = () => {
                       { role: 'user', content: userPayload },
                     ];
                     const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                    const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                    const polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                    const polished = finalizeNarrative(polishedRaw);
                     if (polished) {
                       setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                       const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
