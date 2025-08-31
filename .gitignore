@@ -47,3 +47,8 @@ Thumbs.db
 
 # Uploads (如需忽略本地上传文件)
 lifetrace-backend/Uploads/
+
+#uniapp
+uniapp/
+cloudfunctions/
+node_modules/

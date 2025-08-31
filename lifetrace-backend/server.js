@@ -130,16 +130,6 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ createdAt: 1 });
 userSchema.index({ lastLoginAt: 1 });
 const User = mongoose.model('User', userSchema);
-// User preferences schema: 控制访谈风格/严谨度/具体度/篇幅
-const userPrefsSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-  tone: { type: String, enum: ['plain','warm','narrative'], default: 'plain' },
-  strict: { type: String, enum: ['no_invent','tiny','light'], default: 'no_invent' },
-  concreteness: { type: String, enum: ['high','mid','low'], default: 'high' },
-  length: { type: String, enum: ['short','mid','long'], default: 'short' },
-  updatedAt: { type: Date, default: Date.now }
-});
-const UserPrefs = mongoose.model('UserPrefs', userPrefsSchema);
 // Family schemas
 const familyRequestSchema = new mongoose.Schema({
   requesterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -341,13 +331,6 @@ async function generateWarmStageQuestion(userId, stageIndex, qas) {
   const subject = await RecordSubject.findOne({ userId }).lean();
   const mode = subject?.mode || (subject?.profile?.relation ? 'other' : 'self');
   const relation = subject?.profile?.relation || '';
-  // user prefs
-  let prefs = null;
-  try { prefs = await UserPrefs.findOne({ userId }).lean(); } catch(_) {}
-  const tone = prefs?.tone || 'plain';
-  const strict = prefs?.strict || 'no_invent';
-  const concreteness = prefs?.concreteness || 'high';
-  const lengthPref = prefs?.length || 'short';
   const profileHints = [subject?.profile?.name, subject?.profile?.gender, subject?.profile?.birth, subject?.profile?.origin, subject?.profile?.residence, relation].filter(Boolean).join('、');
   const lifeStagesArr = ['童年','少年','青年','成年','中年','当下','未来愿望'];
   const stage = lifeStagesArr[stageIndex] || '童年';
@@ -356,16 +339,11 @@ async function generateWarmStageQuestion(userId, stageIndex, qas) {
     : '以第二人称与当事人对话；';
   const historyText = (Array.isArray(qas) ? qas : []).map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${(p.a||'').toString().slice(0,300)}`).join('\n');
   const lastAnswer = Array.isArray(qas) && qas.length > 0 ? (qas[qas.length - 1].a || '') : '';
-  const toneText = tone === 'warm' ? '语气温和、克制，不煽情；' : tone === 'narrative' ? '允许轻微叙述风格，但保持克制；' : '语气朴素、直接；';
-  const strictText = strict === 'no_invent' ? '严禁添加问答中不存在的情节、情绪或评价；如信息不足，直接提示“信息不足，我们换个细节聊聊”。' : '尽量避免扩写；如需联想，不得改变事实。';
-  const lengthText = lengthPref === 'short' ? '反馈≤20字，问题≤25字。' : lengthPref === 'mid' ? '反馈≤40字，问题≤35字。' : '反馈≤60字，问题≤45字。';
-  const concretenessText = concreteness === 'high' ? '问题要落在单一具体片段、物件或一句话上；' : concreteness === 'mid' ? '问题尽量具体；' : '问题可适度概括但要有场景锚点；';
-  const system = `你是一位尊重边界的情感访谈引导者。${toneText}${perspective}当前阶段：“${stage}”。
-目标：先给1-2句真诚、具体的共情反馈，再给出一个具象的下一问。
-硬性要求：${strictText}
-- 反馈引用可感知细节（声音/气味/动作/表情/氛围），避免“意义/力量/内核/伟大”等抽象词。
-- ${concretenessText}问题仅一句中文且以问号结尾；不编号、不加前后缀。
-- ${lengthText}
+  const system = `你是一位温暖、耐心、尊重边界的情感访谈引导者。${perspective}当前阶段：“${stage}”。
+目标：提出下一问前，先给出1-2句真诚、具体的共情反馈，再给出一个具象、情感饱满的下一问。
+硬性要求：
+- 共情反馈需引用可感知的细节（声音/气味/动作/表情/氛围等），避免空泛词（如“意义/力量/内核”等）。
+- 下一问必须具体、可回忆，指向人物与场景；仅一句中文且以问号结尾；不编号、不加前后缀。
 输出格式：
 第一行：简短共情反馈（1-2句）。
 第二行：仅一行问题句（以问号结尾）。`;
@@ -579,38 +557,6 @@ app.get('/api/user', authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error('Get user error', { error: err.message, ip: req.ip });
     res.status(500).json({ message: '获取用户信息失败：' + err.message });
-  }
-});
-
-// User preferences endpoints
-app.get('/api/user/prefs', authenticateToken, async (req, res) => {
-  try {
-    const doc = await UserPrefs.findOne({ userId: req.user.userId }).lean();
-    res.json(doc || { tone: 'plain', strict: 'no_invent', concreteness: 'high', length: 'short' });
-  } catch (err) {
-    logger.error('Get prefs error', { error: err.message, ip: req.ip });
-    res.status(500).json({ message: '获取偏好失败：' + err.message });
-  }
-});
-app.post('/api/user/prefs', authenticateToken, async (req, res) => {
-  try {
-    const { tone, strict, concreteness, length } = req.body || {};
-    const payload = {
-      tone: ['plain','warm','narrative'].includes(tone) ? tone : 'plain',
-      strict: ['no_invent','tiny','light'].includes(strict) ? strict : 'no_invent',
-      concreteness: ['high','mid','low'].includes(concreteness) ? concreteness : 'high',
-      length: ['short','mid','long'].includes(length) ? length : 'short',
-      updatedAt: new Date()
-    };
-    const updated = await UserPrefs.findOneAndUpdate(
-      { userId: req.user.userId },
-      { userId: req.user.userId, ...payload },
-      { upsert: true, new: true }
-    ).lean();
-    res.json(updated);
-  } catch (err) {
-    logger.error('Set prefs error', { error: err.message, ip: req.ip });
-    res.status(500).json({ message: '保存偏好失败：' + err.message });
   }
 });
 

@@ -95,11 +95,6 @@ const CreateBiography = () => {
   const [stageTurns, setStageTurns] = useState(Array(7).fill(0));
   const MAX_QUESTIONS_PER_STAGE = 8;
   const [shortContext, setShortContext] = useState(true); // 默认开启：仅带最近 3 轮
-  // 访谈风格偏好（持久化 + 后端同步）
-  const [prefTone, setPrefTone] = useState(() => { try { return localStorage.getItem('pref_tone') || 'plain'; } catch(_) { return 'plain'; } });
-  const [prefStrict, setPrefStrict] = useState(() => { try { return localStorage.getItem('pref_strict') || 'no_invent'; } catch(_) { return 'no_invent'; } });
-  const [prefConcrete, setPrefConcrete] = useState(() => { try { return localStorage.getItem('pref_concrete') || 'high'; } catch(_) { return 'high'; } });
-  const [prefLength, setPrefLength] = useState(() => { try { return localStorage.getItem('pref_length') || 'short'; } catch(_) { return 'short'; } });
   const chatContainerRef = useRef(null);
   const sectionTextareaRef = useRef(null);
   const answerInputRef = useRef(null);
@@ -236,18 +231,6 @@ const CreateBiography = () => {
     setMessage('');
     return axios.post('/api/spark', payload, { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 });
   };
-  // 同步用户偏好到后端（登录后）
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const save = async () => {
-      try {
-        const payload = { tone: prefTone, strict: prefStrict, concreteness: prefConcrete, length: prefLength };
-        await axios.post('/api/user/prefs', payload, { headers: { Authorization: `Bearer ${token}` }, timeout: 8000 });
-      } catch (_) {}
-    };
-    save();
-  }, [prefTone, prefStrict, prefConcrete, prefLength]);
 
   // 确保某阶段对应的篇章存在，并将其设为当前篇章
   const ensureSectionForStage = (stageIdx) => {
@@ -556,16 +539,7 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const sysTone0 = prefTone === 'warm' ? '语气温和、克制；' : (prefTone === 'narrative' ? '允许轻微叙事但保持克制；' : '语气朴素、直接；');
-      const sysStrict0 = prefStrict === 'no_invent' ? '严禁添加问答中不存在的情节或情绪；' : '尽量避免扩写，不改变事实；';
-      const sysLen0 = prefLength === 'short' ? '反馈≤20字，问题≤25字。' : (prefLength === 'mid' ? '反馈≤40字，问题≤35字。' : '反馈≤60字，问题≤45字。');
-      const sysConcrete0 = prefConcrete === 'high' ? '问题落在单一具体片段或物件；' : (prefConcrete === 'mid' ? '问题尽量具体；' : '问题可适度概括但要有场景锚点；');
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${sysTone0} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick}
-硬性要求：${sysStrict0}
-- 反馈引用可感知细节（动作/场景/气味/表情），避免“意义/力量/内核”等抽象词。
-- ${sysConcrete0}仅一句问题且以问号结尾；不编号、不加前后缀。
-- ${sysLen0}
-请用自然口语化的方式回复，先简短共情，再给出一个自然后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，例如“在你的记忆里，${authorRelation || '这位亲人'}……”开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
@@ -599,16 +573,7 @@ const CreateBiography = () => {
         const toneKick2 = (authorMode === 'other')
           ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
           : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-        const sysTone02 = prefTone === 'warm' ? '语气温和、克制；' : (prefTone === 'narrative' ? '允许轻微叙事但保持克制；' : '语气朴素、直接；');
-        const sysStrict02 = prefStrict === 'no_invent' ? '严禁添加问答中不存在的情节或情绪；' : '尽量避免扩写，不改变事实；';
-        const sysLen02 = prefLength === 'short' ? '反馈≤20字，问题≤25字。' : (prefLength === 'mid' ? '反馈≤40字，问题≤35字。' : '反馈≤60字，问题≤45字。');
-        const sysConcrete02 = prefConcrete === 'high' ? '问题落在单一具体片段或物件；' : (prefConcrete === 'mid' ? '问题尽量具体；' : '问题可适度概括但要有场景锚点；');
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${sysTone02} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2}
-硬性要求：${sysStrict02}
-- 反馈引用可感知细节（动作/场景/气味/表情），避免“意义/力量/内核”等抽象词。
-- ${sysConcrete02}仅一句问题且以问号结尾；不编号、不加前后缀。
-- ${sysLen02}
-请用自然口语化的方式回复，先简短共情，再给出一个自然后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} 回复需口语化、无编号列表；先简短共情，再给出一个自然的后续问题，不要出现“下一个问题”字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
           : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
@@ -757,16 +722,7 @@ const CreateBiography = () => {
     const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理被记录者的人生经历，强调“整理与梳理”，避免空泛与闲聊。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
     const p = profile || {};
     const profileText = `基本资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const sysTone = prefTone === 'warm' ? '语气温和、克制；' : (prefTone === 'narrative' ? '允许轻微叙事但保持克制；' : '语气朴素、直接；');
-    const sysStrict = prefStrict === 'no_invent' ? '严禁添加问答中不存在的情节、情绪或评价；如信息不足，直接说明信息不足并换个细节。' : '尽量避免扩写；不得改变事实。';
-    const sysLen = prefLength === 'short' ? '反馈≤20字，问题≤25字。' : (prefLength === 'mid' ? '反馈≤40字，问题≤35字。' : '反馈≤60字，问题≤45字。');
-    const sysConcrete = prefConcrete === 'high' ? '问题落在单一具体片段、物件或一句话上；' : (prefConcrete === 'mid' ? '问题尽量具体；' : '问题可适度概括但要有场景锚点；');
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${sysTone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective}
-硬性要求：${sysStrict}
-- 反馈引用可感知细节（动作/场景/气味/表情），避免“意义/力量/内核”等抽象词。
-- ${sysConcrete}仅一句问题且以问号结尾；不编号、不加前后缀。
-- ${sysLen}
-请用自然口语化的方式回复，先简短共情，再给出一个自然后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${profileText} 目标：帮助记录一生中值得记述的人与事，从童年至今，再到对未来的期盼。当前阶段：${lifeStages[stageIndex]}。${perspective} 请用自然口语化的方式回复，不要使用任何编号、序号或列表符号。先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -1784,32 +1740,6 @@ const CreateBiography = () => {
             onChange={(e) => setBioTitle(sanitizeInput(e.target.value))}
             maxLength={200}
           />
-        </div>
-        {/* 风格设置（影响提问/反馈与成章提示词） */}
-        <div className="mb-3 p-3 border rounded bg-white border-gray-200 text-gray-900">
-          <div className="flex flex-wrap gap-3 items-center">
-            <span className="text-sm font-semibold">风格设置</span>
-            <select className="input" value={prefTone} onChange={(e)=>{ const v=e.target.value; setPrefTone(v); try{localStorage.setItem('pref_tone',v);}catch(_){}}}>
-              <option value="plain">极简事实</option>
-              <option value="warm">克制温和</option>
-              <option value="narrative">适度叙事</option>
-            </select>
-            <select className="input" value={prefStrict} onChange={(e)=>{ const v=e.target.value; setPrefStrict(v); try{localStorage.setItem('pref_strict',v);}catch(_){}}}>
-              <option value="no_invent">不允许脑补</option>
-              <option value="tiny">极少联想</option>
-              <option value="light">少量润色</option>
-            </select>
-            <select className="input" value={prefConcrete} onChange={(e)=>{ const v=e.target.value; setPrefConcrete(v); try{localStorage.setItem('pref_concrete',v);}catch(_){}}}>
-              <option value="high">非常具体</option>
-              <option value="mid">较具体</option>
-              <option value="low">一般</option>
-            </select>
-            <select className="input" value={prefLength} onChange={(e)=>{ const v=e.target.value; setPrefLength(v); try{localStorage.setItem('pref_length',v);}catch(_){}}}>
-              <option value="short">短</option>
-              <option value="mid">中</option>
-              <option value="long">长</option>
-            </select>
-          </div>
         </div>
         {/* 温暖副标题提示 */}
         <p className="text-sm mb-4 text-gray-700">以温柔对话，慢慢整理一生的回忆。请点击"开始访谈"，在"请输入您的回答"中作答；生成后可在上方篇章里自由编辑与完善。点击最下方查看此生可以查看完整回忆。</p>
