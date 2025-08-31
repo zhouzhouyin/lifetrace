@@ -117,6 +117,74 @@ const CreateBiography = () => {
     } catch (_) {}
   };
 
+  // 风格偏好（语气/严格/具体/长度）
+  const [prefTone, setPrefTone] = useState(() => {
+    try { return localStorage.getItem('ai_pref_tone') || 'cool'; } catch (_) { return 'cool'; }
+  }); // 'cool' | 'balanced' | 'warm'
+  const [prefStrict, setPrefStrict] = useState(() => {
+    try { return localStorage.getItem('ai_pref_strict') || 'strict'; } catch (_) { return 'strict'; }
+  }); // 'strict' | 'balanced'
+  const [prefConcrete, setPrefConcrete] = useState(() => {
+    try { return localStorage.getItem('ai_pref_concrete') || 'high'; } catch (_) { return 'high'; }
+  }); // 'high' | 'balanced' | 'low'
+  const [prefLength, setPrefLength] = useState(() => {
+    try { return localStorage.getItem('ai_pref_length') || 'short'; } catch (_) { return 'short'; }
+  }); // 'short' | 'medium' | 'long'
+
+  // 保存到本地 & 同步后端（最佳努力）
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_pref_tone', prefTone);
+      localStorage.setItem('ai_pref_strict', prefStrict);
+      localStorage.setItem('ai_pref_concrete', prefConcrete);
+      localStorage.setItem('ai_pref_length', prefLength);
+    } catch (_) {}
+    // 同步后端
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        await axios.post('/api/user/prefs', {
+          tone: prefTone,
+          strict: prefStrict,
+          concreteness: prefConcrete,
+          length: prefLength,
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      } catch (_) {}
+    })();
+  }, [prefTone, prefStrict, prefConcrete, prefLength]);
+
+  // 启动时尝试从后端拉取（覆盖本地默认）
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await axios.get('/api/user/prefs', { headers: { Authorization: `Bearer ${token}` } });
+        const p = res.data || {};
+        if (p.tone) setPrefTone(p.tone);
+        if (p.strict) setPrefStrict(p.strict);
+        if (p.concreteness) setPrefConcrete(p.concreteness);
+        if (p.length) setPrefLength(p.length);
+      } catch (_) {}
+    })();
+  }, []);
+
+  // 构建风格约束（提问/生成）
+  const buildStyleRules = (kind = 'ask') => {
+    const toneText = prefTone === 'warm' ? '语气温暖但不煽情' : (prefTone === 'balanced' ? '语气自然克制' : '语气克制、平实');
+    const strictText = prefStrict === 'strict' ? '绝不脑补，信息不足先追问' : '尽量不脑补，必要时仅做极轻微补全（不新增事实）';
+    const concreteText = prefConcrete === 'high' ? '要求给出具体人/事/时/地/物与动作细节，避免抽象词' : (prefConcrete === 'balanced' ? '优先具体细节，必要时可概括' : '允许更概括的表达');
+    const lenAsk = prefLength === 'long' ? '反馈≤50字，问题≤80字' : (prefLength === 'medium' ? '反馈≤40字，问题≤60字' : '反馈≤30字，问题≤40字');
+    const lenGen = prefLength === 'long' ? '本段≤1200字' : (prefLength === 'medium' ? '本段≤800字' : '本段≤500字');
+    if (kind === 'ask') return `${toneText}；${strictText}；${concreteText}；${lenAsk}`;
+    return `${toneText}；${strictText}；${concreteText}；${lenGen}`;
+  };
+
+  const getGenMaxChars = () => {
+    return prefLength === 'long' ? 1200 : (prefLength === 'medium' ? 800 : 500);
+  };
+
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
@@ -595,7 +663,7 @@ const CreateBiography = () => {
       const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
       const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
       const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，例如“在你的记忆里，${authorRelation || '这位亲人'}……”开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
@@ -629,7 +697,7 @@ const CreateBiography = () => {
         const toneKick2 = (authorMode === 'other')
           ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
           : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
           : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
@@ -1936,7 +2004,7 @@ const CreateBiography = () => {
                           const perspectiveHint = (authorMode === 'other')
                             ? `请使用第一人称“我”的叙述，从写作者视角回忆与“${authorRelation || profile?.relation || '这位亲人'}”的互动；尽量使用关系称谓（如“${authorRelation || profile?.relation || '这位亲人'}”）而非“他/她”；避免出现“在他的记忆里/深处”等表达，若需表达记忆请用“在我的记忆里/深处”。`
                             : '请使用第一人称“我”的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。`;
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')}`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -1945,7 +2013,9 @@ const CreateBiography = () => {
                             { role: 'user', content: userPayload },
                           ];
                           const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                          const polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          let polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          const maxChars = getGenMaxChars();
+                          if (polishedRaw.length > maxChars) polishedRaw = polishedRaw.slice(0, maxChars);
                           const polished = finalizeNarrative(polishedRaw);
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
