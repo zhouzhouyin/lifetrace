@@ -189,6 +189,11 @@ const CreateBiography = () => {
     return prefLength === 'long' ? 1200 : (prefLength === 'medium' ? 800 : 500);
   };
 
+  // 硬性约束：绝不脑补、只按事实、语言克制
+  const buildHardConstraints = () => {
+    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。';
+  };
+
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
   const getStageLabelByIndex = (idx) => {
     const base = lifeStages[Math.max(0, Math.min(idx, lifeStages.length - 1))] || '';
@@ -721,7 +726,7 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
@@ -729,11 +734,13 @@ const CreateBiography = () => {
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
-      const ai = normalizeAssistant(raw) || (
+      // 引导更具体：环境/人物/动作/感受
+      let ai = normalizeAssistant(raw) || (
         authorMode === 'other'
           ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
           : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
       );
+      ai += ' 能具体说说当时的地点、在场的人、做了什么、你（您）当时的感受吗？';
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 阶段开场问题写入对应阶段篇章
       appendLineToSection(targetIndex, `陪伴师：${ai}`);
@@ -762,7 +769,7 @@ const CreateBiography = () => {
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
         const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
         const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
           : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
@@ -1332,7 +1339,7 @@ const CreateBiography = () => {
     } catch (_) {}
   };
 
-  // 基于问答抽取“事实关键词”，用于简单校验生成是否越界
+  // 基于问答抽取"事实关键词"，用于简单校验生成是否越界
   const extractFactTokens = (qaText) => {
     try {
       const src = (qaText || '').toString().replace(/陪伴师：|我：/g, '');
@@ -2197,13 +2204,24 @@ const CreateBiography = () => {
                           const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')}`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
-                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\n\n${qaSource}\n\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n严格要求：不得新增任何事实或细节；若信息不足以生成连贯段落，请不要凑写，仅输出一个"关键的下一步追问"（仅一句）并停止。否则，请输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
                           const messages = [
                             { role: 'system', content: system },
                             { role: 'user', content: userPayload },
                           ];
-                          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+                          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 900, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
                           let polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          // 简易事实一致性校验：若不支持，则转为追问
+                          const factTokens = extractFactTokens(qaSource);
+                          if (!narrativeSeemsSupported(polishedRaw, factTokens)) {
+                            const tip = '当前信息不足以生成连贯段落。我需要一个具体细节以保持真实与连贯：';
+                            const out = finalizeAssistant(tip);
+                            setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
+                            appendLineToSection(currentSectionIndex, `陪伴师：${out}`);
+                            try { await maybeAskFollowUpBeforeGenerate(currentSectionIndex); } catch (_) {}
+                            setPolishingSectionIndex(null);
+                            return;
+                          }
                           const maxChars = getGenMaxChars();
                           if (polishedRaw.length > maxChars) polishedRaw = polishedRaw.slice(0, maxChars);
                           const polished = finalizeNarrative(polishedRaw);
