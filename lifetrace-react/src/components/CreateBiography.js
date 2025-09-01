@@ -1032,8 +1032,8 @@ const CreateBiography = () => {
             if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
               const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
               const prompt = nextIdx !== stageIndex
-                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题，回答后请点击"${getStageLabelByIndex(nextIdx)}"继续访谈。`
-                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"结束本阶段。';
+                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击“生成本篇回忆”，再点击"${getStageLabelByIndex(nextIdx)}"进入下一阶段。`
+                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击“生成本篇回忆”。';
               setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
               appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
               stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
@@ -2211,17 +2211,7 @@ const CreateBiography = () => {
                           ];
                           const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 900, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
                           let polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-                          // 简易事实一致性校验：若不支持，则转为追问
-                          const factTokens = extractFactTokens(qaSource);
-                          if (!narrativeSeemsSupported(polishedRaw, factTokens)) {
-                            const tip = '当前信息不足以生成连贯段落。我需要一个具体细节以保持真实与连贯：';
-                            const out = finalizeAssistant(tip);
-                            setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
-                            appendLineToSection(currentSectionIndex, `陪伴师：${out}`);
-                            try { await maybeAskFollowUpBeforeGenerate(currentSectionIndex); } catch (_) {}
-                            setPolishingSectionIndex(null);
-                            return;
-                          }
+                          // 撤销：不做自动事实校验与自动追问，完全依提示词约束与用户把控
                           const maxChars = getGenMaxChars();
                           if (polishedRaw.length > maxChars) polishedRaw = polishedRaw.slice(0, maxChars);
                           const polished = finalizeNarrative(polishedRaw);
