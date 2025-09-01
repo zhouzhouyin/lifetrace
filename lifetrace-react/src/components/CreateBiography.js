@@ -1332,6 +1332,36 @@ const CreateBiography = () => {
     } catch (_) {}
   };
 
+  // 基于问答抽取“事实关键词”，用于简单校验生成是否越界
+  const extractFactTokens = (qaText) => {
+    try {
+      const src = (qaText || '').toString().replace(/陪伴师：|我：/g, '');
+      const tokens = new Set();
+      // 连续中文>=2
+      const zh = src.match(/[\u4e00-\u9fa5]{2,}/g) || [];
+      zh.forEach(w => tokens.add(w));
+      // 数字/年份/日期
+      const nums = src.match(/\d{2,4}[年月日号]?/g) || [];
+      nums.forEach(w => tokens.add(w));
+      return tokens;
+    } catch (_) { return new Set(); }
+  };
+
+  const narrativeSeemsSupported = (text, factTokens) => {
+    try {
+      const sents = (text || '').toString().split(/[。！？!?]/).map(v => v.trim()).filter(Boolean);
+      if (sents.length === 0) return true;
+      let unsupported = 0;
+      for (const s of sents) {
+        let ok = false;
+        for (const t of factTokens) { if (t && s.includes(t)) { ok = true; break; } }
+        if (!ok) unsupported++;
+      }
+      // 允许少量过度概括，但不超过全部的三分之一
+      return unsupported <= Math.floor(sents.length / 3);
+    } catch (_) { return true; }
+  };
+
   // 分段编辑：文本与媒体（固定阶段篇章，不允许新增/删除）
   const addSection = () => {};
   const removeSection = () => {};
