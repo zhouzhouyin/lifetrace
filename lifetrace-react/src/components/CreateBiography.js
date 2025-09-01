@@ -306,6 +306,41 @@ const CreateBiography = () => {
     setCurrentSectionIndex(Math.max(0, Math.min(stageIdx, lifeStages.length - 1)));
   };
 
+  // 若Q&A不足，先发起一次有针对性的追问再生成
+  const maybeAskFollowUpBeforeGenerate = async (sectionIndex) => {
+    try {
+      const txt = (sections[sectionIndex]?.text || '').toString();
+      const answers = (txt.match(/^我：/gm) || []).length;
+      const plainLen = txt.replace(/^陪伴师：.*$/gm, '').length;
+      if (answers >= 2 && plainLen >= 80) return false; // 足够生成
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+      const stageName = getStageLabelByIndex(sectionIndex);
+      const perspectiveKick = (authorMode === 'other')
+        ? `请用第二人称“你”，采用关系视角，面向写作者追问与“${authorRelation || profile?.relation || '这位亲人'}”相关的一个关键细节。`
+        : '请用第二人称“您/你”提出一个关键细节问题。';
+      const askRule = `目的：当前材料不足以顺畅成文，请先提出一个最关键、最具体的问题以补齐细节（仅一句）。${buildStyleRules('ask')}`;
+      const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${askRule}`;
+      const snippet = txt.slice(-800);
+      const messages = [
+        { role: 'system', content: system },
+        { role: 'user', content: `以下是已收集的部分问答片段：\n\n${snippet}\n\n请仅输出一个最关键的追问（仅一句），不要其它文字。` },
+      ];
+      const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.3,
+        user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
+      const q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+      if (q) {
+        const out = finalizeAssistant(q);
+        setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
+        appendLineToSection(sectionIndex, `陪伴师：${out}`);
+        setMessage('信息稍显不足，我已补充一个追问，请先回答再生成本篇回忆');
+        setTimeout(() => setMessage(''), 1600);
+        return true; // 已追问，暂不生成
+      }
+    } catch (_) {}
+    return false;
+  };
+
   // 将一行文本追加到指定篇章（自动换行）
   const appendLineToSection = (sectionIndex, line) => {
     if (sectionIndex == null || sectionIndex < 0) return;
@@ -316,6 +351,24 @@ const CreateBiography = () => {
         ? { ...s, text: (s.text ? s.text + '\n' : '') + safeLine }
         : s
     )));
+  };
+
+  // 最近用户是否表述“记不清/想不起来”等
+  const lastUserSaysCantRecall = (sectionIndex) => {
+    try {
+      const txt = (sections[sectionIndex]?.text || '').toString();
+      const lines = txt.split(/\r?\n/).reverse();
+      for (const line of lines) {
+        const s = (line || '').trim();
+        if (!s) continue;
+        if (s.startsWith('陪伴师：')) continue;
+        if (s.startsWith('我：')) {
+          const v = s.slice(2);
+          return /(不记得|想不起来|记不清|不太确定|忘了)/.test(v);
+        }
+      }
+    } catch (_) {}
+    return false;
   };
 
   // 草稿恢复与自动保存（返回预览后不丢失）
@@ -1886,6 +1939,48 @@ const CreateBiography = () => {
         )}
         {/* 隐私条款弹窗已移除 */}
         <div className="flex flex-col gap-6">
+          {/* 风格设置面板 */}
+          <div className="-mx-4 sm:mx-0 px-4">
+            <div className="border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-semibold">风格设置</div>
+                <div className="text-xs text-gray-500">全局生效（提问/追问/生成篇章）</div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm mb-1">语气</label>
+                  <select className="input" value={prefTone} onChange={(e)=>setPrefTone(e.target.value)}>
+                    <option value="cool">克制</option>
+                    <option value="balanced">平衡</option>
+                    <option value="warm">温暖</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">严格度</label>
+                  <select className="input" value={prefStrict} onChange={(e)=>setPrefStrict(e.target.value)}>
+                    <option value="strict">严格按事实</option>
+                    <option value="balanced">适度补全</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">具体度</label>
+                  <select className="input" value={prefConcrete} onChange={(e)=>setPrefConcrete(e.target.value)}>
+                    <option value="high">更具体</option>
+                    <option value="balanced">平衡</option>
+                    <option value="low">更概括</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">长度</label>
+                  <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
+                    <option value="short">更短</option>
+                    <option value="medium">适中</option>
+                    <option value="long">更长</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
           {/* 阶段面包屑（横向滚动） */}
           <div className="-mx-4 sm:mx-0 px-4 overflow-x-auto" ref={stageScrollRef}>
             <div className="flex gap-2 pb-2 min-w-max">
@@ -2005,6 +2100,8 @@ const CreateBiography = () => {
                       onClick={async () => {
                         const section = sections[currentSectionIndex] || {};
                         if (!((section.text || '').trim())) return;
+                        const asked = await maybeAskFollowUpBeforeGenerate(currentSectionIndex);
+                        if (asked) return;
                         setPolishingSectionIndex(currentSectionIndex);
                         try {
                           const token = localStorage.getItem('token');
