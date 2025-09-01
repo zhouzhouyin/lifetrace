@@ -100,6 +100,8 @@ const CreateBiography = () => {
   const answerInputRef = useRef(null);
   const stageDecisionRef = useRef({ stageIndex: null, nextStageIndex: null });
   const closurePendingRef = useRef(null);
+  const thresholdWarnedRef = useRef(new Set());
+  const forcedClosedRef = useRef(new Set());
   // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
@@ -279,7 +281,7 @@ const CreateBiography = () => {
       });
       // 清空粘贴板
       localStorage.removeItem('dailyPasteboard');
-      setMessage('已从“每日回首”粘贴最新问答到对应篇章');
+      setMessage('已从"每日回首"粘贴最新问答到对应篇章');
       setTimeout(() => setMessage(''), 1500);
     } catch (_) {}
   }, []);
@@ -319,8 +321,8 @@ const CreateBiography = () => {
       if (!token) return false;
       const stageName = getStageLabelByIndex(sectionIndex);
       const perspectiveKick = (authorMode === 'other')
-        ? `请用第二人称“你”，采用关系视角，面向写作者追问与“${authorRelation || profile?.relation || '这位亲人'}”相关的一个关键细节。`
-        : '请用第二人称“您/你”提出一个关键细节问题。';
+        ? `请用第二人称"你"，采用关系视角，面向写作者追问与"${authorRelation || profile?.relation || '这位亲人'}"相关的一个关键细节。`
+        : '请用第二人称"您/你"提出一个关键细节问题。';
       const askRule = `目的：当前材料不足以顺畅成文，请先提出一个最关键、最具体的问题以补齐细节（仅一句）。${buildStyleRules('ask')}`;
       const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${askRule}`;
       const snippet = txt.slice(-800);
@@ -355,7 +357,7 @@ const CreateBiography = () => {
     )));
   };
 
-  // 最近用户是否表述“记不清/想不起来”等
+  // 最近用户是否表述"记不清/想不起来"等
   const lastUserSaysCantRecall = (sectionIndex) => {
     try {
       const txt = (sections[sectionIndex]?.text || '').toString();
@@ -502,7 +504,7 @@ const CreateBiography = () => {
     // 删除明显煽情/抽象词
     const banned = ['伟大', '崇高', '灵魂', '使命', '精神内核', '力量', '澎湃', '震撼', '永恒', '史诗', '注定', '宿命', '意义'];
     for (const w of banned) s = s.replace(new RegExp(w, 'g'), '');
-    // 去掉“下一个问题”等提示词
+    // 去掉"下一个问题"等提示词
     s = s.replace(/下一个问题[:：]?/g, '').trim();
     // 他/她 → 关系称谓（仅在为他人模式）
     try {
@@ -519,23 +521,23 @@ const CreateBiography = () => {
   };
 
   // 叙述后处理：
-  // - 为他人模式时，将可能的“在他的/她的记忆…”改为“在我的记忆…”，
-  // - 优先使用关系称谓替换含“他的/她的”的指代，
-  // - 若全文缺少“我/我的”，补充一个“在我的记忆里，”作为开场以确保第一人称视角。
+  // - 为他人模式时，将可能的"在他的/她的记忆…"改为"在我的记忆…"，
+  // - 优先使用关系称谓替换含"他的/她的"的指代，
+  // - 若全文缺少"我/我的"，补充一个"在我的记忆里，"作为开场以确保第一人称视角。
   const finalizeNarrative = (rawText) => {
     let s = (rawText || '').toString().trim();
     try {
       if (authorMode === 'other') {
         const rel = (authorRelation || profile?.relation || '这位亲人').toString();
-        // 关系称谓优先，避免“他/她”的模糊指代（仅在所有格场景下替换）
+        // 关系称谓优先，避免"他/她"的模糊指代（仅在所有格场景下替换）
         s = s.replace(/(?<![你您我])[他她]的/g, `${rel}的`);
-        // 记忆/印象类常见短语统一改为“我的”
+        // 记忆/印象类常见短语统一改为"我的"
         s = s.replace(/在[他她]的记忆深处/g, '在我的记忆深处');
         s = s.replace(/在[他她]的记忆里/g, '在我的记忆里');
         s = s.replace(/在[他她]的记忆中/g, '在我的记忆中');
         s = s.replace(/在[他她]的印象里/g, '在我的印象里');
         s = s.replace(/在[他她]的印象中/g, '在我的印象中');
-        // 诸如“他/她”“她/他”“他（她）”“她（他）” → 关系称谓
+        // 诸如"他/她""她/他""他（她）""她（他）" → 关系称谓
         s = s.replace(/他\/她|她\/他|他（她）|她（他）|他\(她\)|她\(他\)/g, rel);
         // 若几乎没有第一人称痕迹，则补一个柔和的第一句前缀
         if (!/[\b我\b]|我的/.test(s)) {
@@ -714,15 +716,15 @@ const CreateBiography = () => {
     const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
     try {
       const perspectiveKick = (authorMode === 'other')
-        ? `请使用第二人称“你”，但采用“关系视角”提问：围绕你与“${authorRelation || '这位亲人'}”的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
-        : '请使用第二人称“您/你”。';
+        ? `请使用第二人称"你"，但采用"关系视角"提问：围绕你与"${authorRelation || '这位亲人'}"的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
+        : '请使用第二人称"您/你"。';
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
-        ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，例如“在你的记忆里，${authorRelation || '这位亲人'}……”开头，给出一个本阶段的第一个暖心问题（仅一句）。`
-        : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
+        ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段的第一个暖心问题（仅一句）。`
+        : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
@@ -748,8 +750,8 @@ const CreateBiography = () => {
       // 短上下文重试
       try {
         const perspectiveKick2 = (authorMode === 'other')
-          ? `请使用第二人称“你”，但采用“关系视角”提问：围绕你与“${authorRelation || '这位亲人'}”的互动、对你的影响与具体细节；，避免过度煽情，要给写作者温暖的回忆，避免第三人称与抽象化表达。`
-          : '请使用第二人称“您/你”。';
+          ? `请使用第二人称"你"，但采用"关系视角"提问：围绕你与"${authorRelation || '这位亲人'}"的互动、对你的影响与具体细节；，避免过度煽情，要给写作者温暖的回忆，避免第三人称与抽象化表达。`
+          : '请使用第二人称"您/你"。';
         const toneKick2 = (authorMode === 'other')
           ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
           : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
@@ -760,10 +762,10 @@ const CreateBiography = () => {
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
         const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
         const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
-          ? `请以关系视角面向写作者发问：聚焦“你与${authorRelation || '这位亲人'}”的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
-          : `请面向“您”提出本阶段的第一个暖心问题（仅一句）。`;
+          ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
+          : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
@@ -803,8 +805,8 @@ const CreateBiography = () => {
       if (!token) return;
       const stageName = getStageLabelByIndex(stageIdx);
       const perspectiveKick = (authorMode === 'other')
-        ? `请用第二人称“你”，采用关系视角，面向写作者提出一个收束该阶段的小结问题（仅一句）。`
-        : '请用第二人称“您/你”提出一个收束该阶段的小结问题（仅一句）。';
+        ? `请用第二人称"你"，采用关系视角，面向写作者提出一个收束该阶段的小结问题（仅一句）。`
+        : '请用第二人称"您/你"提出一个收束该阶段的小结问题（仅一句）。';
       const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildStyleRules('ask')}`;
       const messages = [
         { role: 'system', content: system },
@@ -929,22 +931,24 @@ const CreateBiography = () => {
     // 同步素材文本可选，如不再使用素材区可注释
     // setMaterialsText(prev => (prev ? prev + '\n' + trimmed : trimmed));
 
-    const perspective = (authorMode === 'other') ? `请使用第二人称“你”，并采用“关系视角”与写作者对话：围绕写作者与“${authorRelation || profile?.relation || '这位亲人'}”的互动细节与影响来提问；明确写作者与被记录者身份，不要过度煽情，不要使用第三人称。` : '请使用第二人称“您/你”，避免第三人称。';
-    const tone = (authorMode === 'other') ? '你现在是“引导者/助手”，与记录者一起梳理被记录者的人生经历，强调“整理与梳理”，避免空泛与闲聊。' : '你现在是“情感陪伴师”，与当事人交流，语气自然温和。';
+    const perspective = (authorMode === 'other') ? `请使用第二人称"你"，并采用"关系视角"与写作者对话：围绕写作者与"${authorRelation || profile?.relation || '这位亲人'}"的互动细节与影响来提问；明确写作者与被记录者身份，不要过度煽情，不要使用第三人称。` : '请使用第二人称"您/你"，避免第三人称。';
+    const tone = (authorMode === 'other') ? '你现在是"引导者/助手"，与记录者一起梳理被记录者的人生经历，强调"整理与梳理"，避免空泛与闲聊。' : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
     const p = profile || {};
     const writerName = (localStorage.getItem('username') || username || '').toString();
     const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
     const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加“下一个问题”字样。仅输出中文。`;
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
     setChatMessages(prev => [...prev, { role: 'user', content: trimmed }]);
     // 将用户答案写入当前阶段篇章
     appendLineToSection(currentSectionIndex, `我：${trimmed}`);
-    // 不立即清空输入框，直到我们生成了下一问或发起收尾/阶段切换提示后再清空
+    // 立即清空输入框（视觉反馈），答案已写入篇章与对话
+    setAnswerInput('');
+    if (answerInputRef.current) answerInputRef.current.value = '';
     setIsAsking(true);
     try {
       const resp = await retry(() => callSparkThrottled({
@@ -969,7 +973,7 @@ const CreateBiography = () => {
         if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
           const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
           const prompt = nextIdx !== stageIndex
-            ? `本阶段已达到提问上限。要继续在“${getStageLabelByIndex(stageIndex)}”里深入追问，还是先回答一个小结后进入“${getStageLabelByIndex(nextIdx)}”？`
+            ? `本阶段已达到提问上限。要继续在"${getStageLabelByIndex(stageIndex)}"里深入追问，还是先回答一个小结后进入"${getStageLabelByIndex(nextIdx)}"？`
             : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
           setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
@@ -997,11 +1001,32 @@ const CreateBiography = () => {
           setStageTurns(prev => {
             const copy = [...prev];
             copy[stageIndex] = (copy[stageIndex] || 0) + 1;
+            // 字数阈值逻辑（8000引导收尾，9000强制收尾）
+            try {
+              const curText = (sections[currentSectionIndex]?.text || '').toString();
+              const len = curText.length;
+              if (len >= 9000 && !forcedClosedRef.current.has(stageIndex)) {
+                forcedClosedRef.current.add(stageIndex);
+                const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
+                const forceMsg = `本阶段内容已达上限，我将为当前段落做收尾。请点击"${getStageLabelByIndex(nextIdx)}"继续访谈。`;
+                setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(forceMsg) }]);
+                appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(forceMsg)}`);
+                // 自动进入下一个阶段
+                setTimeout(() => askStageKickoff(nextIdx, false), 300);
+                return copy;
+              }
+              if (len >= 8000 && !thresholdWarnedRef.current.has(stageIndex)) {
+                thresholdWarnedRef.current.add(stageIndex);
+                const warn = '本阶段内容已较为充实，如需收尾，请回复"小结"；若想继续，请回复"继续追忆"。';
+                setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(warn) }]);
+                appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(warn)}`);
+              }
+            } catch (_) {}
             if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
               const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
               const prompt = nextIdx !== stageIndex
-                ? `本阶段已达到提问上限。要继续在“${getStageLabelByIndex(stageIndex)}”里深入追问，还是先回答一个小结后进入“${getStageLabelByIndex(nextIdx)}”？`
-                : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
+                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题，回答后请点击"${getStageLabelByIndex(nextIdx)}"继续访谈。`
+                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"结束本阶段。';
               setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
               appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
               stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
@@ -1977,21 +2002,21 @@ const CreateBiography = () => {
                 <div className="text-xs text-gray-500">全局生效（提问/追问/生成篇章）</div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div>
+          <div>
                   <label className="block text-sm mb-1">语气</label>
                   <select className="input" value={prefTone} onChange={(e)=>setPrefTone(e.target.value)}>
                     <option value="cool">克制</option>
                     <option value="balanced">平衡</option>
                     <option value="warm">温暖</option>
                   </select>
-                </div>
+            </div>
                 <div>
                   <label className="block text-sm mb-1">严格度</label>
                   <select className="input" value={prefStrict} onChange={(e)=>setPrefStrict(e.target.value)}>
                     <option value="strict">严格按事实</option>
                     <option value="balanced">适度补全</option>
                   </select>
-                </div>
+                  </div>
                 <div>
                   <label className="block text-sm mb-1">具体度</label>
                   <select className="input" value={prefConcrete} onChange={(e)=>setPrefConcrete(e.target.value)}>
@@ -1999,7 +2024,7 @@ const CreateBiography = () => {
                     <option value="balanced">平衡</option>
                     <option value="low">更概括</option>
                   </select>
-                </div>
+              </div>
                 <div>
                   <label className="block text-sm mb-1">长度</label>
                   <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
@@ -2025,9 +2050,9 @@ const CreateBiography = () => {
                 >
                   {getSectionLabelByIndex(idx)}
                 </button>
-                ))}
-              </div>
+                  ))}
                 </div>
+            </div>
           {/* 永恒计划引导：仅在用户点击"查看此生"后于预览页展示；此处不再弹出 */}
           
           {/* 情感陪伴师访谈（一体化：隐藏单独区域，所有问答只在篇章正文中体现） */}
@@ -2076,7 +2101,7 @@ const CreateBiography = () => {
                     placeholder={t ? t('chapterTextPlaceholder') : '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。'}
                     value={sections[currentSectionIndex]?.text || ''}
                     onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
-                    maxLength={5000}
+                    maxLength={10000}
               disabled={isSaving || isUploading}
                     ref={sectionTextareaRef}
                   />
@@ -2137,8 +2162,8 @@ const CreateBiography = () => {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
                           const perspectiveHint = (authorMode === 'other')
-                            ? `请使用第一人称“我”的叙述，从写作者视角回忆与“${authorRelation || profile?.relation || '这位亲人'}”的互动；尽量使用关系称谓（如“${authorRelation || profile?.relation || '这位亲人'}”）而非“他/她”；避免出现“在他的记忆里/深处”等表达，若需表达记忆请用“在我的记忆里/深处”。`
-                            : '请使用第一人称“我”的表述方式。';
+                            ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
+                            : '请使用第一人称"我"的表述方式。';
                           const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')}`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
@@ -2353,8 +2378,8 @@ const CreateBiography = () => {
                     const token = localStorage.getItem('token');
                     if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
                     const perspectiveHint = (authorMode === 'other')
-                      ? `请使用第一人称“我”的叙述，从写作者视角回忆与“${authorRelation || profile?.relation || '这位亲人'}”的互动；尽量使用关系称谓（如“${authorRelation || profile?.relation || '这位亲人'}”）而非“他/她”；避免出现“在他的记忆里/深处”等表达，若需表达记忆请用“在我的记忆里/深处”。`
-                      : '请使用第一人称“我”的表述方式。';
+                      ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
+                      : '请使用第一人称"我"的表述方式。';
                     const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。`;
                     const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                     const qaSource = filterPolishSource(qaSourceRaw);
