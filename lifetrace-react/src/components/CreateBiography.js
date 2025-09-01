@@ -98,6 +98,8 @@ const CreateBiography = () => {
   const chatContainerRef = useRef(null);
   const sectionTextareaRef = useRef(null);
   const answerInputRef = useRef(null);
+  const stageDecisionRef = useRef({ stageIndex: null, nextStageIndex: null });
+  const closurePendingRef = useRef(null);
   // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
@@ -794,6 +796,30 @@ const CreateBiography = () => {
     }
   };
 
+  // 发起阶段收尾追问（仅一句），等待用户回答
+  const askStageClosureQuestion = async (stageIdx) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const stageName = getStageLabelByIndex(stageIdx);
+      const perspectiveKick = (authorMode === 'other')
+        ? `请用第二人称“你”，采用关系视角，面向写作者提出一个收束该阶段的小结问题（仅一句）。`
+        : '请用第二人称“您/你”提出一个收束该阶段的小结问题（仅一句）。';
+      const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildStyleRules('ask')}`;
+      const messages = [
+        { role: 'system', content: system },
+        { role: 'user', content: `请仅输出一个用于收束本阶段的提问（仅一句），不要任何额外文字。` },
+      ];
+      const tokenUid = (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon');
+      const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.3, user: tokenUid }, token, { silentThrottle: true });
+      const q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+      const out = finalizeAssistant(q);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
+      appendLineToSection(stageIdx, `陪伴师：${out}`);
+      closurePendingRef.current = stageIdx;
+    } catch (_) {}
+  };
+
   // 访谈身份设定：本人/他人
   const [authorMode, setAuthorMode] = useState(() => {
     try { return localStorage.getItem('author_mode') || ''; } catch(_) { return ''; }
@@ -918,8 +944,7 @@ const CreateBiography = () => {
     setChatMessages(prev => [...prev, { role: 'user', content: trimmed }]);
     // 将用户答案写入当前阶段篇章
     appendLineToSection(currentSectionIndex, `我：${trimmed}`);
-    setAnswerInput('');
-    if (answerInputRef.current) answerInputRef.current.value = '';
+    // 不立即清空输入框，直到我们生成了下一问或发起收尾/阶段切换提示后再清空
     setIsAsking(true);
     try {
       const resp = await retry(() => callSparkThrottled({
@@ -934,19 +959,22 @@ const CreateBiography = () => {
       // 将陪伴师问题写入当前阶段篇章（只保留反馈+问题的一行）
       appendLineToSection(currentSectionIndex, `陪伴师：${ai}`);
       if (autoSpeakAssistant) speakText(ai);
+      // 已顺利产生下一问，可以清空输入框
+      setAnswerInput('');
+      if (answerInputRef.current) answerInputRef.current.value = '';
       // 统计轮数并自动推进
       setStageTurns(prev => {
         const copy = [...prev];
         copy[stageIndex] = (copy[stageIndex] || 0) + 1;
         if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
-          if (stageIndex < lifeStages.length - 1) {
-            setTimeout(() => askStageKickoff(stageIndex + 1, false), 200);
-          } else {
-            // 最后一阶段完成，温暖结束
-            const closing = '非常感谢您的真诚分享。我们的访谈到这里告一段落了。您可以点击"生成传记并预览"查看整理结果，或选择上方任一阶段按钮重新开始该阶段的对话。祝您生活温暖而明亮。';
-            setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: closing }]);
-            setIsInterviewing(false);
-          }
+          const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
+          const prompt = nextIdx !== stageIndex
+            ? `本阶段已达到提问上限。要继续在“${getStageLabelByIndex(stageIndex)}”里深入追问，还是先回答一个小结后进入“${getStageLabelByIndex(nextIdx)}”？`
+            : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
+          setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
+          appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
+          // 记录允许的下一阶段
+          stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
         }
         return copy;
       });
@@ -964,17 +992,19 @@ const CreateBiography = () => {
           setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${ai2}`);
           if (autoSpeakAssistant) speakText(ai2);
+          setAnswerInput('');
+          if (answerInputRef.current) answerInputRef.current.value = '';
           setStageTurns(prev => {
             const copy = [...prev];
             copy[stageIndex] = (copy[stageIndex] || 0) + 1;
             if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
-              if (stageIndex < lifeStages.length - 1) {
-                setTimeout(() => askStageKickoff(stageIndex + 1, false), 200);
-              } else {
-                const closing = '非常感谢您的真诚分享。我们的访谈到这里告一段落了。您可以点击"生成传记并预览"查看整理结果，或选择上方任一阶段按钮重新开始该阶段的对话。祝您生活温暖而明亮。';
-                setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: closing }]);
-                setIsInterviewing(false);
-              }
+              const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
+              const prompt = nextIdx !== stageIndex
+                ? `本阶段已达到提问上限。要继续在“${getStageLabelByIndex(stageIndex)}”里深入追问，还是先回答一个小结后进入“${getStageLabelByIndex(nextIdx)}”？`
+                : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
+              setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
+              appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
+              stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
             }
             return copy;
           });
