@@ -726,7 +726,7 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
@@ -769,7 +769,7 @@ const CreateBiography = () => {
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
         const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
         const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现“下一个问题”字样。仅输出中文。`;
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
           : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
@@ -893,6 +893,39 @@ const CreateBiography = () => {
       setTimeout(() => navigate('/login'), 1000);
       return;
     }
+
+    // 阶段上限后的用户选择处理："小结" 或 "继续追忆"
+    try {
+      const decision = stageDecisionRef.current || {};
+      if (decision && Number.isInteger(decision.stageIndex) && decision.stageIndex === stageIndex) {
+        const norm = trimmed.replace(/\s/g, '');
+        if (/(小结)/.test(norm)) {
+          // 用户选择小结：发起小结问题
+          appendLineToSection(currentSectionIndex, `我：${trimmed}`);
+          setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
+          await askStageClosureQuestion(stageIndex);
+          return;
+        }
+        if (/(继续追忆|继续)/.test(norm)) {
+          // 用户选择继续：清除上限提示状态，按正常提问继续
+          stageDecisionRef.current = { stageIndex: null, nextStageIndex: decision.nextStageIndex };
+        }
+      }
+
+      // 若用户刚回答了小结问题（等待收尾回答）
+      if (closurePendingRef.current === stageIndex) {
+        appendLineToSection(currentSectionIndex, `我：${trimmed}`);
+        setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
+        // 小结已记录，只提示生成，不再继续提问或重复上限提示
+        const tip = '小结已记录。请点击"生成本篇回忆"，然后再进入下一阶段继续访谈。';
+        setChatMessages(prev => [...prev, { role: 'assistant', content: tip }]);
+        appendLineToSection(currentSectionIndex, `陪伴师：${tip}`);
+        closurePendingRef.current = null;
+        stageDecisionRef.current = { stageIndex: null, nextStageIndex: null };
+        return;
+      }
+    } catch (_) {}
+
     // 处理身份设定回答
     if (!authorMode) {
       const v = trimmed.replace(/\s/g,'');
@@ -1032,8 +1065,8 @@ const CreateBiography = () => {
             if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
               const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
               const prompt = nextIdx !== stageIndex
-                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击“生成本篇回忆”，再点击"${getStageLabelByIndex(nextIdx)}"进入下一阶段。`
-                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击“生成本篇回忆”。';
+                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击"生成本篇回忆"，再点击"${getStageLabelByIndex(nextIdx)}"进入下一阶段。`
+                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击"生成本篇回忆"。';
               setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
               appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
               stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
@@ -2201,7 +2234,7 @@ const CreateBiography = () => {
                           const perspectiveHint = (authorMode === 'other')
                             ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
                             : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')}`;
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')} ${buildHardConstraints()} 当用户表述"想不起来/记不清"等时，不再追问；请用一句平实、克制且富于共情的句子自然收束当前段落（不新增事实），并在下一句以自然方式引出下一话题或阶段的过渡句，保证整体连贯。`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n严格要求：不得新增任何事实或细节；若信息不足以生成连贯段落，请不要凑写，仅输出一个"关键的下一步追问"（仅一句）并停止。否则，请输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -2232,7 +2265,7 @@ const CreateBiography = () => {
                       {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
                     </button>
                   </div>
-                  <p className="text-sm text-gray-500">当前字数: {sections[currentSectionIndex]?.text?.length || 0} / 5000</p>
+                  <p className="text-sm text-gray-500">当前字数: {sections[currentSectionIndex]?.text?.length || 0} / 10000</p>
                   {(sections[currentSectionIndex]?.media?.length > 0) && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                       {sections[currentSectionIndex].media.map((m, mi) => (
