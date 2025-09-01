@@ -130,7 +130,7 @@ const CreateBiography = () => {
   const [prefStrict] = useState('strict');
   const [prefConcrete] = useState('high');
   const [prefLength, setPrefLength] = useState(() => {
-    try { return localStorage.getItem('ai_pref_length') || 'short'; } catch (_) { return 'short'; }
+    try { return localStorage.getItem('ai_pref_length') || 'medium'; } catch (_) { return 'medium'; }
   }); // 'short' | 'medium' | 'long'
   const [showStylePanel, setShowStylePanel] = useState(() => {
     try { return !(window && window.innerWidth < 640); } catch (_) { return true; }
@@ -188,7 +188,7 @@ const CreateBiography = () => {
     const strictText = '绝不脑补、不得新增或推断未出现的细节';
     const concreteText = '强调具体人/事/时/地/物与动作细节，避免空泛与抽象词';
     const lenAsk = prefLength === 'long' ? '反馈≤50字，问题≤80字' : (prefLength === 'medium' ? '反馈≤40字，问题≤60字' : '反馈≤30字，问题≤40字');
-    const lenGen = prefLength === 'long' ? '本段≤1200字' : (prefLength === 'medium' ? '本段≤800字' : '本段≤500字');
+    const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
     const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
     if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${adapt}；${lenAsk}`;
@@ -201,7 +201,7 @@ const CreateBiography = () => {
 
   // 硬性约束：绝不脑补、只按事实、语言克制
   const buildHardConstraints = () => {
-    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。';
+    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。任何虚构内容都被视为严重错误，必须避免。若出现无法填补的空白，务必使用中性过渡语衔接，不得编造细节。';
   };
 
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
@@ -650,12 +650,11 @@ const CreateBiography = () => {
     return cleaned.join('\n');
   };
 
-  // 当前篇章文本变更后，自动滚动到末尾并将光标置于末尾，便于查看最新内容
+  // 切换篇章时，滚动到末尾并将光标置于末尾（不在用户编辑过程中强制改变光标）
   useEffect(() => {
     const el = sectionTextareaRef.current;
     if (!el) return;
     try {
-      // 需要等待 DOM 更新完成
       setTimeout(() => {
         try {
           el.scrollTop = el.scrollHeight;
@@ -667,7 +666,7 @@ const CreateBiography = () => {
         } catch (_) {}
       }, 0);
     } catch (_) {}
-  }, [currentSectionIndex, sections]);
+  }, [currentSectionIndex]);
 
   // 切换篇章时，优先聚焦回答输入框，提升可发现性
   useEffect(() => {
@@ -1437,7 +1436,7 @@ const CreateBiography = () => {
     return lines.filter(l => !shouldDrop(l)).join('\n');
   };
   const updateSectionTitle = (index, value) => setSections(prev => prev.map((s, i) => i === index ? { ...s, title: sanitizeInput(value) } : s));
-  const updateSectionText = (index, value) => setSections(prev => prev.map((s, i) => i === index ? { ...s, text: sanitizeInput(value) } : s));
+  const updateSectionText = (index, value) => setSections(prev => prev.map((s, i) => i === index ? { ...s, text: value } : s));
   const removeMediaFromSection = (sectionIndex, mediaIndex) => setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: s.media.filter((_, mi) => mi !== mediaIndex) } : s));
   const inferMediaType = (fileOrName) => {
     const file = typeof fileOrName === 'object' ? fileOrName : null;
@@ -2102,11 +2101,11 @@ const CreateBiography = () => {
                       <input className="input" value="更具体" readOnly />
                     </div>
           <div>
-                      <label className="block text-sm mb-1">长度</label>
+                      <label className="block text-sm mb-1">渲染度</label>
                       <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
-                        <option value="short">更短</option>
+                        <option value="short">少量渲染</option>
                         <option value="medium">适中</option>
-                        <option value="long">更长</option>
+                        <option value="long">大量渲染</option>
                       </select>
             </div>
                   </div>
@@ -2243,7 +2242,7 @@ const CreateBiography = () => {
                           const perspectiveHint = (authorMode === 'other')
                             ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
                             : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')} ${buildHardConstraints()} 当用户表述"想不起来/记不清"等时，不再追问；请用一句平实、克制且富于共情的句子自然收束当前段落（不新增事实），并在下一句以自然方式引出下一话题或阶段的过渡句，保证整体连贯。`;
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')} ${buildHardConstraints()} 当用户表述“想不起来/记不清”等时，不再追问；请用一句平实、克制且富于共情的句子自然收束当前段落（不新增事实），并在下一句以自然方式引出下一话题或阶段的过渡句，保证整体连贯；生成后请提示用户：请核查并修改任何与您记忆不符的内容，再次点击“生成本篇回忆”将生成更贴近您的版本。`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n严格要求：不得新增任何事实或细节；若信息不足以生成连贯段落，请不要凑写，仅输出一个"关键的下一步追问"（仅一句）并停止。否则，请输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
