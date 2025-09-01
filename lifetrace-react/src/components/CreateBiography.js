@@ -122,25 +122,27 @@ const CreateBiography = () => {
   };
 
   // 风格偏好（语气/严格/具体/长度）
+  // 文风（替代原"语气"）：plain(平实客观) | warm(温情内敛) | poetic(诗意浪漫) | humorous(幽默风趣)
   const [prefTone, setPrefTone] = useState(() => {
-    try { return localStorage.getItem('ai_pref_tone') || 'cool'; } catch (_) { return 'cool'; }
-  }); // 'cool' | 'balanced' | 'warm'
-  const [prefStrict, setPrefStrict] = useState(() => {
-    try { return localStorage.getItem('ai_pref_strict') || 'strict'; } catch (_) { return 'strict'; }
-  }); // 'strict' | 'balanced'
-  const [prefConcrete, setPrefConcrete] = useState(() => {
-    try { return localStorage.getItem('ai_pref_concrete') || 'high'; } catch (_) { return 'high'; }
-  }); // 'high' | 'balanced' | 'low'
+    try { return localStorage.getItem('ai_pref_tone') || 'plain'; } catch (_) { return 'plain'; }
+  });
+  // 固定：严格按事实、具体度高（隐藏选项）
+  const [prefStrict] = useState('strict');
+  const [prefConcrete] = useState('high');
   const [prefLength, setPrefLength] = useState(() => {
     try { return localStorage.getItem('ai_pref_length') || 'short'; } catch (_) { return 'short'; }
   }); // 'short' | 'medium' | 'long'
+  const [showStylePanel, setShowStylePanel] = useState(() => {
+    try { return !(window && window.innerWidth < 640); } catch (_) { return true; }
+  });
 
   // 保存到本地 & 同步后端（最佳努力）
   useEffect(() => {
     try {
       localStorage.setItem('ai_pref_tone', prefTone);
-      localStorage.setItem('ai_pref_strict', prefStrict);
-      localStorage.setItem('ai_pref_concrete', prefConcrete);
+      // 固定值写入，避免后端历史值干扰
+      localStorage.setItem('ai_pref_strict', 'strict');
+      localStorage.setItem('ai_pref_concrete', 'high');
       localStorage.setItem('ai_pref_length', prefLength);
     } catch (_) {}
     // 同步后端
@@ -150,8 +152,8 @@ const CreateBiography = () => {
         if (!token) return;
         await axios.post('/api/user/prefs', {
           tone: prefTone,
-          strict: prefStrict,
-          concreteness: prefConcrete,
+          strict: 'strict',
+          concreteness: 'high',
           length: prefLength,
         }, { headers: { Authorization: `Bearer ${token}` } });
       } catch (_) {}
@@ -167,8 +169,7 @@ const CreateBiography = () => {
         const res = await axios.get('/api/user/prefs', { headers: { Authorization: `Bearer ${token}` } });
         const p = res.data || {};
         if (p.tone) setPrefTone(p.tone);
-        if (p.strict) setPrefStrict(p.strict);
-        if (p.concreteness) setPrefConcrete(p.concreteness);
+        // 严格与具体保持固定
         if (p.length) setPrefLength(p.length);
       } catch (_) {}
     })();
@@ -176,13 +177,22 @@ const CreateBiography = () => {
 
   // 构建风格约束（提问/生成）
   const buildStyleRules = (kind = 'ask') => {
-    const toneText = prefTone === 'warm' ? '语气温暖但不煽情' : (prefTone === 'balanced' ? '语气自然克制' : '语气克制、平实');
-    const strictText = prefStrict === 'strict' ? '绝不脑补，信息不足先追问' : '尽量不脑补，必要时仅做极轻微补全（不新增事实）';
-    const concreteText = prefConcrete === 'high' ? '要求给出具体人/事/时/地/物与动作细节，避免抽象词' : (prefConcrete === 'balanced' ? '优先具体细节，必要时可概括' : '允许更概括的表达');
+    // 文风
+    const styleText = (
+      prefTone === 'warm' ? '文风温情内敛、细腻但不煽情' :
+      prefTone === 'poetic' ? '文风诗意、比喻克制、意境自然' :
+      prefTone === 'humorous' ? '文风幽默风趣但分寸得体' :
+      '文风平实客观、真实不加修饰'
+    );
+    // 固定：严格事实/更具体
+    const strictText = '绝不脑补、不得新增或推断未出现的细节';
+    const concreteText = '强调具体人/事/时/地/物与动作细节，避免空泛与抽象词';
     const lenAsk = prefLength === 'long' ? '反馈≤50字，问题≤80字' : (prefLength === 'medium' ? '反馈≤40字，问题≤60字' : '反馈≤30字，问题≤40字');
     const lenGen = prefLength === 'long' ? '本段≤1200字' : (prefLength === 'medium' ? '本段≤800字' : '本段≤500字');
-    if (kind === 'ask') return `${toneText}；${strictText}；${concreteText}；${lenAsk}`;
-    return `${toneText}；${strictText}；${concreteText}；${lenGen}`;
+    const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
+    const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
+    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${adapt}；${lenAsk}`;
+    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${lenGen}`;
   };
 
   const getGenMaxChars = () => {
@@ -2066,44 +2076,43 @@ const CreateBiography = () => {
         <div className="flex flex-col gap-6">
           {/* 风格设置面板 */}
           <div className="-mx-4 sm:mx-0 px-4">
-            <div className="border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-semibold">风格设置</div>
-                <div className="text-xs text-gray-500">全局生效（提问/追问/生成篇章）</div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="border rounded bg-white border-gray-200 text-gray-900">
+              <button type="button" className="w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3" onClick={()=>setShowStylePanel(v=>!v)}>
+                <span className="font-semibold">风格设置</span>
+                <span className="text-sm text-gray-500">{showStylePanel ? '收起' : '展开'}</span>
+              </button>
+              {showStylePanel && (
+                <div className="p-3 sm:p-4 border-t border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm mb-1">文风</label>
+                      <select className="input" value={prefTone} onChange={(e)=>setPrefTone(e.target.value)}>
+                        <option value="plain">平实客观</option>
+                        <option value="warm">温情内敛</option>
+                        <option value="poetic">诗意浪漫</option>
+                        <option value="humorous">幽默风趣</option>
+                      </select>
+                    </div>
+                    <div className="hidden">
+                      <label className="block text-sm mb-1">严格度</label>
+                      <input className="input" value="严格按事实" readOnly />
+                    </div>
+                    <div className="hidden">
+                      <label className="block text-sm mb-1">具体度</label>
+                      <input className="input" value="更具体" readOnly />
+                    </div>
           <div>
-                  <label className="block text-sm mb-1">语气</label>
-                  <select className="input" value={prefTone} onChange={(e)=>setPrefTone(e.target.value)}>
-                    <option value="cool">克制</option>
-                    <option value="balanced">平衡</option>
-                    <option value="warm">温暖</option>
-                  </select>
+                      <label className="block text-sm mb-1">长度</label>
+                      <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
+                        <option value="short">更短</option>
+                        <option value="medium">适中</option>
+                        <option value="long">更长</option>
+                      </select>
             </div>
-                <div>
-                  <label className="block text-sm mb-1">严格度</label>
-                  <select className="input" value={prefStrict} onChange={(e)=>setPrefStrict(e.target.value)}>
-                    <option value="strict">严格按事实</option>
-                    <option value="balanced">适度补全</option>
-                  </select>
                   </div>
-                <div>
-                  <label className="block text-sm mb-1">具体度</label>
-                  <select className="input" value={prefConcrete} onChange={(e)=>setPrefConcrete(e.target.value)}>
-                    <option value="high">更具体</option>
-                    <option value="balanced">平衡</option>
-                    <option value="low">更概括</option>
-                  </select>
+                  <div className="mt-3 text-xs text-gray-500">严格事实与更具体已固定；悲伤/庄重情境下文风会自动收敛。</div>
               </div>
-                <div>
-                  <label className="block text-sm mb-1">长度</label>
-                  <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
-                    <option value="short">更短</option>
-                    <option value="medium">适中</option>
-                    <option value="long">更长</option>
-                  </select>
-                </div>
-              </div>
+            )}
             </div>
           </div>
           {/* 阶段面包屑（横向滚动） */}
