@@ -189,8 +189,10 @@ const CreateBiography = () => {
     const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
     const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
-    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${adapt}；${lenAsk}`;
-    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${lenGen}`;
+    const detailGuide = '引导具体化：围绕上一轮回答中的关键信息，追问时间（何时）、地点（在哪）、人物（与谁）、动作/对话（发生了什么/原话）、情绪与身体感受、声音/气味/光线等可感知细节；避免空泛词。';
+    const structureGuide = '生成正文时，按时间线或话题逻辑串联回忆，分段清晰，每段聚焦一个主要回忆。';
+    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${detailGuide}；${adapt}；${lenAsk}`;
+    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${structureGuide}；${lenGen}`;
   };
 
   const getGenMaxChars = () => {
@@ -199,7 +201,16 @@ const CreateBiography = () => {
 
   // 硬性约束：绝不脑补、只按事实、语言克制
   const buildHardConstraints = () => {
-    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。任何虚构内容都被视为严重错误，必须避免。若出现无法填补的空白，务必使用中性过渡语衔接，不得编造细节。';
+    return [
+      '仅使用用户在回答中明确提供的信息',
+      '严禁添加任何未提及的、猜测性的细节、人物、场景或情感',
+      '回答不完整或模糊时，必须使用简练的中性过渡语带过，绝不脑补或主观推测',
+      '可使用能传达情感的形容与比喻，但必须直接来源于用户描述或感受',
+      '禁止空洞的煽情词（如“非常伟大”“感人至深”等）',
+      '关注用户回答中的细微情绪（如“当时有点紧张”），据此转化为更具画面感的描写',
+      '保持平实、自然、克制的风格，避免夸张或宏大词语',
+      '任何虚构内容均视为严重错误；无法填补的空白一律用中性过渡语衔接'
+    ].join('；');
   };
 
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
@@ -741,7 +752,7 @@ const CreateBiography = () => {
     const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
+    const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。`;
     try {
       const perspectiveKick = (authorMode === 'other')
         ? `请使用第二人称"你"，但采用"关系视角"提问：围绕你与"${authorRelation || '这位亲人'}"的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
