@@ -168,7 +168,6 @@ const CreateBiography = () => {
         const p = res.data || {};
         if (p.tone) setPrefTone(p.tone);
         // 严格与具体保持固定
-        if (p.length) setPrefLength(p.length);
       } catch (_) {}
     })();
   }, []);
@@ -2287,8 +2286,8 @@ const CreateBiography = () => {
                           const out = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
                           if (out) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: out } : s));
-                            setMessage('已完成润色（不新增事实）');
-                            setTimeout(()=>setMessage(''), 1000);
+                            setCenterToast('已完成润色（不新增事实）');
+                            setTimeout(()=>setCenterToast(''), 1000);
                           }
                         } catch(e) {
                           console.error('light polish error', e);
