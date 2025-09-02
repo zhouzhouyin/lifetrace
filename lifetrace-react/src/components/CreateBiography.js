@@ -102,6 +102,7 @@ const CreateBiography = () => {
   const closurePendingRef = useRef(null);
   const thresholdWarnedRef = useRef(new Set());
   const forcedClosedRef = useRef(new Set());
+  const limitPromptShownRef = useRef(new Set());
   // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
@@ -367,6 +368,14 @@ const CreateBiography = () => {
         ? { ...s, text: (s.text ? s.text + '\n' : '') + safeLine }
         : s
     )));
+    // 追加后滚动到篇章底部，展示最新一行
+    try {
+      setTimeout(() => {
+        if (sectionTextareaRef.current) {
+          sectionTextareaRef.current.scrollTop = sectionTextareaRef.current.scrollHeight;
+        }
+      }, 0);
+    } catch (_) {}
   };
 
   // 最近用户是否表述"记不清/想不起来"等
@@ -566,6 +575,14 @@ const CreateBiography = () => {
   // 若缺少问号，则让模型补充一个"仅一句问题"
   const appendQuestionIfMissing = async (baseText, phaseIndex, history, token) => {
     let result = (baseText || '').toString().trim();
+    // 去重：若生成的问题与最近一条陪伴师问题重复，则返回空以触发上层再生策略
+    const recentAssistant = (chatMessages || []).slice(-6).reverse().find(m => m.role === 'assistant');
+    if (recentAssistant) {
+      const ra = (recentAssistant.content || '').toString().trim();
+      if (ra && result && ra === result) {
+        return '';
+      }
+    }
     if (hasQuestionMark(result)) return result;
     try {
       const systemAsk = '请仅输出一个自然口语化的问题句子，不要任何编号、前缀或额外解释。仅一句中文问题。';
@@ -915,6 +932,7 @@ const CreateBiography = () => {
         if (/(继续追忆|继续)/.test(norm)) {
           // 用户选择继续：清除上限提示状态，按正常提问继续
           stageDecisionRef.current = { stageIndex: null, nextStageIndex: decision.nextStageIndex };
+          limitPromptShownRef.current.delete(stageIndex);
         }
       }
 
@@ -922,10 +940,7 @@ const CreateBiography = () => {
       if (closurePendingRef.current === stageIndex) {
         appendLineToSection(currentSectionIndex, `我：${trimmed}`);
         setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
-        // 小结已记录，只提示生成，不再继续提问或重复上限提示
-        const tip = '小结已记录。请点击"生成本篇回忆"，然后再进入下一阶段继续访谈。';
-        setChatMessages(prev => [...prev, { role: 'assistant', content: tip }]);
-        appendLineToSection(currentSectionIndex, `陪伴师：${tip}`);
+        // 小结已记录：不再生成进一步提示或问题
         closurePendingRef.current = null;
         stageDecisionRef.current = { stageIndex: null, nextStageIndex: null };
         return;
@@ -997,6 +1012,24 @@ const CreateBiography = () => {
     if (answerInputRef.current) answerInputRef.current.value = '';
     setIsAsking(true);
     try {
+      // 若当前阶段已达到上限且尚未展示过上限提示，则仅记录选择，不再产生新的小结外问题
+      const turnsBeforeAsk = (stageTurns[stageIndex] || 0);
+      const reachedLimit = turnsBeforeAsk >= MAX_QUESTIONS_PER_STAGE;
+      if (reachedLimit) {
+        // 第一次触达上限，给出一次性选择提示；随后等待用户输入"继续追忆"或"小结"
+        if (!limitPromptShownRef.current.has(stageIndex)) {
+          const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
+          const prompt = nextIdx !== stageIndex
+            ? `本阶段已达到提问上限。要继续在"${getStageLabelByIndex(stageIndex)}"里深入追问，还是先回答一个小结后进入"${getStageLabelByIndex(nextIdx)}"？`
+            : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
+          setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
+          appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
+          stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
+          limitPromptShownRef.current.add(stageIndex);
+        }
+        setIsAsking(false);
+        return;
+      }
       const resp = await retry(() => callSparkThrottled({
         model: 'x1', messages: messagesToSend, max_tokens: 520, temperature: 0.3,
         user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
@@ -1004,7 +1037,9 @@ const CreateBiography = () => {
       const raw = resp.data?.choices?.[0]?.message?.content;
       let aiBase = normalizeAssistant(raw) || '谢谢您的分享。';
       const historyForAsk = chatMessages.slice(-5);
-      const ai = finalizeAssistant(await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token));
+      let ai = finalizeAssistant(await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token));
+      // 若检测为重复导致返回空，则使用兜底问题
+      if (!ai || !ai.trim()) ai = finalizeAssistant(getStageFallbackQuestion(stageIndex));
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 将陪伴师问题写入当前阶段篇章（只保留反馈+问题的一行）
       appendLineToSection(currentSectionIndex, `陪伴师：${ai}`);
@@ -1016,16 +1051,7 @@ const CreateBiography = () => {
       setStageTurns(prev => {
         const copy = [...prev];
         copy[stageIndex] = (copy[stageIndex] || 0) + 1;
-        if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
-          const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
-          const prompt = nextIdx !== stageIndex
-            ? `本阶段已达到提问上限。要继续在"${getStageLabelByIndex(stageIndex)}"里深入追问，还是先回答一个小结后进入"${getStageLabelByIndex(nextIdx)}"？`
-            : '本阶段已达到提问上限。要继续在此阶段深入，还是先做一个小结后结束？';
-          setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
-          appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
-          // 记录允许的下一阶段
-          stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
-        }
+        // 不在提问时立即弹出上限提示；改为等待用户回答完这一问后再提示
         return copy;
       });
     } catch (err) {
@@ -1038,7 +1064,8 @@ const CreateBiography = () => {
             user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
           const raw2 = resp2.data?.choices?.[0]?.message?.content;
           let ai2Base = normalizeAssistant(raw2) || '谢谢您的分享。';
-          const ai2 = finalizeAssistant(await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token));
+          let ai2 = finalizeAssistant(await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token));
+          if (!ai2 || !ai2.trim()) ai2 = finalizeAssistant(getStageFallbackQuestion(stageIndex));
           setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${ai2}`);
           if (autoSpeakAssistant) speakText(ai2);
@@ -1068,15 +1095,7 @@ const CreateBiography = () => {
                 appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(warn)}`);
               }
             } catch (_) {}
-            if (copy[stageIndex] >= MAX_QUESTIONS_PER_STAGE) {
-              const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
-              const prompt = nextIdx !== stageIndex
-                ? `本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击"生成本篇回忆"，再点击"${getStageLabelByIndex(nextIdx)}"进入下一阶段。`
-                : '本阶段已达提问上限。请输入"继续追忆"继续此阶段，或输入"小结"我将给出小结问题；回答小结后，请点击"生成本篇回忆"。';
-              setChatMessages(prevMsgs => [...prevMsgs, { role: 'assistant', content: finalizeAssistant(prompt) }]);
-              appendLineToSection(currentSectionIndex, `陪伴师：${finalizeAssistant(prompt)}`);
-              stageDecisionRef.current = { stageIndex, nextStageIndex: nextIdx };
-            }
+            // 同样，兜底路径也不在提问侧弹提示；改为回答完成后处理
             return copy;
           });
           return;
