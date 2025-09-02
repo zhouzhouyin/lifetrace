@@ -189,10 +189,8 @@ const CreateBiography = () => {
     const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
     const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
-    const detailGuide = '引导具体化：围绕上一轮回答中的关键信息，追问时间（何时）、地点（在哪）、人物（与谁）、动作/对话（发生了什么/原话）、情绪与身体感受、声音/气味/光线等可感知细节；避免空泛词。';
-    const structureGuide = '生成正文时，按时间线或话题逻辑串联回忆，分段清晰，每段聚焦一个主要回忆。';
-    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${detailGuide}；${adapt}；${lenAsk}`;
-    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${structureGuide}；${lenGen}`;
+    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${adapt}；${lenAsk}`;
+    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${lenGen}`;
   };
 
   const getGenMaxChars = () => {
@@ -201,16 +199,7 @@ const CreateBiography = () => {
 
   // 硬性约束：绝不脑补、只按事实、语言克制
   const buildHardConstraints = () => {
-    return [
-      '仅使用用户在回答中明确提供的信息',
-      '严禁添加任何未提及的、猜测性的细节、人物、场景或情感',
-      '回答不完整或模糊时，必须使用简练的中性过渡语带过，绝不脑补或主观推测',
-      '可使用能传达情感的形容与比喻，但必须直接来源于用户描述或感受',
-      '禁止空洞的煽情词（如“非常伟大”“感人至深”等）',
-      '关注用户回答中的细微情绪（如“当时有点紧张”），据此转化为更具画面感的描写',
-      '保持平实、自然、克制的风格，避免夸张或宏大词语',
-      '任何虚构内容均视为严重错误；无法填补的空白一律用中性过渡语衔接'
-    ].join('；');
+    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。任何虚构内容都被视为严重错误，必须避免。若出现无法填补的空白，务必使用中性过渡语衔接，不得编造细节。';
   };
 
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
@@ -846,12 +835,12 @@ const CreateBiography = () => {
       if (!token) return;
       const stageName = getStageLabelByIndex(stageIdx);
       const perspectiveKick = (authorMode === 'other')
-        ? `请用第二人称"你"，采用关系视角，面向写作者提出一个收束该阶段的小结问题（仅一句）。`
-        : '请用第二人称"您/你"提出一个收束该阶段的小结问题（仅一句）。';
-      const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildStyleRules('ask')}`;
+        ? '请用第二人称"你"（关系视角）提出一个真正的总结性问题：只允许基于已出现的信息进行总结或收束，不得引入新话题或新信息，仅一句。'
+        : '请用第二人称"您/你"提出一个真正的总结性问题：只允许基于已出现的信息进行总结或收束，不得引入新话题或新信息，仅一句。';
+      const system = `你是一位克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildHardConstraints()}`;
       const messages = [
         { role: 'system', content: system },
-        { role: 'user', content: `请仅输出一个用于收束本阶段的提问（仅一句），不要任何额外文字。` },
+        { role: 'user', content: '请仅输出一个用于收束本阶段的总结性提问（仅一句），不要任何额外文字。不得引入新的主题、人物、情节或信息。' },
       ];
       const tokenUid = (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon');
       const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.3, user: tokenUid }, token, { silentThrottle: true });
