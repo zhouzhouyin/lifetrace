@@ -129,9 +129,7 @@ const CreateBiography = () => {
   // 固定：严格按事实、具体度高（隐藏选项）
   const [prefStrict] = useState('strict');
   const [prefConcrete] = useState('high');
-  const [prefLength, setPrefLength] = useState(() => {
-    try { return localStorage.getItem('ai_pref_length') || 'medium'; } catch (_) { return 'medium'; }
-  }); // 'short' | 'medium' | 'long'
+  const [prefLength] = useState('short'); // 固定为不渲染（短）
   const [showStylePanel, setShowStylePanel] = useState(() => {
     try { return !(window && window.innerWidth < 640); } catch (_) { return true; }
   });
@@ -2091,25 +2089,17 @@ const CreateBiography = () => {
                         <option value="poetic">诗意浪漫</option>
                         <option value="humorous">幽默风趣</option>
                       </select>
-                    </div>
+            </div>
                     <div className="hidden">
                       <label className="block text-sm mb-1">严格度</label>
                       <input className="input" value="严格按事实" readOnly />
-                    </div>
+                  </div>
                     <div className="hidden">
                       <label className="block text-sm mb-1">具体度</label>
                       <input className="input" value="更具体" readOnly />
                     </div>
-          <div>
-                      <label className="block text-sm mb-1">渲染度</label>
-                      <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
-                        <option value="short">少量渲染</option>
-                        <option value="medium">适中</option>
-                        <option value="long">大量渲染</option>
-                      </select>
-            </div>
                   </div>
-                  <div className="mt-3 text-xs text-gray-500">严格事实与更具体已固定；悲伤/庄重情境下文风会自动收敛。</div>
+                  <div className="mt-3 text-xs text-gray-500">严格事实与更具体已固定；文风可选。渲染度默认不渲染，仅基于问答生成原始回忆。</div>
               </div>
             )}
             </div>
@@ -2242,29 +2232,29 @@ const CreateBiography = () => {
                           const perspectiveHint = (authorMode === 'other')
                             ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
                             : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。${buildStyleRules('gen')} ${buildHardConstraints()} 当用户表述“想不起来/记不清”等时，不再追问；请用一句平实、克制且富于共情的句子自然收束当前段落（不新增事实），并在下一句以自然方式引出下一话题或阶段的过渡句，保证整体连贯；生成后请提示用户：请核查并修改任何与您记忆不符的内容，再次点击“生成本篇回忆”将生成更贴近您的版本。`;
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚且忠于事实的传记正文；严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。${buildStyleRules('gen')} ${buildHardConstraints()}`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
-                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n严格要求：不得新增任何事实或细节；若信息不足以生成连贯段落，请不要凑写，仅输出一个"关键的下一步追问"（仅一句）并停止。否则，请输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
+                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n请仅据此输出该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
                           const messages = [
                             { role: 'system', content: system },
                             { role: 'user', content: userPayload },
                           ];
                           const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 900, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
                           let polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-                          // 撤销：不做自动事实校验与自动追问，完全依提示词约束与用户把控
                           const maxChars = getGenMaxChars();
                           if (polishedRaw.length > maxChars) polishedRaw = polishedRaw.slice(0, maxChars);
                           const polished = finalizeNarrative(polishedRaw);
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
-                            const fb = stageFeedbacks[currentSectionIndex] || '恭喜您，又一个生命的故事被铭记。您的行动，让爱和记忆永不消逝。';
-                            setMessage(fb);
+                            // 中心提示：请核查并修改...
+                            const tip = '请核查并修改任何与您记忆不符的内容，再次点击"生成本篇回忆"。';
+                            setMessage(tip);
                             setTimeout(() => setMessage(''), 1000);
                           }
                         } catch (e) {
                           console.error('Polish current section error:', e);
-                          setMessage('当前阶段篇章润色失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
+                          setMessage('当前阶段篇章生成失败：' + (e?.response?.data?.message || e?.message || '网络/鉴权错误'));
                         } finally {
                           setPolishingSectionIndex(null);
                         }
@@ -2272,6 +2262,31 @@ const CreateBiography = () => {
                     >
                       {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
                     </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-full sm:w-auto"
+                      disabled={isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
+                      onClick={async ()=>{
+                        // 轻润色：仅书面化表达，绝不新增事实
+                        try {
+                          const token = localStorage.getItem('token');
+                          if (!token) { setMessage('请先登录'); return; }
+                          const src = (sections[currentSectionIndex]?.text || '').toString();
+                          const system = '你是一位文本编辑，请将以下内容从口语化整理为更清晰的书面表达。不得新增任何事实或细节；不得改变人称与时间；避免煽情与夸饰；仅输出整理后的正文。';
+                          const messages = [ { role: 'system', content: system }, { role: 'user', content: src } ];
+                          const resp = await retry(()=>callSparkThrottled({ model:'x1', messages, max_tokens: 900, temperature: 0.2, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle:true }));
+                          const out = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                          if (out) {
+                            setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: out } : s));
+                            setMessage('已完成润色（不新增事实）');
+                            setTimeout(()=>setMessage(''), 1000);
+                          }
+                        } catch(e) {
+                          console.error('light polish error', e);
+                          setMessage('润色失败，请稍后再试');
+                        }
+                      }}
+                    >润色</button>
                   </div>
                   <p className="text-sm text-gray-500">当前字数: {sections[currentSectionIndex]?.text?.length || 0} / 10000</p>
                   {(sections[currentSectionIndex]?.media?.length > 0) && (
