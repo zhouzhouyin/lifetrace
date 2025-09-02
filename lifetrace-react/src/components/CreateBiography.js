@@ -2032,6 +2032,8 @@ const CreateBiography = () => {
     }
   }, [sections, chatMessages, currentSectionIndex, isFocusMode]);
 
+  const [centerToast, setCenterToast] = useState('');
+
   return (
     <div className="min-h-screen py-4 sm:py-6">
       <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
@@ -2067,6 +2069,13 @@ const CreateBiography = () => {
         {message && (
           <div className={`mb-4 p-2 text-center rounded ${message.includes('失败') || message.includes('违规') || message.includes('错误') ? 'bg-red-700' : 'bg-green-700'}`} style={{ color: '#e7c36f' }}>
             {message}
+          </div>
+        )}
+        {centerToast && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-black/80 text-white px-4 py-2 rounded shadow pointer-events-none">
+              {centerToast}
+            </div>
           </div>
         )}
         {/* 隐私条款弹窗已移除 */}
@@ -2249,8 +2258,8 @@ const CreateBiography = () => {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                             // 中心提示：请核查并修改...
                             const tip = '请核查并修改任何与您记忆不符的内容，再次点击"生成本篇回忆"。';
-                            setMessage(tip);
-                            setTimeout(() => setMessage(''), 1000);
+                            setCenterToast(tip);
+                            setTimeout(() => setCenterToast(''), 1000);
                           }
                         } catch (e) {
                           console.error('Polish current section error:', e);
@@ -2502,6 +2511,29 @@ const CreateBiography = () => {
               >
                 {polishingSectionIndex === currentSectionIndex ? '生成中...' : (t ? t('generateSection') : '生成本篇回忆')}
               </button>
+              <button
+                className="btn btn-secondary w-full ring-1 ring-blue-400"
+                disabled={isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
+                onClick={async ()=>{
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (!token) { setMessage('请先登录'); return; }
+                    const src = (sections[currentSectionIndex]?.text || '').toString();
+                    const system = '你是一位文本编辑，请将以下内容从口语化整理为更清晰的书面表达。不得新增任何事实或细节；不得改变人称与时间；避免煽情与夸饰；仅输出整理后的正文。';
+                    const messages = [ { role: 'system', content: system }, { role: 'user', content: src } ];
+                    const resp = await retry(()=>callSparkThrottled({ model:'x1', messages, max_tokens: 900, temperature: 0.2, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle:true }));
+                    const out = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+                    if (out) {
+                      setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: out } : s));
+                      setCenterToast('已完成润色（不新增事实）');
+                      setTimeout(()=>setCenterToast(''), 1000);
+                    }
+                  } catch(e) {
+                    console.error('light polish error (focus)', e);
+                    setMessage('润色失败，请稍后再试');
+                  }
+                }}
+              >润色</button>
             </div>
           </div>
         </div>
