@@ -862,11 +862,14 @@ const CreateBiography = () => {
       if (!ai || !ai.trim()) {
         ai = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
       }
+      // 阶段首问：始终追加括号温馨提示
+      ai = withFirstQuestionTip(ai);
       // 避免与最近一问重复：若与最近一条 assistant 内容完全相同，则改为兜底开场
       try {
         const lastA = [...(chatMessages||[])].reverse().find(m=>m.role==='assistant');
         if (lastA && (lastA.content||'').toString().trim() === (ai||'').toString().trim()) {
           ai = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
+          ai = withFirstQuestionTip(ai);
         }
       } catch(_){}
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
@@ -909,6 +912,7 @@ const CreateBiography = () => {
         if (!ai2 || !ai2.trim()) {
           ai2 = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
         }
+        ai2 = withFirstQuestionTip(ai2);
         setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
         appendLineToSection(targetIndex, `陪伴师：${ai2}`);
         if (autoSpeakAssistant) speakText(ai2);
