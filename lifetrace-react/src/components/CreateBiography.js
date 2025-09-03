@@ -1586,6 +1586,33 @@ const CreateBiography = () => {
     if (isAudio) return 'audio';
     return 'image';
   };
+  const generateMediaId = () => `m${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const insertMediaMarkerAtCaret = (sectionIndex, markerText) => {
+    try {
+      const isCurrent = currentSectionIndex === sectionIndex;
+      const el = sectionTextareaRef.current;
+      if (isCurrent && el && typeof el.selectionStart === 'number' && typeof el.selectionEnd === 'number') {
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        setSections(prev => prev.map((s, i) => {
+          if (i !== sectionIndex) return s;
+          const raw = (s.text || '').toString();
+          const next = raw.slice(0, start) + markerText + raw.slice(end);
+          return { ...s, text: next };
+        }));
+        setTimeout(() => {
+          try {
+            el.focus();
+            const pos = start + markerText.length;
+            if (typeof el.setSelectionRange === 'function') el.setSelectionRange(pos, pos);
+            el.scrollTop = el.scrollHeight;
+          } catch (_) {}
+        }, 0);
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  };
   const handleUploadMediaToSection = async (sectionIndex, file, desc = '') => {
     if (!file) return;
     try {
@@ -1610,8 +1637,11 @@ const CreateBiography = () => {
       });
       const url = res.data?.filePath;
       const type = inferMediaType(file);
-      setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: [...s.media, { type, url, desc }] } : s));
-      setMessage('媒体已添加到分段');
+      const id = generateMediaId();
+      const marker = `\n[媒体:${id}]\n`;
+      const inserted = insertMediaMarkerAtCaret(sectionIndex, marker);
+      setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: [...s.media, { id, type, url, desc }] } : s));
+      setMessage(inserted ? '媒体已插入到光标位置' : '媒体已添加到分段');
       // 在专注模式下，添加媒体后滚动到最底部，便于立即看到新媒体
       try {
         if (isFocusMode && focusContentRef.current) {
