@@ -763,6 +763,13 @@ const CreateBiography = () => {
           ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
           : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
       );
+      // 避免与最近一问重复：若与最近一条 assistant 内容完全相同，则改为兜底开场
+      try {
+        const lastA = [...(chatMessages||[])].reverse().find(m=>m.role==='assistant');
+        if (lastA && (lastA.content||'').toString().trim() === (ai||'').toString().trim()) {
+          ai = getStageFallbackQuestion(targetIndex);
+        }
+      } catch(_){}
       ai += ' 能具体说说当时的地点、在场的人、做了什么、你（您）当时的感受吗？';
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 阶段开场问题写入对应阶段篇章
