@@ -620,15 +620,15 @@ const CreateBiography = () => {
   // 是否包含问号
   const hasQuestionMark = (text) => /[?？]/.test((text || '').toString());
 
-  // 确保问题带有具体化引导（地点/人物/发生了什么/感受）
-  const ensureDetailAsk = (text) => {
+  // 首轮温馨提示尾句（仅在每个阶段的第一个问题时追加一次）
+  const withFirstQuestionTip = (text) => {
     try {
       let s = (text || '').toString().trim();
       if (!s) return s;
-      // 小结问题不强加细化引导（该函数仅用于常规追问/首问路径）
-      const alreadySpecific = /(具体|地点|在场|发生了什么|感受)/.test(s);
-      if (alreadySpecific) return s;
-      return s + ' 能具体说说当时的地点、在场的人、发生了什么，以及你的感受吗？';
+      const tip = '（温馨提示：每个问题都尽量多提供细节信息，如：当时的地点、在场的人、发生了什么，以及你的感受）';
+      // 避免重复添加
+      if (s.includes('温馨提示：')) return s;
+      return s + ' ' + tip;
     } catch (_) { return text; }
   };
 
@@ -839,6 +839,7 @@ const CreateBiography = () => {
     const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
+    const profileGuideFollow = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
     const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。`;
     try {
       const perspectiveKick = (authorMode === 'other')
@@ -847,7 +848,8 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+      const profileGuideKick = '提问时请充分参考上述资料（如祖籍、现居地、出生年代、家庭与教育背景等），在不引入新信息的前提下，从不同维度切入，避免重复维度；若某项资料为空，切勿猜测。';
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} ${profileGuideKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
       const kickoffUser = (authorMode === 'other')
         ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段的第一个暖心问题（仅一句）。`
         : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
@@ -1108,7 +1110,7 @@ const CreateBiography = () => {
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
     const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} ${profileGuideFollow} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -1146,7 +1148,10 @@ const CreateBiography = () => {
       let aiBase = normalizeAssistant(raw) || '谢谢您的分享。';
       const historyForAsk = chatMessages.slice(-5);
       let ai = finalizeAssistant(await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token));
-      ai = ensureDetailAsk(ai);
+      // 仅在每个阶段的首问追加温馨提示
+      if ((stageTurns[stageIndex] || 0) === 0) {
+        ai = withFirstQuestionTip(ai);
+      }
       // 若检测为重复导致返回空，则使用兜底问题
       if (!ai || !ai.trim()) ai = finalizeAssistant(getStageFallbackQuestion(stageIndex));
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
@@ -1174,7 +1179,9 @@ const CreateBiography = () => {
           const raw2 = resp2.data?.choices?.[0]?.message?.content;
           let ai2Base = normalizeAssistant(raw2) || '谢谢您的分享。';
           let ai2 = finalizeAssistant(await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token));
-          ai2 = ensureDetailAsk(ai2);
+          if ((stageTurns[stageIndex] || 0) === 0) {
+            ai2 = withFirstQuestionTip(ai2);
+          }
           if (!ai2 || !ai2.trim()) ai2 = finalizeAssistant(getStageFallbackQuestion(stageIndex));
           setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${ai2}`);
