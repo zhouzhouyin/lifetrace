@@ -625,7 +625,7 @@ const CreateBiography = () => {
     try {
       let s = (text || '').toString().trim();
       if (!s) return s;
-      const tip = '（温馨提示：每个问题都尽量多提供细节信息，如：当时的地点、在场的人、发生了什么，以及你的感受）';
+      const tip = '（温馨提示：每个问题都尽量多提供细节信息，如：当时的地点、在场的人、发生了什么，以及你的感受，提供后续整理出来更加准确的回忆）';
       // 避免重复添加
       if (s.includes('温馨提示：')) return s;
       return s + ' ' + tip;
