@@ -396,6 +396,54 @@ const CreateBiography = () => {
     return false;
   };
 
+  // 提取最近用户回答中的锚点词（原词片段，≥2字符），用于小结问题绑定上下文
+  const getRecentUserAnchors = (sectionIndex, maxAnchors = 6) => {
+    try {
+      const txt = (sections[sectionIndex]?.text || '').toString();
+      const lines = txt.split(/\r?\n/).reverse();
+      const userLines = [];
+      for (const line of lines) {
+        const s = (line || '').trim();
+        if (!s) continue;
+        if (s.startsWith('我：')) {
+          userLines.push(s.slice(2));
+          if (userLines.length >= 8) break;
+        }
+        if (s.startsWith('陪伴师：')) continue;
+      }
+      const stopwords = new Set(['我','我们','当时','后来','然后','现在','那里','这里','那个','这个','就是','因为','所以','但是','而且','以及','还有','可能','觉得','有点','一点','比较','非常','特别']);
+      const anchors = [];
+      for (const ul of userLines) {
+        const parts = (ul || '').split(/[\s,，。\.！？!？；;:：、\-\(\)\[\]【】"“”']/).filter(Boolean);
+        for (const p of parts) {
+          const token = p.trim();
+          if (token.length >= 2 && !stopwords.has(token)) {
+            if (!anchors.includes(token)) anchors.push(token);
+            if (anchors.length >= maxAnchors) break;
+          }
+        }
+        if (anchors.length >= maxAnchors) break;
+      }
+      return anchors;
+    } catch(_) { return []; }
+  };
+
+  // 校验小结问题是否真正引用了上文且无引入新内容
+  const validateClosureQuestion = (q, anchors) => {
+    const s = (q || '').toString().trim();
+    if (!s) return false;
+    // 不允许诱导新增信息的词
+    if (/(还有(什么|哪些)|有没有|能再|再说|更多|更详细|补充|别的|其他|其它|另一个|另一段|换一个|新的)/.test(s)) return false;
+    // 必须包含至少一个锚点词（原词片段）
+    if (anchors && anchors.length > 0) {
+      const hit = anchors.some(a => a && s.includes(a));
+      if (!hit) return false;
+    }
+    // 长度控制，保持一句话
+    if (s.length > 50) return false;
+    return true;
+  };
+
   // 草稿恢复与自动保存（返回预览后不丢失）
   const draftRestoreRef = useRef(false);
   useEffect(() => {
@@ -572,6 +620,18 @@ const CreateBiography = () => {
   // 是否包含问号
   const hasQuestionMark = (text) => /[?？]/.test((text || '').toString());
 
+  // 确保问题带有具体化引导（地点/人物/发生了什么/感受）
+  const ensureDetailAsk = (text) => {
+    try {
+      let s = (text || '').toString().trim();
+      if (!s) return s;
+      // 小结问题不强加细化引导（该函数仅用于常规追问/首问路径）
+      const alreadySpecific = /(具体|地点|在场|发生了什么|感受)/.test(s);
+      if (alreadySpecific) return s;
+      return s + ' 能具体说说当时的地点、在场的人、发生了什么，以及你的感受吗？';
+    } catch (_) { return text; }
+  };
+
   // 若缺少问号，则让模型补充一个"仅一句问题"
   const appendQuestionIfMissing = async (baseText, phaseIndex, history, token) => {
     let result = (baseText || '').toString().trim();
@@ -616,6 +676,44 @@ const CreateBiography = () => {
       '对于未来，您最想留下或实现的一件愿望是什么？',
     ];
     return map[idx] || '有没有一段让您心里柔软起来的回忆可以分享？';
+  };
+
+  // 阶段开场：按阶段定制不同首问（关系/本人两种措辞）
+  const getStageKickoffQuestion = (idx, mode, relation) => {
+    const rel = (mode === 'other') ? (relation || '这位亲人') : '';
+    const detailTail = ' 能具体说说当时的地点、在场的人、发生了什么，以及你的感受吗？';
+    const byIdx = [
+      // 0 童年
+      mode === 'other'
+        ? `在你的童年记忆里，${rel}和你一起做过哪些日常小事或小习惯？`
+        : '在你的童年里，有哪件让你记得很清楚的小事？',
+      // 1 少年
+      mode === 'other'
+        ? `在你的少年时期，${rel}对你的学习或生活影响最深的一次具体片段是什么？`
+        : '在你的少年时期，最常想起的一件具体事情是什么？',
+      // 2 青年
+      mode === 'other'
+        ? `在你的青年阶段，${rel}曾在什么决定或经历上给过你具体的支持或提醒？`
+        : '在你的青年阶段，有没有一个改变你方向的决定或相遇？',
+      // 3 成年
+      mode === 'other'
+        ? `成年的这些年里，你与${rel}共同经历过的一件具体事情是什么？当时${rel}做了什么？`
+        : '成年的这些年里，你做过一件让自己记忆很深的事情是什么？',
+      // 4 中年
+      mode === 'other'
+        ? `中年之后，你对${rel}有什么新的理解？有没有一件让你改变看法的事？`
+        : '中年之后，你对家人或自我有哪些新的理解？有没有一件改变看法的事？',
+      // 5 当下
+      mode === 'other'
+        ? `现在的生活里，你与${rel}之间最常见的一次日常互动是什么？`
+        : '现在的生活中，有没有一个让你觉得踏实的日常片段？',
+      // 6 未来
+      mode === 'other'
+        ? `如果把对${rel}的一句话留给未来，你最想写什么？`
+        : '关于未来，你最想留下或实现的一件愿望是什么？',
+    ];
+    const base = byIdx[idx] || (mode === 'other' ? `在你的回忆里，${rel}哪件具体的小事最容易浮现？` : '有没有一段最容易浮现的具体回忆？');
+    return base + detailTail;
   };
 
   // 语音朗读通用方法
@@ -758,19 +856,17 @@ const CreateBiography = () => {
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
       const raw = resp.data?.choices?.[0]?.message?.content;
       // 引导更具体：环境/人物/动作/感受
-      let ai = normalizeAssistant(raw) || (
-        authorMode === 'other'
-          ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
-          : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
-      );
+      let ai = normalizeAssistant(raw);
+      if (!ai || !ai.trim()) {
+        ai = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
+      }
       // 避免与最近一问重复：若与最近一条 assistant 内容完全相同，则改为兜底开场
       try {
         const lastA = [...(chatMessages||[])].reverse().find(m=>m.role==='assistant');
         if (lastA && (lastA.content||'').toString().trim() === (ai||'').toString().trim()) {
-          ai = getStageFallbackQuestion(targetIndex);
+          ai = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
         }
       } catch(_){}
-      ai += ' 能具体说说当时的地点、在场的人、做了什么、你（您）当时的感受吗？';
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       // 阶段开场问题写入对应阶段篇章
       appendLineToSection(targetIndex, `陪伴师：${ai}`);
@@ -807,11 +903,10 @@ const CreateBiography = () => {
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
         const raw2 = resp2.data?.choices?.[0]?.message?.content;
-        const ai2 = normalizeAssistant(raw2) || (
-          authorMode === 'other'
-            ? `让我们开始"${lifeStages[targetIndex]}"。请${authorRelation || '他/她'}回忆一件最难忘的小事。`
-            : `我们来聊聊"${lifeStages[targetIndex]}"。可以先从一件让您记忆深刻的小事说起吗？`
-        );
+        let ai2 = normalizeAssistant(raw2);
+        if (!ai2 || !ai2.trim()) {
+          ai2 = getStageKickoffQuestion(targetIndex, authorMode, authorRelation);
+        }
         setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
         appendLineToSection(targetIndex, `陪伴师：${ai2}`);
         if (autoSpeakAssistant) speakText(ai2);
@@ -841,18 +936,24 @@ const CreateBiography = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       const stageName = getStageLabelByIndex(stageIdx);
+      const anchors = getRecentUserAnchors(stageIdx, 6);
       const perspectiveKick = (authorMode === 'other')
         ? '请用第二人称"你"（关系视角）提出一个真正的总结性问题：只允许基于已出现的信息进行总结或收束，不得引入新话题或新信息，仅一句。'
         : '请用第二人称"您/你"提出一个真正的总结性问题：只允许基于已出现的信息进行总结或收束，不得引入新话题或新信息，仅一句。';
-      const system = `你是一位克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildHardConstraints()}`;
+      const system = `你是一位克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${buildHardConstraints()} 若可行，请在问题中自然包含上文关键词以建立对应关系。`;
       const messages = [
         { role: 'system', content: system },
-        { role: 'user', content: '请仅输出一个用于收束本阶段的总结性提问（仅一句），不要任何额外文字。不得引入新的主题、人物、情节或信息。' },
+        { role: 'user', content: `以下是上文关键词（原词片段）：${anchors.join('、') || '（无）'}。请仅输出一个用于收束本阶段的总结性提问（仅一句），不要任何额外文字。不得引入新的主题、人物、情节或信息。` },
       ];
       const tokenUid = (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon');
-      const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.3, user: tokenUid }, token, { silentThrottle: true });
+      const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.2, user: tokenUid }, token, { silentThrottle: true });
       const q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-      const out = finalizeAssistant(q);
+      let out = finalizeAssistant(q);
+      // 校验：需引用上文关键词且不得诱导新增
+      if (!validateClosureQuestion(out, anchors)) {
+        const anchor = anchors[0] || '这段经历';
+        out = finalizeAssistant(`关于「${anchor}」，这样总结是否准确，或你想补充哪个细节？`);
+      }
       setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
       appendLineToSection(stageIdx, `陪伴师：${out}`);
       closurePendingRef.current = stageIdx;
@@ -1045,6 +1146,7 @@ const CreateBiography = () => {
       let aiBase = normalizeAssistant(raw) || '谢谢您的分享。';
       const historyForAsk = chatMessages.slice(-5);
       let ai = finalizeAssistant(await appendQuestionIfMissing(aiBase, stageIndex, historyForAsk, token));
+      ai = ensureDetailAsk(ai);
       // 若检测为重复导致返回空，则使用兜底问题
       if (!ai || !ai.trim()) ai = finalizeAssistant(getStageFallbackQuestion(stageIndex));
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
@@ -1072,6 +1174,7 @@ const CreateBiography = () => {
           const raw2 = resp2.data?.choices?.[0]?.message?.content;
           let ai2Base = normalizeAssistant(raw2) || '谢谢您的分享。';
           let ai2 = finalizeAssistant(await appendQuestionIfMissing(ai2Base, stageIndex, chatMessages.slice(-5), token));
+          ai2 = ensureDetailAsk(ai2);
           if (!ai2 || !ai2.trim()) ai2 = finalizeAssistant(getStageFallbackQuestion(stageIndex));
           setChatMessages(prev => [...prev, { role: 'assistant', content: ai2 }]);
           appendLineToSection(currentSectionIndex, `陪伴师：${ai2}`);
