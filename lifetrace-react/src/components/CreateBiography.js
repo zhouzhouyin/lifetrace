@@ -103,6 +103,7 @@ const CreateBiography = () => {
   const thresholdWarnedRef = useRef(new Set());
   const forcedClosedRef = useRef(new Set());
   const limitPromptShownRef = useRef(new Set());
+  const allowBeyondLimitRef = useRef(new Set());
   // 首次"开始访谈"仅展示基础资料开场
   const [hasShownOpening, setHasShownOpening] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
@@ -1044,9 +1045,10 @@ const CreateBiography = () => {
           return;
         }
         if (/(继续追忆|继续)/.test(norm)) {
-          // 用户选择继续：清除上限提示状态，按正常提问继续
+          // 用户选择继续：允许本阶段继续提问（超越上限）
           stageDecisionRef.current = { stageIndex: null, nextStageIndex: decision.nextStageIndex };
           limitPromptShownRef.current.delete(stageIndex);
+          allowBeyondLimitRef.current.add(stageIndex);
         }
       }
 
@@ -1054,9 +1056,10 @@ const CreateBiography = () => {
       if (closurePendingRef.current === stageIndex) {
         appendLineToSection(currentSectionIndex, `我：${trimmed}`);
         setAnswerInput(''); if (answerInputRef.current) answerInputRef.current.value = '';
-        // 小结已记录：不再生成进一步提示或问题
+        // 小结已记录：不再生成进一步提示或问题；清除超限继续标记
         closurePendingRef.current = null;
         stageDecisionRef.current = { stageIndex: null, nextStageIndex: null };
+        allowBeyondLimitRef.current.delete(stageIndex);
         return;
       }
     } catch (_) {}
@@ -1130,7 +1133,7 @@ const CreateBiography = () => {
       // 若当前阶段已达到上限且尚未展示过上限提示，则仅记录选择，不再产生新的小结外问题
       const turnsBeforeAsk = (stageTurns[stageIndex] || 0);
       const reachedLimit = turnsBeforeAsk >= MAX_QUESTIONS_PER_STAGE;
-      if (reachedLimit) {
+      if (reachedLimit && !allowBeyondLimitRef.current.has(stageIndex)) {
         // 第一次触达上限，给出一次性选择提示；随后等待用户输入"继续追忆"或"小结"
         if (!limitPromptShownRef.current.has(stageIndex)) {
           const nextIdx = Math.min(lifeStages.length - 1, stageIndex + 1);
