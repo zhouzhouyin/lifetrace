@@ -172,61 +172,21 @@ const Preview = () => {
             maxLength={200000}
           />
         ) : (
-          <div className="space-y-6">
-            {Array.isArray(chapters) && chapters.map((section, si) => {
-              const text = (section?.text || '').toString();
-              const media = Array.isArray(section?.media) ? section.media : [];
-              // 解析 [媒体:ID] 标记，将文本切片 + 媒体组件拼接
-              const parts = [];
-              try {
-                const regex = /\[媒体:([^\]]+)\]/g;
-                let lastIndex = 0;
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                  const before = text.slice(lastIndex, match.index);
-                  if (before) parts.push({ type: 'text', content: before });
-                  const mid = (match[1] || '').trim();
-                  const m = media.find(mm => (mm.id || '').toString() === mid);
-                  if (m) parts.push({ type: 'media', content: m });
-                  lastIndex = match.index + match[0].length;
-                }
-                const tail = text.slice(lastIndex);
-                if (tail) parts.push({ type: 'text', content: tail });
-              } catch (_) {
-                parts.push({ type: 'text', content: text });
-              }
-              // 未被消费的媒体（没有标记）放在末尾展示
-              const usedIds = new Set(parts.filter(p => p.type === 'media').map(p => p.content.id));
-              const unmarked = media.filter(m => !usedIds.has(m.id));
-              return (
-                <div key={si} className="space-y-3">
-                  {parts.map((p, pi) => (
-                    p.type === 'text' ? (
-                      <p key={pi} className="whitespace-pre-wrap text-gray-800">{p.content}</p>
-                    ) : (
-                      <div key={pi} className="border rounded overflow-hidden bg-white border-gray-200">
-                        {p.content.type === 'image' && <img src={p.content.url} alt={p.content.desc || ''} className="w-full" />}
-                        {p.content.type === 'video' && <video src={p.content.url} className="w-full" controls />}
-                        {p.content.type === 'audio' && <audio src={p.content.url} className="w-full" controls />}
-                        {p.content.desc ? <div className="text-xs text-gray-600 p-2">{p.content.desc}</div> : null}
-                      </div>
-                    )
-                  ))}
-                  {unmarked.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {unmarked.map((m, mi) => (
-                        <div key={mi} className="border rounded overflow-hidden bg-white border-gray-200">
-                          {m.type === 'image' && <img src={m.url} alt={m.desc || ''} className="w-full h-32 object-cover" />}
-                          {m.type === 'video' && <video src={m.url} className="w-full h-32 object-cover" controls />}
-                          {m.type === 'audio' && <audio src={m.url} className="w-full" controls />}
-                          {m.desc ? <div className="text-xs text-gray-600 p-2">{m.desc}</div> : null}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="space-y-4">
+            {(fullText || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
+              <p key={i} className="whitespace-pre-wrap text-gray-800">{para}</p>
+            ))}
+            {Array.isArray(chapters) && chapters.some(s => Array.isArray(s.media) && s.media.length > 0) && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                {chapters.flatMap((s) => (s.media || []).map((m) => ({ ...m }))).map((m, mi) => (
+                  <div key={mi} className="border rounded overflow-hidden bg-white border-gray-200">
+                    {m.type === 'image' && <img src={m.url} alt={m.desc || ''} className="w-full h-32 object-cover" />}
+                    {m.type === 'video' && <video src={m.url} className="w-full h-32 object-cover" controls />}
+                    {m.type === 'audio' && <audio src={m.url} className="w-full" controls />}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {/* 支付卡片已下线 */}

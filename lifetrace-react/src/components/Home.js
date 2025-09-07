@@ -573,6 +573,7 @@ const Home = () => {
           <p className="mt-4 text-base sm:text-lg text-gray-700">
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
+          
           {/* 每日回首弹窗（默认弹出，可跳过当天） */}
           {showDailyCard && (
             <div className="fixed inset-0 z-40 flex items-center justify-center">

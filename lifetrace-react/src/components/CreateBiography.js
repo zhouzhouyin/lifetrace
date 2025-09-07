@@ -190,8 +190,14 @@ const CreateBiography = () => {
     const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
     const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
-    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${adapt}；${lenAsk}`;
-    return `${styleText}；${strictText}；${concreteText}；${adapt}；${noFill}；${lenGen}`;
+    const investigative = '侦查：围绕“谁/何时/何地/因果/动作/对话/证据”提问，避免抽象词。';
+    const strengths = '优势：刻画能力、选择、韧性与体察，克制不煽情。';
+    const conflict = '冲突：时代与个人叙述不一致时，不下结论，给出可能区间/可能解释，提示核对。';
+    const eraGuide = '时代：若时间模糊，请用当时的大事件作参照帮助定位时间范围；发现疑似错误时给出两个可能范围供选择。';
+    const flowGuide = '流程：先让用户说本阶段最想讲的一件事→补具体细节→再核对时间顺序与关系。';
+    const logicGuide = '逻辑：询问动机、触发点、权衡、替代方案、当时即时反应与后果。';
+    if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${investigative}；${strengths}；${conflict}；${eraGuide}；${flowGuide}；${logicGuide}；${adapt}；${lenAsk}`;
+    return `${styleText}；${strictText}；${concreteText}；${investigative}；${strengths}；${conflict}；${eraGuide}；${flowGuide}；${logicGuide}；${adapt}；${noFill}；${lenGen}`;
   };
 
   const getGenMaxChars = () => {
@@ -200,7 +206,7 @@ const CreateBiography = () => {
 
   // 硬性约束：绝不脑补、只按事实、语言克制
   const buildHardConstraints = () => {
-    return '只使用用户提供的信息；不要添加任何用户没有提及的、猜测性的细节、场景、情感或人物。若回答不完整或模糊，保持客观和简练，不要进行任何脑补。保持平实、自然的叙事风格，避免夸张、煽情或宏大词语。任何虚构内容都被视为严重错误，必须避免。若出现无法填补的空白，务必使用中性过渡语衔接，不得编造细节。';
+    return '只使用用户提供的信息；不要添加任何未提及或猜测性的细节、场景、情感或人物。信息不足时用中性过渡语，不脑补。文风平实克制，避免宏大/煽情。发现时间节点疑似错误：给出“可能区间/两种可能解释”，提示用户核对，不得自定时间。遇到价值/选择冲突：中立呈现各方约束与考虑，提供温和的自我解释与关系建议，不评判。';
   };
 
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
@@ -209,6 +215,50 @@ const CreateBiography = () => {
     if (base === '未来愿望') return base;
     return `${base}回忆`;
   };
+
+  // 从篇章文本抽取时间线索（年份/年代/年龄/学段等）用于自动锚定
+  const extractTimeHintsFromText = (text) => {
+    const s = (text || '').toString();
+    const hints = [];
+    const yearRe = /(19\d{2}|20\d{2})年?/g;
+    const ageRe = /([一二三四五六七八九十\d]{1,3})岁/g;
+    const stageRe = /(小学|初中|高中|大学|大一|大二|大三|研究生|工作初期|结婚|生子)/g;
+    let m;
+    while ((m = yearRe.exec(s)) !== null) hints.push({ type: 'year', value: m[1] });
+    while ((m = ageRe.exec(s)) !== null) hints.push({ type: 'age', value: m[1] });
+    let ms;
+    while ((ms = stageRe.exec(s)) !== null) hints.push({ type: 'stage', value: ms[1] });
+    return hints;
+  };
+  // 注意：自动锚定放在 sections 声明之后，避免 TDZ 报错
+
+  // 时代锚点（简版）：输入出生年与关键词，给出建议并采纳
+  const [eraBirthYear, setEraBirthYear] = useState('');
+  const [eraKeyword, setEraKeyword] = useState('');
+  const [eraSuggestions, setEraSuggestions] = useState([]);
+  const [eraAnchors, setEraAnchors] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('era_anchors') || '[]'); } catch(_) { return []; }
+  });
+  useEffect(() => { try { localStorage.setItem('era_anchors', JSON.stringify(eraAnchors)); } catch(_){} }, [eraAnchors]);
+  const ERA_DB = [
+    { id: '1978_reform', label: '1978 改革开放开始（中国）', start: 1978, end: 1985, tags: ['改革开放'] },
+    { id: '1990s_internet', label: '1990s 互联网与市场化加速', start: 1993, end: 2000, tags: ['互联网'] },
+    { id: '2008_crisis', label: '2008 全球金融危机', start: 2007, end: 2009, tags: ['金融'] },
+    { id: '2007_2015_mobile', label: '2007-2015 移动互联网爆发', start: 2007, end: 2015, tags: ['移动互联网'] },
+  ];
+  useEffect(() => {
+    try {
+      const by = parseInt(eraBirthYear || '0', 10);
+      const kw = (eraKeyword || '').trim();
+      if (!by && !kw) { setEraSuggestions([]); return; }
+      const res = ERA_DB.filter(e => {
+        const hitKw = !kw || e.label.includes(kw) || e.tags.some(t => t.includes(kw));
+        const within = !by || (e.end - by >= 0 && e.start - by <= 60);
+        return hitKw && within;
+      }).map(e => ({ ...e, reason: by ? `当时年龄约 ${e.start - by} 至 ${e.end - by} 岁` : '' }));
+      setEraSuggestions(res);
+    } catch(_) { setEraSuggestions([]); }
+  }, [eraBirthYear, eraKeyword]);
 
   // 篇章区域展示用标签：显示为"X篇"（不影响情感访谈师区域）
   const getSectionLabelByIndex = (idx) => {
@@ -302,6 +352,22 @@ const CreateBiography = () => {
   // 图文并茂篇章（每篇章：title + text + media[]）——固定为各阶段一一对应
   const [sections, setSections] = useState(Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] })));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // 用户主动选择的当前篇章
+  // 自动锚定：根据当前篇章文本推荐时代锚点
+  useEffect(()=>{
+    try {
+      const txt = (sections[currentSectionIndex]?.text || '').toString();
+      if (!txt.trim()) return;
+      const hasInternet = /互联网|上网|网吧|手机|QQ|OICQ|微信|微博|智能机/.test(txt);
+      const hasFinance = /金融危机|次贷|雷曼|基金暴跌/.test(txt);
+      const rec = [];
+      if (hasInternet) rec.push('2007_2015_mobile','1990s_internet');
+      if (hasFinance) rec.push('2008_crisis');
+      if (rec.length) {
+        const add = ERA_DB.filter(e => rec.includes(e.id) && !(eraAnchors||[]).find(x=>x.id===e.id));
+        if (add.length) setEraSuggestions(prev => [...prev, ...add.map(e=>({ ...e, reason: '来自正文线索的自动推荐' }))]);
+      }
+    } catch(_){}
+  }, [sections, currentSectionIndex]);
   // 访谈节流：防止用户过快连续提问
   const lastAskAtRef = useRef(0);
   const MIN_INTERVAL_MS = 3200;
@@ -519,7 +585,7 @@ const CreateBiography = () => {
         const original = (sections[i]?.text || '').trim();
         if (!original) continue;
         setMessage(`正在润色：第 ${i + 1}/${sections.length} 篇章…`);
-        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。';
+        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议，禁止自定具体时间。';
         const messages = [
           { role: 'system', content: system },
           { role: 'user', content: `请润色这一章内容：\n${original}` },
@@ -841,7 +907,7 @@ const CreateBiography = () => {
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
     const profileGuideFollow = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
-    const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。`;
+    const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。请从“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”两条线并用，避免空泛。`;
     try {
       const perspectiveKick = (authorMode === 'other')
         ? `请使用第二人称"你"，但采用"关系视角"提问：围绕你与"${authorRelation || '这位亲人'}"的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
@@ -900,7 +966,7 @@ const CreateBiography = () => {
         const writerGender2 = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
         const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
-        const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
+        const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”。';
         const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
         const kickoffUser = (authorMode === 'other')
           ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
@@ -1594,33 +1660,7 @@ const CreateBiography = () => {
     if (isAudio) return 'audio';
     return 'image';
   };
-  const generateMediaId = () => `m${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const insertMediaMarkerAtCaret = (sectionIndex, markerText) => {
-    try {
-      const isCurrent = currentSectionIndex === sectionIndex;
-      const el = sectionTextareaRef.current;
-      if (isCurrent && el && typeof el.selectionStart === 'number' && typeof el.selectionEnd === 'number') {
-        const start = el.selectionStart;
-        const end = el.selectionEnd;
-        setSections(prev => prev.map((s, i) => {
-          if (i !== sectionIndex) return s;
-          const raw = (s.text || '').toString();
-          const next = raw.slice(0, start) + markerText + raw.slice(end);
-          return { ...s, text: next };
-        }));
-        setTimeout(() => {
-          try {
-            el.focus();
-            const pos = start + markerText.length;
-            if (typeof el.setSelectionRange === 'function') el.setSelectionRange(pos, pos);
-            el.scrollTop = el.scrollHeight;
-          } catch (_) {}
-        }, 0);
-        return true;
-      }
-    } catch (_) {}
-    return false;
-  };
+  // 撤销：不再插入媒体占位符，统一添加到末尾
   const handleUploadMediaToSection = async (sectionIndex, file, desc = '') => {
     if (!file) return;
     try {
@@ -1645,11 +1685,8 @@ const CreateBiography = () => {
       });
       const url = res.data?.filePath;
       const type = inferMediaType(file);
-      const id = generateMediaId();
-      const marker = `\n[媒体:${id}]\n`;
-      const inserted = insertMediaMarkerAtCaret(sectionIndex, marker);
-      setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: [...s.media, { id, type, url, desc }] } : s));
-      setMessage(inserted ? '媒体已插入到光标位置' : '媒体已添加到分段');
+      setSections(prev => prev.map((s, i) => i === sectionIndex ? { ...s, media: [...s.media, { type, url, desc }] } : s));
+      setMessage('媒体已添加到分段');
       // 在专注模式下，添加媒体后滚动到最底部，便于立即看到新媒体
       try {
         if (isFocusMode && focusContentRef.current) {
@@ -1888,7 +1925,7 @@ const CreateBiography = () => {
         const original = (sections[i]?.text || '').trim();
         if (!original) continue;
         setMessage(`正在润色：第 ${i + 1}/${sections.length} 篇章…`);
-        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。';
+        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议，禁止自定具体时间。';
         const messages = [
           { role: 'system', content: system },
           { role: 'user', content: `请润色这一章内容：\n${original}` },
@@ -1996,7 +2033,7 @@ const CreateBiography = () => {
       const mediaSnapshots = sections.map(s => s.media || []);
 
       // 让模型基于问答对，生成"分章文本数组"，与现有章节数对齐；若生成数量不同，则就近截断/补空
-      const system = '你是一位资深传记写作者。现在请把给定的问答对拆分整理为若干"章节正文"，每个章节是一段自然的第一人称叙述，不要列表/编号/标题，不编造事实，保留细节，风格朴素真挚。只输出JSON数组，每个元素是字符串，对应各章节正文。不要任何其它文字。';
+      const system = '你是一位资深传记写作者。现在请把给定的问答对拆分整理为若干"章节正文"，每个章节是一段自然的第一人称叙述，不要列表/编号/标题，不编造事实，保留细节，风格朴素真挚。并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”。遇到时间冲突仅提示可能区间与核对建议。只输出JSON数组，每个元素是字符串，对应各章节正文。不要任何其它文字。';
       const userMsg = `问答对如下：\n${qaPairs.map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${p.a}`).join('\n')}\n\n请输出JSON数组（每个元素是一章的正文）。`;
       const resp = await retry(() => callSparkThrottled({
         model: 'x1',
@@ -2206,6 +2243,13 @@ const CreateBiography = () => {
   }, [sections, chatMessages, currentSectionIndex, isFocusMode]);
 
   const [centerToast, setCenterToast] = useState('');
+  // 富文本模式：默认关闭（保留纯文本），开启后使用 contentEditable 简单富文本
+  const [richTextMode, setRichTextMode] = useState(() => {
+    try { return localStorage.getItem('richtext_mode') === '1'; } catch(_) { return false; }
+  });
+  const richDivRef = useRef(null);
+  // 时代面板展开
+  const [showEraPanel, setShowEraPanel] = useState(false);
 
   return (
     <div className="min-h-screen py-4 sm:py-6">
@@ -2286,6 +2330,74 @@ const CreateBiography = () => {
             )}
             </div>
           </div>
+          {/* 时代锚点面板 */}
+          <div className="-mx-4 sm:mx-0 px-4">
+            <div className="border rounded bg-white border-gray-200 text-gray-900">
+              <button type="button" className="w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3" onClick={()=>setShowEraPanel(v=>!v)}>
+                <span className="font-semibold">时代锚点（可选）</span>
+                <span className="text-sm text-gray-500">建议先确定出生年，再输入关键词</span>
+              </button>
+              {showEraPanel && (
+              <div className="p-3 sm:p-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-sm mb-1">出生年份</label>
+                    <input className="input" placeholder="如 1970" value={eraBirthYear} onChange={(e)=>setEraBirthYear(e.target.value)} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm mb-1">事件关键词</label>
+                    <input className="input" placeholder="如 改革开放/互联网/金融危机" value={eraKeyword} onChange={(e)=>setEraKeyword(e.target.value)} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-xs text-gray-600 mb-2">建议：</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(eraSuggestions || []).length === 0 && <div className="text-xs text-gray-400">暂无建议</div>}
+                    {(eraSuggestions || []).map(s => (
+                      <div key={s.id} className="p-3 border rounded bg-slate-50 flex items-start justify-between">
+                        <div>
+                          <div className="text-sm font-medium">{s.label}</div>
+                          <div className="text-xs text-gray-500">{s.reason}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select className="input text-xs" onChange={(e)=>{ const stage = e.target.value; setEraAnchors(prev=>[...prev.filter(x=>x.id!==s.id), { ...s, stage }]); }} defaultValue="">
+                            <option value="">关联阶段</option>
+                            {lifeStages.map((ls, idx)=>(<option key={idx} value={ls}>{ls}</option>))}
+                          </select>
+                          <button className="btn btn-tertiary text-xs" onClick={()=>{ if (!eraAnchors.find(a=>a.id===s.id)) setEraAnchors(prev=>[...prev, s]); }}>采纳</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {(eraAnchors || []).length > 0 && (
+                    <div className="mt-3">
+                      <div className="text-xs text-gray-600 mb-2">已采纳（按人生节点分组）：</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {lifeStages.map((ls, idx)=>{
+                          const items = eraAnchors.filter(a => (a.stage || '') === ls);
+                          if (items.length === 0) return null;
+                          return (
+                            <div key={idx} className="p-3 border rounded">
+                              <div className="text-sm font-semibold mb-2">{ls}</div>
+                              <div className="space-y-2">
+                                {items.map(a => (
+                                  <div key={a.id} className="p-2 border rounded bg-white flex items-center justify-between">
+                                    <div className="text-sm">{a.label}</div>
+                                    <button className="text-xs text-red-500" onClick={()=>setEraAnchors(prev=>prev.filter(x=>x.id!==a.id))}>移除</button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              )}
+            </div>
+          </div>
           {/* 阶段面包屑（横向滚动） */}
           <div className="-mx-4 sm:mx-0 px-4 overflow-x-auto" ref={stageScrollRef}>
             <div className="flex gap-2 pb-2 min-w-max">
@@ -2346,15 +2458,36 @@ const CreateBiography = () => {
                     maxLength={200}
                     disabled={isSaving || isUploading}
                   />
-            <textarea
-                    className="input w-full resize-y h-[40vh] sm:h-60"
-                    placeholder={t ? t('chapterTextPlaceholder') : '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。'}
-                    value={sections[currentSectionIndex]?.text || ''}
-                    onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
-                    maxLength={10000}
-              disabled={isSaving || isUploading}
-                    ref={sectionTextareaRef}
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xs text-gray-500">{richTextMode ? '富文本模式（可粘贴粗体/分段）' : '纯文本模式'}</div>
+                    <button type="button" className="btn btn-tertiary text-xs" onClick={()=>{ const v=!richTextMode; setRichTextMode(v); try{localStorage.setItem('richtext_mode', v?'1':'0');}catch(_){} }} disabled={isSaving||isUploading}>{richTextMode?'切换为纯文本':'切换为富文本'}</button>
+                  </div>
+                  {richTextMode ? (
+                    <div
+                      className="input w-full min-h-[40vh] sm:min-h-60 whitespace-pre-wrap"
+                      contentEditable
+                      suppressContentEditableWarning
+                      ref={richDivRef}
+                      onInput={(e)=>{
+                        const html = (e.currentTarget.innerHTML || '').toString();
+                        // 仅允许基本内联标签，去除脚本
+                        const clean = DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b','strong','i','em','u','br','p','span'], ALLOWED_ATTR: [] });
+                        updateSectionText(currentSectionIndex, clean);
+                      }}
+                      dangerouslySetInnerHTML={{ __html: sections[currentSectionIndex]?.text || '' }}
+                      style={{ minHeight: '40vh' }}
+                    />
+                  ) : (
+                    <textarea
+                      className="input w-full resize-y h-[40vh] sm:h-60"
+                      placeholder={t ? t('chapterTextPlaceholder') : '在此输入该篇章的正文内容。回答完某个问题后，直接把内容写在这里；接着点击下方按钮可以给此篇章插入图片或视频。'}
+                      value={sections[currentSectionIndex]?.text || ''}
+                      onChange={(e) => updateSectionText(currentSectionIndex, e.target.value)}
+                      maxLength={10000}
+                      disabled={isSaving || isUploading}
+                      ref={sectionTextareaRef}
+                    />
+                  )}
                   {/* 章节导航（移动到正文下方） */}
                   <div className="mt-2" />
                   {/* 一体化聊天控制：仅在篇章里进行问答 */}
@@ -2414,7 +2547,7 @@ const CreateBiography = () => {
                           const perspectiveHint = (authorMode === 'other')
                             ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
                             : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚且忠于事实的传记正文；严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。${buildStyleRules('gen')} ${buildHardConstraints()}`;
+                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚且忠于事实的传记正文；严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议。${buildStyleRules('gen')} ${buildHardConstraints()}`;
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
                           const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n请仅据此输出该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
@@ -2656,7 +2789,7 @@ const CreateBiography = () => {
                     const perspectiveHint = (authorMode === 'other')
                       ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
                       : '请使用第一人称"我"的表述方式。';
-                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。不要包含身份设定与基础资料引导类语句。`;
+                    const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚的传记正文；保留事实细节（姓名、地名、时间等），严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议。不要包含身份设定与基础资料引导类语句。`;
                     const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                     const qaSource = filterPolishSource(qaSourceRaw);
                     const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的对话记录（按时间顺序，经清理元话术）：\\n\\n${qaSource}\\n\\n请据此输出一段该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;

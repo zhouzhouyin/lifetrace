@@ -270,6 +270,7 @@ export const AppContextProvider = ({ children }) => {
 
     const verifyToken = async () => {
       setAuthLoading(true);
+      // 取消开发模式免登录
       const storedToken = localStorage.getItem('token');
       console.log('AppContext: Verifying token:', storedToken);
       if (storedToken) {
