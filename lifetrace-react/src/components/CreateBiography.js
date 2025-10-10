@@ -108,6 +108,28 @@ const CreateBiography = () => {
   const [hasShownOpening, setHasShownOpening] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false); // 手机端专注模式
   const isSmallScreen = () => { try { return window.innerWidth < 640; } catch (_) { return false; } };
+  
+  // 用户自定义主题引导
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [currentThemeStageIndex, setCurrentThemeStageIndex] = useState(0);
+  const [userThemes, setUserThemes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user_themes') || '{}'); } catch(_) { return {}; }
+  });
+  
+  // 预设主题库：每个阶段的重要主题选项
+  const STAGE_THEMES = {
+    0: ['家庭关系', '童年玩伴', '启蒙教育', '难忘事件', '性格形成', '兴趣萌芽', '家庭变故', '童年创伤'],
+    1: ['学业经历', '友情', '师生关系', '青春期变化', '初恋', '叛逆与成长', '兴趣爱好', '价值观形成'],
+    2: ['升学就业', '恋爱婚姻', '职业选择', '人生目标', '重大决策', '迷茫与探索', '重要相遇', '独立成长'],
+    3: ['事业发展', '婚姻家庭', '子女教育', '经济状况', '人际关系', '挫折与突破', '成就与荣誉', '责任担当'],
+    4: ['家庭变化', '事业转型', '健康问题', '人生顿悟', '子女独立', '婚姻关系', '财务规划', '精神追求'],
+    5: ['生活状态', '家庭关系', '健康养生', '兴趣爱好', '社会参与', '代际关系', '内心感悟', '遗憾与满足'],
+    6: ['人生愿望', '家族传承', '未竟之事', '后代期望', '精神寄托', '人生总结', '遗愿', '生命意义']
+  };
+  
+  useEffect(() => {
+    try { localStorage.setItem('user_themes', JSON.stringify(userThemes)); } catch(_){}
+  }, [userThemes]);
   const focusContentRef = useRef(null);
   const [isFocusEditing, setIsFocusEditing] = useState(false);
   const stageScrollRef = useRef(null);
@@ -190,12 +212,12 @@ const CreateBiography = () => {
     const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
     const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
-    const investigative = '侦查：围绕“谁/何时/何地/因果/动作/对话/证据”提问，避免抽象词。';
-    const strengths = '优势：刻画能力、选择、韧性与体察，克制不煽情。';
+    const investigative = '侦查：围绕"谁/何时/何地/因果/动作/对话/证据"提问，但优先聚焦对人生有深远影响的关键时刻，避免抽象词与琐碎细节。';
+    const strengths = '优势：刻画能力、选择、韧性与体察，克制不煽情。深挖关键决策背后的思考过程、艰难抉择中的内心挣扎。';
     const conflict = '冲突：时代与个人叙述不一致时，不下结论，给出可能区间/可能解释，提示核对。';
     const eraGuide = '时代：若时间模糊，请用当时的大事件作参照帮助定位时间范围；发现疑似错误时给出两个可能范围供选择。';
-    const flowGuide = '流程：先让用户说本阶段最想讲的一件事→补具体细节→再核对时间顺序与关系。';
-    const logicGuide = '逻辑：询问动机、触发点、权衡、替代方案、当时即时反应与后果。';
+    const flowGuide = '流程：先让用户说本阶段最重要、最难忘的经历→补具体细节→再核对时间顺序与关系。避免停留在表层琐事。';
+    const logicGuide = '逻辑：深入询问动机、触发点、权衡、替代方案、当时即时反应与后果，重点挖掘改变人生轨迹的关键节点。';
     if (kind === 'ask') return `${styleText}；${strictText}；${concreteText}；${investigative}；${strengths}；${conflict}；${eraGuide}；${flowGuide}；${logicGuide}；${adapt}；${lenAsk}`;
     return `${styleText}；${strictText}；${concreteText}；${investigative}；${strengths}；${conflict}；${eraGuide}；${flowGuide}；${logicGuide}；${adapt}；${noFill}；${lenGen}`;
   };
@@ -712,8 +734,8 @@ const CreateBiography = () => {
     }
     if (hasQuestionMark(result)) return result;
     try {
-      const systemAsk = '请仅输出一个自然口语化的问题句子，不要任何编号、前缀或额外解释。仅一句中文问题。';
-      const userAsk = `基于当前阶段"${lifeStages[phaseIndex]}"与上述对话，请继续提出一个紧接上下文的下一个问题（仅一句）。`;
+      const systemAsk = '请仅输出一个自然口语化的问题句子，不要任何编号、前缀或额外解释。仅一句中文问题。优先询问重要、有深度的事件。';
+      const userAsk = `基于当前阶段"${lifeStages[phaseIndex]}"与上述对话，请继续提出一个紧接上下文、有深度的重要问题（仅一句）。优先关注人生转折、关键决策或深刻影响，避免琐碎日常。`;
       const messages = [
         { role: 'system', content: systemAsk },
         ...history,
@@ -734,15 +756,15 @@ const CreateBiography = () => {
   // 阶段兜底问题（确保每轮都有"下一个问题"）
   const getStageFallbackQuestion = (idx) => {
     const map = [
-      '我们聊聊童年里一件让您记忆最深的小事？',
-      '少年时期，有没有一段让您会心一笑的经历？',
-      '青年阶段，是否有一个改变您人生方向的决定或相遇？',
-      '成年后的这些年，您最骄傲的一件事是什么？',
-      '中年后，您对家人或自我有哪些新的理解？',
-      '当下的您，最想感谢的人是谁？为什么？',
-      '对于未来，您最想留下或实现的一件愿望是什么？',
+      '童年时期，有没有一件事让您的人生观发生了改变？',
+      '少年时期，有没有遇到过影响您一生的人或重要选择？',
+      '青年阶段，有没有一个关键决定改变了您的人生轨迹？',
+      '成年后，有没有经历过让您重新认识自己的重要时刻？',
+      '中年时期，有没有做过一个艰难但重要的人生抉择？',
+      '回顾人生，哪个时刻让您感受到自己真正成长了？',
+      '对于未来，您最想实现的人生愿望是什么？为什么对您如此重要？',
     ];
-    return map[idx] || '有没有一段让您心里柔软起来的回忆可以分享？';
+    return map[idx] || '有没有一个改变您人生的重要时刻可以分享？';
   };
 
   // 阶段开场：按阶段定制不同首问（关系/本人两种措辞）
@@ -752,34 +774,34 @@ const CreateBiography = () => {
     const byIdx = [
       // 0 童年
       mode === 'other'
-        ? `在你的童年记忆里，${rel}和你一起做过哪些日常小事或小习惯？`
-        : '在你的童年里，有哪件让你记得很清楚的小事？',
+        ? `在你的童年记忆里，${rel}做过的哪件事对你的成长影响最深？`
+        : '在你的童年里，有没有一件事让你开始理解这个世界？',
       // 1 少年
       mode === 'other'
-        ? `在你的少年时期，${rel}对你的学习或生活影响最深的一次具体片段是什么？`
-        : '在你的少年时期，最常想起的一件具体事情是什么？',
+        ? `在你的少年时期，${rel}对你做出过哪个重要决定或给过关键建议？`
+        : '在你的少年时期，有没有遇到过影响你价值观的人或事？',
       // 2 青年
       mode === 'other'
-        ? `在你的青年阶段，${rel}曾在什么决定或经历上给过你具体的支持或提醒？`
-        : '在你的青年阶段，有没有一个改变你方向的决定或相遇？',
+        ? `在你的青年阶段，${rel}在你面临重大选择时给过你什么支持或启发？`
+        : '在你的青年阶段，有没有一个关键决定改变了你的人生轨迹？',
       // 3 成年
       mode === 'other'
-        ? `成年的这些年里，你与${rel}共同经历过的一件具体事情是什么？当时${rel}做了什么？`
-        : '成年的这些年里，你做过一件让自己记忆很深的事情是什么？',
+        ? `成年后，你与${rel}之间有没有经历过一次让你们关系发生改变的重要时刻？`
+        : '成年后，有没有一个时刻让你重新认识了自己？',
       // 4 中年
       mode === 'other'
-        ? `中年之后，你对${rel}有什么新的理解？有没有一件让你改变看法的事？`
-        : '中年之后，你对家人或自我有哪些新的理解？有没有一件改变看法的事？',
+        ? `中年之后，你对${rel}有什么新的理解？有没有一次深刻的对话或顿悟时刻？`
+        : '中年之后，有没有做过一个艰难但重要的人生抉择？',
       // 5 当下
       mode === 'other'
-        ? `现在的生活里，你与${rel}之间最常见的一次日常互动是什么？`
-        : '现在的生活中，有没有一个让你觉得踏实的日常片段？',
+        ? `现在回望人生，${rel}给你留下的最重要的影响或教诲是什么？`
+        : '现在回望人生，哪个时刻让你感受到自己真正成长了？',
       // 6 未来
       mode === 'other'
-        ? `如果把对${rel}的一句话留给未来，你最想写什么？`
-        : '关于未来，你最想留下或实现的一件愿望是什么？',
+        ? `关于${rel}，你最想传承给后代的是什么精神或品质？为什么？`
+        : '关于未来，你最想实现的人生愿望是什么？为什么对你如此重要？',
     ];
-    const base = byIdx[idx] || (mode === 'other' ? `在你的回忆里，${rel}哪件具体的小事最容易浮现？` : '有没有一段最容易浮现的具体回忆？');
+    const base = byIdx[idx] || (mode === 'other' ? `在你的回忆里，${rel}对你影响最深的一件事是什么？` : '有没有一个改变你人生的重要时刻？');
     return base + detailTail;
   };
 
@@ -907,7 +929,7 @@ const CreateBiography = () => {
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
     const profileGuideFollow = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
-    const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。请从“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”两条线并用，避免空泛。`;
+    const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。请从"追踪视角（谁/何时/何地/因果/动作/对话/证据）"与"优势视角（能力/选择/韧性/体察）"两条线并用，避免空泛与琐碎日常。优先询问有深远意义的事件，而非表面细节。`;
     try {
       const perspectiveKick = (authorMode === 'other')
         ? `请使用第二人称"你"，但采用"关系视角"提问：围绕你与"${authorRelation || '这位亲人'}"的互动、对你的影响与具体细节；避免第三人称与抽象化表达。`
@@ -916,10 +938,16 @@ const CreateBiography = () => {
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
       const profileGuideKick = '提问时请充分参考上述资料（如祖籍、现居地、出生年代、家庭与教育背景等），在不引入新信息的前提下，从不同维度切入，避免重复维度；若某项资料为空，切勿猜测。';
-      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} ${profileGuideKick} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+      // 用户选择的主题引导
+      const userSelectedThemes = userThemes[targetIndex] || [];
+      const themeGuide = userSelectedThemes.length > 0 
+        ? `用户特别关注的主题：${userSelectedThemes.join('、')}。请围绕这些主题提问，但要自然融入，不要生硬列举。` 
+        : '';
+      const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick} ${writerProfile} ${subjectProfile} ${profileGuideKick} ${themeGuide} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick} ${factRules} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+      const themeHint = userSelectedThemes.length > 0 ? `特别关注：${userSelectedThemes.join('、')}。` : '';
       const kickoffUser = (authorMode === 'other')
-        ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段的第一个暖心问题（仅一句）。`
-        : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
+        ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"中最重要、最难忘的互动与影响，例如"在你的记忆里，${authorRelation || '这位亲人'}……"开头，给出一个本阶段最核心、最有深度的开场问题（仅一句）。${themeHint}优先询问人生转折、关键决策或深刻影响，避免琐碎日常。`
+        : `请面向"您"提出本阶段最重要、最有深度的核心问题（仅一句）。${themeHint}优先询问人生转折、关键决策或难忘时刻，避免琐碎日常。`;
       const history = chatMessages.slice(-5);
       const messages = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: kickoffUser } ];
       const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
@@ -966,11 +994,17 @@ const CreateBiography = () => {
         const writerGender2 = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
         const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
-        const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”。';
-        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+        const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。请并用"追踪视角（谁/何时/何地/因果/动作/对话/证据）"与"优势视角（能力/选择/韧性/体察）"。优先询问有深远意义的事件，而非表面细节。';
+        // 用户选择的主题引导（重试块）
+        const userSelectedThemes2 = userThemes[targetIndex] || [];
+        const themeGuide2 = userSelectedThemes2.length > 0 
+          ? `用户特别关注的主题：${userSelectedThemes2.join('、')}。请围绕这些主题提问，但要自然融入，不要生硬列举。` 
+          : '';
+        const systemPrompt = `你是一位温暖、耐心且得体的引导者。${toneKick2} ${writerProfile2} ${subjectProfile2} ${themeGuide2} 当前阶段：${lifeStages[targetIndex]}。${perspectiveKick2} ${factRules2} ${buildHardConstraints()} ${buildStyleRules('ask')} 回复需口语化；先简短共情，再给出一个自然的后续问题；不要出现"下一个问题"字样。仅输出中文。`;
+        const themeHint2 = userSelectedThemes2.length > 0 ? `特别关注：${userSelectedThemes2.join('、')}。` : '';
         const kickoffUser = (authorMode === 'other')
-          ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响，给出这个阶段的第一个暖心问题（仅一句）。`
-          : `请面向"您"提出本阶段的第一个暖心问题（仅一句）。`;
+          ? `请以关系视角面向写作者发问：聚焦"你与${authorRelation || '这位亲人'}"中最重要、最难忘的互动与影响，给出这个阶段最核心、最有深度的开场问题（仅一句）。${themeHint2}优先询问人生转折、关键决策或深刻影响，避免琐碎日常。`
+          : `请面向"您"提出本阶段最重要、最有深度的核心问题（仅一句）。${themeHint2}优先询问人生转折、关键决策或难忘时刻，避免琐碎日常。`;
         const messages = [ { role: 'system', content: systemPrompt }, { role: 'user', content: kickoffUser } ];
         setMessage('阶段提问失败，正以短上下文自动重试…');
         const resp2 = await callSparkThrottled({ model: 'x1', messages, max_tokens: 280, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
@@ -1044,6 +1078,16 @@ const CreateBiography = () => {
     try { return JSON.parse(localStorage.getItem('record_profile') || '{}'); } catch(_) { return {}; }
   }); // { name, gender, birth, origin, residence, relation? }
 
+  // 主题选择完成后的处理
+  const handleThemeSelectionComplete = () => {
+    setShowThemeSelector(false);
+    const idx = currentThemeStageIndex;
+    setStageIndex(idx);
+    setCurrentSectionIndex(idx);
+    setHasShownOpening(true);
+    askStageKickoff(idx, true);
+  };
+
   const startInterview = () => {
     const idx = Math.min(currentSectionIndex, lifeStages.length - 1);
     // 确保进入访谈状态并同步当前阶段
@@ -1060,8 +1104,13 @@ const CreateBiography = () => {
     try { if (isFocusEditing) setIsFocusEditing(false); } catch(_){}
     // 首次仅给基础资料开场，之后不再重复
     if (!hasShownOpening) {
-      // 身份与关系已在首页设定，不再重复
-      // 已具备身份与（如需）关系信息：直接进入阶段开场，不再询问基础资料
+      // 首次访谈：先显示主题选择界面
+      if (!userThemes[idx] || userThemes[idx].length === 0) {
+        setCurrentThemeStageIndex(idx);
+        setShowThemeSelector(true);
+        return;
+      }
+      // 已选择主题：直接进入阶段开场
       setHasShownOpening(true);
       askStageKickoff(idx, true);
       return;
@@ -1070,6 +1119,12 @@ const CreateBiography = () => {
     const sectionText = (sections[idx]?.text || '').toString();
     const hasAssistant = sectionText.includes('陪伴师：');
     if (!hasAssistant) {
+      // 检查是否已选择主题，若未选择则显示主题选择
+      if (!userThemes[idx] || userThemes[idx].length === 0) {
+        setCurrentThemeStageIndex(idx);
+        setShowThemeSelector(true);
+        return;
+      }
       askStageKickoff(idx, true);
       return;
     }
@@ -1183,8 +1238,13 @@ const CreateBiography = () => {
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
     const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
     const profileGuide = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
-    const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。';
-    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} ${profileGuide} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
+    const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。优先询问有深远意义的事件，而非表面细节与琐碎日常。';
+    // 用户选择的主题引导
+    const userSelectedThemes = userThemes[stageIndex] || [];
+    const themeGuide = userSelectedThemes.length > 0 
+      ? `用户特别关注的主题：${userSelectedThemes.join('、')}。请围绕这些主题深入提问，自然融入对话，不要生硬列举。` 
+      : '';
+    const systemPrompt = `你是一位温暖、耐心且得体的引导者。${tone} ${writerProfile} ${subjectProfile} ${profileGuide} ${themeGuide} 当前阶段：${lifeStages[stageIndex]}。${perspective} ${factRules} 请用自然口语化的方式回复；先进行真诚简短的反馈，再给出一个自然的后续问题，不要添加"下一个问题"字样。仅输出中文。`;
     const MAX_TURNS = 12;
     const history = chatMessages.slice(-5);
     const messagesToSend = [ { role: 'system', content: systemPrompt }, ...history, { role: 'user', content: trimmed } ];
@@ -1294,15 +1354,15 @@ const CreateBiography = () => {
       }
       console.error('Interview ask error:', err);
       const fallbackByStage = {
-        0: '我们聊聊童年里一件让您记忆最深的小事吧？当时发生了什么？',
-        1: '少年时期，您最喜欢的人或事是什么？有没有一段让您会心一笑的经历？',
-        2: '青年阶段，是否有一个改变您人生方向的决定或相遇？',
-        3: '成年的这些年，您做过最让自己骄傲的一件事是什么？',
-        4: '中年后，您对家人、事业或自我有过哪些新的理解？',
-        5: '现在的您，最想感谢的人是谁？原因是什么？',
-        6: '对于未来，您最想留下或实现的一件愿望是什么？'
+        0: '童年时期，有没有一件事让您开始理解这个世界或改变了您的想法？',
+        1: '少年时期，有没有遇到过影响您价值观或人生观的重要事件？',
+        2: '青年阶段，有没有一个关键决定改变了您的人生轨迹？',
+        3: '成年后，有没有经历过让您重新认识自己的重要时刻？',
+        4: '中年后，有没有做过一个艰难但重要的人生抉择？',
+        5: '回顾人生，哪个时刻让您感受到自己真正成长了？',
+        6: '关于未来，您最想实现的人生愿望是什么？为什么对您如此重要？'
       };
-      const ai = finalizeAssistant(fallbackByStage[stageIndex] || '我们换个角度聊聊：有没有一段让您心里柔软起来的回忆？');
+      const ai = finalizeAssistant(fallbackByStage[stageIndex] || '有没有一个改变您人生的重要时刻可以分享？');
       setChatMessages(prev => [...prev, { role: 'assistant', content: ai }]);
       appendLineToSection(currentSectionIndex, `陪伴师：${ai}`);
       if (autoSpeakAssistant) speakText(ai);
@@ -1903,7 +1963,112 @@ const CreateBiography = () => {
     }
   };
 
-  // 生成传记（AI润色）：逐章润色文本并生成预览
+  // 两阶段润色：第一阶段提取事实，第二阶段文学化表达
+  const twoStagePolish = async (originalText, token, chapterIndex, selectedThemes = []) => {
+    // 第一阶段：从原文提取事实清单
+    const stage1System = `你是一位严谨的事实提取专家。请从传记段落中提取纯粹的事实信息，以结构化方式输出。
+
+关键规则：
+1. 只提取明确提到的事实，不做任何推断或补充
+2. 如果原文包含问答形式，只提取回答者的内容，忽略提问
+3. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
+4. 按时间顺序或逻辑顺序组织
+5. 用简洁的陈述句表达，每个事实一行
+6. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
+7. 不要添加任何原文中未出现的内容
+8. 去除"陪伴师""提问""回答"等问答痕迹`;
+
+    const stage1User = `原文：\n${originalText}\n\n请提取上述段落中的所有事实（忽略问答痕迹），仅输出JSON格式的事实清单。`;
+    
+    setMessage(`第 ${chapterIndex + 1} 章：正在提取事实清单...`);
+    
+    const resp1 = await retry(() => callSparkThrottled({
+      model: 'x1',
+      messages: [
+        { role: 'system', content: stage1System },
+        { role: 'user', content: stage1User },
+      ],
+      max_tokens: 1500,
+      temperature: 0.2,
+      user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
+    }, token, { silentThrottle: true }));
+    
+    const raw1 = (resp1.data?.choices?.[0]?.message?.content || '').toString().trim();
+    
+    // 解析事实清单
+    let factsList = [];
+    try {
+      const parsed = JSON.parse(raw1);
+      if (Array.isArray(parsed.facts)) {
+        factsList = parsed.facts;
+      }
+    } catch (_) {
+      // 容错：尝试提取JSON
+      const start = raw1.indexOf('{');
+      const end = raw1.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        try {
+          const parsed = JSON.parse(raw1.slice(start, end + 1));
+          if (Array.isArray(parsed.facts)) {
+            factsList = parsed.facts;
+          }
+        } catch (_) {}
+      }
+    }
+    
+    if (factsList.length === 0) {
+      // 如果事实提取失败，返回原文
+      return originalText;
+    }
+    
+    // 第二阶段：文学化表达
+    const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，用具有文学色彩、感染力的方式改写为自传段落。
+
+核心要求：
+1. 严格基于事实清单，不得添加任何新情节、新人物、新事件
+2. 保留事实内容，但用场景化语言重构叙事
+
+叙事技巧：
+3. 将每一段聚焦于一个核心情绪或主题（如"决心""挫折""成长""温暖""失落"等）
+4. 避免简单的时间顺序罗列，改用情感主线串联事件
+5. 适当使用第一人称回忆口吻，加入内心反思与当下的感悟
+6. 通过场景重现、细节刻画来展现情绪，而非直接陈述
+
+文风把控：
+7. 语言自然流畅，保持朴素真挚的风格
+8. 避免过度煽情、华丽辞藻或抽象概念堆砌
+9. 合理组织段落，使叙述连贯有节奏，张弛有度
+
+输出规范：
+10. 仅输出改写后的段落正文，不要标题、编号、总结
+11. 输出字数：5000字以内`;
+
+    const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
+    const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，改写为一段有文学性和情感深度的自传段落。
+注意：
+- 不按时间顺序简单罗列，而是用情感线索或主题线索重构叙事
+- 每段聚焦一个核心情绪或主题
+- 加入第一人称的内心感受和回忆口吻
+- 记住：不得添加任何清单中没有的内容`;
+    
+    setMessage(`第 ${chapterIndex + 1} 章：正在进行文学化改写...`);
+    
+    const resp2 = await retry(() => callSparkThrottled({
+      model: 'x1',
+      messages: [
+        { role: 'system', content: stage2System },
+        { role: 'user', content: stage2User },
+      ],
+      max_tokens: 1500,
+      temperature: 0.6,
+      user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
+    }, token, { silentThrottle: true }));
+    
+    const finalText = (resp2.data?.choices?.[0]?.message?.content || '').toString().trim();
+    return finalText;
+  };
+
+  // 生成传记（AI润色）：逐章润色文本并生成预览 - 使用两阶段生成
   const handlePolishAI = async () => {
     setIsPolishing(true);
     const token = localStorage.getItem('token');
@@ -1924,15 +2089,10 @@ const CreateBiography = () => {
       for (let i = 0; i < sections.length; i++) {
         const original = (sections[i]?.text || '').trim();
         if (!original) continue;
-        setMessage(`正在润色：第 ${i + 1}/${sections.length} 篇章…`);
-        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议，禁止自定具体时间。';
-        const messages = [
-          { role: 'system', content: system },
-          { role: 'user', content: `请润色这一章内容：\n${original}` },
-        ];
+        setMessage(`正在润色：第 ${i + 1}/${sections.length} 篇章（两阶段生成）…`);
+        
         try {
-          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-          const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+          const polished = await twoStagePolish(original, token, i);
           if (polished) {
             setSections(prev => prev.map((s, idx) => idx === i ? { ...s, text: polished } : s));
           }
@@ -1942,7 +2102,8 @@ const CreateBiography = () => {
         }
       }
       setShowPreview(true);
-      setMessage('逐章润色完成，已生成下方预览（图文并茂，不可编辑）');
+      setMessage('逐章润色完成（两阶段生成：事实提取+文学化表达），已生成下方预览');
+      
       // 简介自动润色（可选）：仅当已有简介时尝试润色一遍
       if ((bioSummary || '').trim()) {
         try {
@@ -1996,7 +2157,132 @@ const CreateBiography = () => {
     }
   };
 
-  // 基于问答生成各个篇章（按阶段/顺序拆分），不动媒体
+  // 两阶段生成：第一阶段提取事实，第二阶段文学化表达
+  const twoStageGenerate = async (qaText, token, chapterIndex = null, selectedThemes = []) => {
+    // 第一阶段：提取事实清单
+    const stage1System = `你是一位严谨的事实提取专家。请从问答对话中提取用户回答里的纯粹事实信息。
+
+关键规则：
+1. **只提取用户（"我"/"A"）的回答内容**，完全忽略陪伴师/提问者的问题
+2. 将用户的回答转换为第三人称客观事实陈述
+3. 只提取明确提到的事实，不做任何推断或补充
+4. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
+5. 按时间顺序或逻辑顺序组织
+6. 用简洁的陈述句表达，每个事实一行
+7. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
+
+示例：
+问答对：Q: 外婆为你做过什么？ A: 外婆常为我烹制美食，最怀念农忙时期的炒土豆片。
+正确提取：{"facts": ["外婆常为我烹制美食", "最怀念的是农忙时期外婆炒的土豆片"]}
+错误提取：{"facts": ["陪伴师询问外婆做过什么", "外婆常为我烹制美食"]} ❌ 不要包含提问`;
+
+    const stage1User = `${qaText}\n\n请只提取用户回答（"我"/"A"）中的事实，完全忽略陪伴师/提问者的问题，仅输出JSON格式的事实清单。`;
+    
+    setMessage(chapterIndex !== null ? `第 ${chapterIndex + 1} 章：正在提取事实清单...` : '正在提取事实清单...');
+    
+    const resp1 = await retry(() => callSparkThrottled({
+      model: 'x1',
+      messages: [
+        { role: 'system', content: stage1System },
+        { role: 'user', content: stage1User },
+      ],
+      max_tokens: 1500,
+      temperature: 0.2, // 低温度，确保严格按事实
+      user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
+    }, token, { silentThrottle: true }));
+    
+    const raw1 = (resp1.data?.choices?.[0]?.message?.content || '').toString().trim();
+    
+    // 解析事实清单
+    let factsList = [];
+    try {
+      const parsed = JSON.parse(raw1);
+      if (Array.isArray(parsed.facts)) {
+        factsList = parsed.facts;
+      }
+    } catch (_) {
+      // 容错：尝试提取JSON
+      const start = raw1.indexOf('{');
+      const end = raw1.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        try {
+          const parsed = JSON.parse(raw1.slice(start, end + 1));
+          if (Array.isArray(parsed.facts)) {
+            factsList = parsed.facts;
+          }
+        } catch (_) {}
+      }
+    }
+    
+    if (factsList.length === 0) {
+      throw new Error('无法提取事实清单');
+    }
+    
+    // 第二阶段：文学化表达
+    const themeGuide = selectedThemes.length > 0 
+      ? `\n\n本段重点主题：${selectedThemes.join('、')}。请围绕这些主题组织叙事，但要自然融入，不要生硬堆砌。`
+      : '';
+    
+    const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
+
+【核心要求】
+1. 严格基于事实清单，不得添加任何新情节、新人物、新事件
+2. 输出纯粹的第一人称叙述，完全去除问答痕迹
+3. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
+4. 直接用"我"的视角自然叙述，就像在讲述自己的故事
+
+【叙事重构】
+5. 保留事实内容，但用场景化语言重构叙事
+6. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
+7. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+8. 通过场景重现、细节刻画来展现情绪，而非直接陈述
+
+【情感深度】
+9. 使用第一人称回忆口吻，加入内心反思与当下的感悟
+10. 让读者感受到时间沉淀后的思考和情感
+
+【文风把控】
+11. 语言自然流畅，保持朴素真挚的风格
+12. 避免过度煽情、华丽辞藻或抽象概念堆砌
+13. 合理组织段落，使叙述连贯有节奏，张弛有度
+
+【输出规范】
+14. 仅输出第一人称叙述段落，不要标题、编号、总结、过渡语
+15. 输出字数：${getGenMaxChars()}字以内${themeGuide}`;
+
+    const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
+    const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
+
+关键要求：
+✓ 直接用"我"的视角叙述，像讲述自己的故事
+✓ 完全去除问答痕迹，不要出现"陪伴师""提问""回答"等字眼  
+✓ 用情感或主题线索重构叙事，不要简单的时间罗列
+✓ 加入回忆口吻和内心感悟
+✗ 不得添加任何清单中没有的内容
+
+示例转换：
+事实：外婆常为我烹制美食；最怀念农忙时期的炒土豆片；外公、舅舅和姨姨一起进餐
+错误写法：陪伴师询问...随后回答...继而追问... ❌
+正确写法：外婆的手艺，是我童年最温暖的记忆。即便在农忙时节，她依然会为我们炒上一盘土豆片。那时候，外公、舅舅和姨姨都围坐在桌旁... ✓`;
+    
+    setMessage(chapterIndex !== null ? `第 ${chapterIndex + 1} 章：正在进行文学化改写...` : '正在进行文学化改写...');
+    
+    const resp2 = await retry(() => callSparkThrottled({
+      model: 'x1',
+      messages: [
+        { role: 'system', content: stage2System },
+        { role: 'user', content: stage2User },
+      ],
+      max_tokens: 1500,
+      temperature: 0.6, // 适中温度，保持创造性表达
+      user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
+    }, token, { silentThrottle: true }));
+    
+    const finalText = (resp2.data?.choices?.[0]?.message?.content || '').toString().trim();
+    return finalText;
+  };
+
+  // 基于问答生成各个篇章（按阶段/顺序拆分），不动媒体 - 使用两阶段生成
   const handleGenerateChaptersFromQA = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -2032,49 +2318,51 @@ const CreateBiography = () => {
       // 把现有章节媒体暂存，后续仅替换 text
       const mediaSnapshots = sections.map(s => s.media || []);
 
-      // 让模型基于问答对，生成"分章文本数组"，与现有章节数对齐；若生成数量不同，则就近截断/补空
-      const system = '你是一位资深传记写作者。现在请把给定的问答对拆分整理为若干"章节正文"，每个章节是一段自然的第一人称叙述，不要列表/编号/标题，不编造事实，保留细节，风格朴素真挚。并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”。遇到时间冲突仅提示可能区间与核对建议。只输出JSON数组，每个元素是字符串，对应各章节正文。不要任何其它文字。';
-      const userMsg = `问答对如下：\n${qaPairs.map((p,i)=>`Q${i+1}：${p.q}\nA${i+1}：${p.a}`).join('\n')}\n\n请输出JSON数组（每个元素是一章的正文）。`;
-      const resp = await retry(() => callSparkThrottled({
-        model: 'x1',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: userMsg },
-        ],
-        max_tokens: 1800,
-        temperature: 0.4,
-        user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
-      }, token, { silentThrottle: true }));
-      const raw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-      let arr = [];
-      // 容错解析：截取首尾中括号尝试解析
-      const tryParseArray = (text) => {
-        try { return JSON.parse(text); } catch (_) {}
-        const start = text.indexOf('[');
-        const end = text.lastIndexOf(']');
-        if (start !== -1 && end !== -1 && end > start) {
-          const sub = text.slice(start, end + 1);
-          try { return JSON.parse(sub); } catch (_) {}
+      // 先确定章节分组（按阶段或对话轮数分）
+      const chapterQAs = [];
+      const qaPairsPerChapter = Math.ceil(qaPairs.length / sections.length);
+      for (let i = 0; i < sections.length; i++) {
+        const start = i * qaPairsPerChapter;
+        const end = Math.min(start + qaPairsPerChapter, qaPairs.length);
+        const chapterPairs = qaPairs.slice(start, end);
+        if (chapterPairs.length > 0) {
+          chapterQAs.push(chapterPairs);
         }
-        return null;
-      };
-      const parsed = tryParseArray(raw);
-      if (Array.isArray(parsed)) arr = parsed; 
-      if (!Array.isArray(arr) || arr.length === 0) {
+      }
+
+      // 逐章使用两阶段生成
+      const generatedChapters = [];
+      for (let i = 0; i < chapterQAs.length; i++) {
+        const pairs = chapterQAs[i];
+        const qaText = `问答对如下：\n${pairs.map((p, idx) => `Q${idx + 1}：${p.q}\nA${idx + 1}：${p.a}`).join('\n')}`;
+        
+        // 获取该章节用户选择的主题
+        const chapterThemes = userThemes[i] || [];
+        
+        try {
+          const chapterText = await twoStageGenerate(qaText, token, i, chapterThemes);
+          generatedChapters.push(chapterText);
+        } catch (err) {
+          console.error(`Chapter ${i} generation failed:`, err);
+          generatedChapters.push(''); // 失败章节留空
+        }
+      }
+
+      if (generatedChapters.length === 0) {
         setMessage('生成篇章失败，请重试');
         setIsGeneratingChapters(false);
         return;
       }
 
-      // 仅为"空白篇章"写入内容，不覆盖已有正文；若问答生成的数组比现有篇章更多，则将多出的内容忽略（不在此新增篇章）
+      // 仅为"空白篇章"写入内容，不覆盖已有正文
       setSections(prev => prev.map((s, i) => {
         const isEmpty = !((s.text || '').toString().trim().length > 0);
-        if (isEmpty && i < arr.length) {
-          return { ...s, text: (arr[i] || '').toString().trim(), media: mediaSnapshots[i] || s.media || [] };
+        if (isEmpty && i < generatedChapters.length) {
+          return { ...s, text: generatedChapters[i] || '', media: mediaSnapshots[i] || s.media || [] };
         }
         return s;
       }));
-      setMessage('已根据问答填充空白篇章（未覆盖已有内容）');
+      setMessage('已根据问答填充空白篇章（两阶段生成，未覆盖已有内容）');
     } catch (err) {
       console.error('Generate chapters from QA error:', err);
       setMessage('生成篇章失败：' + (err.response?.data?.message || err.message));
@@ -2253,6 +2541,141 @@ const CreateBiography = () => {
 
   return (
     <div className="min-h-screen py-4 sm:py-6">
+      {/* 主题选择模态框 */}
+      {showThemeSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowThemeSelector(false); }}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">选择您想重点记录的主题</h2>
+              <p className="text-sm text-gray-600">为「{getStageLabelByIndex(currentThemeStageIndex)}」阶段选择您认为重要的主题，系统会据此提出更有针对性的问题。</p>
+              <p className="text-xs text-gray-500 mt-1">建议选择 2-4 个主题，也可以跳过直接开始。</p>
+            </div>
+            
+            <div className="mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(STAGE_THEMES[currentThemeStageIndex] || []).map((theme) => {
+                  const isSelected = (userThemes[currentThemeStageIndex] || []).includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => {
+                        setUserThemes(prev => {
+                          const stageThemes = prev[currentThemeStageIndex] || [];
+                          if (stageThemes.includes(theme)) {
+                            return { ...prev, [currentThemeStageIndex]: stageThemes.filter(t => t !== theme) };
+                          } else {
+                            return { ...prev, [currentThemeStageIndex]: [...stageThemes, theme] };
+                          }
+                        });
+                      }}
+                      className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 border-blue-700 text-white' 
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
+                      }`}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">自定义主题（可选）</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="输入您的自定义主题，然后点击添加"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      const custom = e.target.value.trim();
+                      setUserThemes(prev => {
+                        const stageThemes = prev[currentThemeStageIndex] || [];
+                        if (!stageThemes.includes(custom)) {
+                          return { ...prev, [currentThemeStageIndex]: [...stageThemes, custom] };
+                        }
+                        return prev;
+                      });
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    const input = e.target.previousElementSibling;
+                    const custom = (input.value || '').trim();
+                    if (custom) {
+                      setUserThemes(prev => {
+                        const stageThemes = prev[currentThemeStageIndex] || [];
+                        if (!stageThemes.includes(custom)) {
+                          return { ...prev, [currentThemeStageIndex]: [...stageThemes, custom] };
+                        }
+                        return prev;
+                      });
+                      input.value = '';
+                    }
+                  }}
+                  className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+            
+            {(userThemes[currentThemeStageIndex] || []).length > 0 && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">已选择的主题：</p>
+                <div className="flex flex-wrap gap-2">
+                  {(userThemes[currentThemeStageIndex] || []).map((theme) => (
+                    <span key={theme} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                      {theme}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserThemes(prev => ({
+                            ...prev,
+                            [currentThemeStageIndex]: (prev[currentThemeStageIndex] || []).filter(t => t !== theme)
+                          }));
+                        }}
+                        className="hover:bg-blue-700 rounded-full"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  // 跳过主题选择，使用默认问题
+                  setUserThemes(prev => ({ ...prev, [currentThemeStageIndex]: [] }));
+                  handleThemeSelectionComplete();
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                跳过
+              </button>
+              <button
+                type="button"
+                onClick={handleThemeSelectionComplete}
+                disabled={(userThemes[currentThemeStageIndex] || []).length === 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                开始访谈
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="card max-w-4xl mx-auto w-full p-4 sm:p-6">
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
@@ -2449,6 +2872,31 @@ const CreateBiography = () => {
                       )}
                   </div>
                   </div>
+                  {/* 显示已选主题 */}
+                  {(userThemes[currentSectionIndex] || []).length > 0 && (
+                    <div className="mb-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-xs font-medium text-blue-900">重点主题：</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentThemeStageIndex(currentSectionIndex);
+                            setShowThemeSelector(true);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          重新选择
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(userThemes[currentSectionIndex] || []).map((theme) => (
+                          <span key={theme} className="inline-block px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                            {theme}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <input
                     type="text"
                     className="input w-full mb-2"
