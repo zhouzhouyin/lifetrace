@@ -329,6 +329,30 @@ const CreateBiography = () => {
     } catch (_) {}
   }, []);
 
+  // 导入原始采访数据
+  useEffect(() => {
+    try {
+      const importData = localStorage.getItem('importInterviewData');
+      if (importData) {
+        const data = JSON.parse(importData);
+        if (data.title) {
+          setBioTitle(data.title);
+        }
+        if (data.sections && Array.isArray(data.sections)) {
+          setSections(data.sections);
+        }
+        if (data.themes) {
+          setUserThemes(data.themes);
+        }
+        localStorage.removeItem('importInterviewData');
+        setMessage('已导入原始采访记录，您可以重新生成传记内容');
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (err) {
+      console.error('Import interview data error:', err);
+    }
+  }, []);
+
   // 每日回首粘贴板：从本地或路由 state 写入对应篇章
   useEffect(() => {
     try {
@@ -386,7 +410,7 @@ const CreateBiography = () => {
       });
       // 清空粘贴板
       localStorage.removeItem('dailyPasteboard');
-      setMessage('已从"每日回首"粘贴最新问答到对应篇章');
+      setMessage('已粘贴最新问答到对应篇章');
       setTimeout(() => setMessage(''), 1500);
     } catch (_) {}
   }, []);
@@ -2485,7 +2509,7 @@ ${userStyleRules}
   };
 
   // 上传传记
-  const handleUpload = async () => {
+  const handleUpload = async (interviewData = null) => {
     const token = localStorage.getItem('token');
     if (!token) {
       setMessage('请先登录');
@@ -2507,6 +2531,18 @@ ${userStyleRules}
             content: bioText,
             summary: bioSummary,
             sections,
+            interviewData: interviewData || sections.map((s, idx) => {
+              const text = (s.text || '').toString();
+              if (text.includes('陪伴师：') || text.includes('我：')) {
+                return {
+                  stage: lifeStages[idx],
+                  title: s.title || '',
+                  content: text,
+                  themes: userThemes[idx] || []
+                };
+              }
+              return null;
+            }).filter(Boolean), // 自动生成采访数据
             author: username || (localStorage.getItem('username') || ''),
             isPublic: publicBio,
             cloudStatus: 'Uploaded',
@@ -2577,6 +2613,21 @@ ${userStyleRules}
       setMessage('请至少回答一个问题或输入自由传记内容');
       return;
     }
+    
+    // 保存原始问答对话作为采访记录（仅保存包含问答的章节）
+    const interviewSections = sections.map((s, idx) => {
+      const text = (s.text || '').toString();
+      if (text.includes('陪伴师：') || text.includes('我：')) {
+        return {
+          stage: lifeStages[idx],
+          title: s.title || '',
+          content: text,
+          themes: userThemes[idx] || []
+        };
+      }
+      return null;
+    }).filter(Boolean);
+    
     // 1) 本地保存（静默，不把本地草稿加入云端列表）
     try {
       const localBiographies = JSON.parse(localStorage.getItem('localBiographies') || '[]');
@@ -2586,6 +2637,7 @@ ${userStyleRules}
         content: bioText,
         summary: bioSummary,
         sections,
+        interviewData: interviewSections, // 保存原始采访数据
         isPublic: false,
         cloudStatus: 'Not Uploaded',
         type: 'Biography',
@@ -2596,8 +2648,8 @@ ${userStyleRules}
       localStorage.setItem('localBiographies', JSON.stringify(localBiographies));
     } catch (_) { /* ignore local save error */ }
 
-    // 2) 上传云端
-    await handleUpload();
+    // 2) 上传云端（传递原始采访数据）
+    await handleUpload(interviewSections);
   };
 
   // 若未同意且弹窗开启，优先渲染强制同意界面，屏蔽其它功能
@@ -2931,9 +2983,6 @@ ${userStyleRules}
                           </span>
                         ))}
                       </div>
-                      <p className="text-xs text-blue-700 mt-1">
-                        💡 提示：使用"每日回首"时，建议选择相同的主题/事件，以便素材更贴合
-                      </p>
                     </div>
                   )}
                   <input
@@ -3020,47 +3069,6 @@ ${userStyleRules}
                     </label>
                     <button
                       type="button"
-                      className="btn btn-tertiary w-full sm:w-auto text-xs"
-                      onClick={async () => {
-                        // 显示每日回首素材统计
-                        try {
-                          const token = localStorage.getItem('token');
-                          if (!token) { setMessage('请先登录'); return; }
-                          
-                          const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
-                          const allMemos = Array.isArray(res.data) ? res.data : [];
-                          const dailyMemos = allMemos.filter(m => {
-                            const tags = Array.isArray(m.tags) ? m.tags : [];
-                            return tags.includes('每日回首');
-                          });
-                          
-                          if (dailyMemos.length === 0) {
-                            setMessage('暂无每日回首素材');
-                            setTimeout(() => setMessage(''), 2000);
-                            return;
-                          }
-                          
-                          // 按阶段统计
-                          const counts = {};
-                          lifeStages.forEach((_, idx) => { counts[idx] = 0; });
-                          dailyMemos.forEach(m => {
-                            const tags = Array.isArray(m.tags) ? m.tags : [];
-                            const stageIdx = lifeStages.findIndex(s => tags.includes(s));
-                            if (stageIdx >= 0) counts[stageIdx]++;
-                          });
-                          
-                          const summary = lifeStages.map((stage, idx) => counts[idx] > 0 ? `${stage}${counts[idx]}条` : '').filter(Boolean).join('、');
-                          setMessage(`📊 每日回首素材：共${dailyMemos.length}条（${summary}）。这些素材会在生成传记时作为参考。`);
-                          setTimeout(() => setMessage(''), 5000);
-                        } catch (err) {
-                          console.error('Check daily reflections failed:', err);
-                        }
-                      }}
-                    >
-                      📊 查看每日回首素材
-                    </button>
-                    <button
-                      type="button"
                       className="btn btn-primary w-full sm:w-auto"
                       disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
                       onClick={async () => {
@@ -3107,7 +3115,7 @@ ${userStyleRules}
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                             // 中心提示：请核查并修改...
-                            const tip = '已生成（已参考每日回首素材）。请核查并修改任何与您记忆不符的内容。';
+                            const tip = '已生成内容。请核查并修改任何与您记忆不符的内容。';
                             setCenterToast(tip);
                             setTimeout(() => setCenterToast(''), 2000);
                           }

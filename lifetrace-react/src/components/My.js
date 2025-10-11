@@ -397,11 +397,13 @@ const My = () => {
   // 已移除“我的随笔”展示
 
   // Tabs, pagination, and batch selection states
-  const [activeTab, setActiveTab] = useState('overview'); // overview | memos | biographies | photos | videos | audios | settings
+  const [activeTab, setActiveTab] = useState('overview'); // overview | memos | biographies | interviews | photos | videos | audios | settings
   const [pageMemos, setPageMemos] = useState(1);
   const [sizeMemos, setSizeMemos] = useState(20);
   const [pageBios, setPageBios] = useState(1);
   const [sizeBios, setSizeBios] = useState(20);
+  const [pageInterviews, setPageInterviews] = useState(1);
+  const [sizeInterviews, setSizeInterviews] = useState(20);
   const [pagePhotos, setPagePhotos] = useState(1);
   const [sizePhotos, setSizePhotos] = useState(20);
   const [pageVideos, setPageVideos] = useState(1);
@@ -410,6 +412,7 @@ const My = () => {
   const [sizeAudios, setSizeAudios] = useState(20);
   const [selectedMemos, setSelectedMemos] = useState(new Set());
   const [selectedBios, setSelectedBios] = useState(new Set());
+  const [selectedInterviews, setSelectedInterviews] = useState(new Set());
   const [selectedPhotos, setSelectedPhotos] = useState(new Set());
   const [selectedVideos, setSelectedVideos] = useState(new Set());
   const [selectedAudios, setSelectedAudios] = useState(new Set());
@@ -557,6 +560,7 @@ const My = () => {
         ['overview','总览'],
         ['memos','随手记'],
         ['biographies','我的记录'],
+        ['interviews','原始采访'],
         ['photos','照片'],
         ['videos','视频'],
         ['audios','音频'],
@@ -666,6 +670,108 @@ const My = () => {
     );
   };
 
+  const lifeStages = ['童年', '少年', '青年', '中年', '壮年', '老年', '晚年'];
+
+  const renderInterviews = () => {
+    // 获取所有包含采访数据的传记
+    const interviewBios = biographies.filter(bio => bio.interviewData && bio.interviewData.length > 0);
+    const { items, totalPages, page } = paginate(interviewBios, pageInterviews, sizeInterviews);
+    
+    return (
+      <div>
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-gray-700">
+            这里保存了您与情感陪伴师的原始对话记录，是您珍贵的采访素材。您可以随时将这些素材重新导入到创作传记中生成新的内容。
+          </p>
+        </div>
+        
+        {items.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            暂无原始采访记录
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {items.map((bio) => (
+              <div key={bio.id || bio._id} className="card p-4 bg-white border border-gray-200">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-lg">{bio.title}</h4>
+                    <p className="text-sm text-gray-500">
+                      {new Date(bio.createdAt || bio.timestamp).toLocaleString('zh-CN')}
+                      {bio.interviewData && ` · ${bio.interviewData.length} 个阶段采访`}
+                    </p>
+                  </div>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => {
+                      // 将采访数据导入到CreateBiography
+                      const importData = {
+                        title: bio.title,
+                        sections: Array.from({ length: lifeStages.length }, (_, idx) => {
+                          const interviewForStage = bio.interviewData.find(i => i.stage === lifeStages[idx]);
+                          return interviewForStage ? {
+                            title: interviewForStage.title || '',
+                            text: interviewForStage.content || '',
+                            media: []
+                          } : { title: '', text: '', media: [] };
+                        }),
+                        themes: bio.interviewData.reduce((acc, interview) => {
+                          const stageIndex = lifeStages.indexOf(interview.stage);
+                          if (stageIndex >= 0) {
+                            acc[stageIndex] = interview.themes || [];
+                          }
+                          return acc;
+                        }, {})
+                      };
+                      localStorage.setItem('importInterviewData', JSON.stringify(importData));
+                      navigate('/create');
+                    }}
+                  >
+                    导入创作
+                  </button>
+                </div>
+                
+                {/* 显示各阶段采访概要 */}
+                {bio.interviewData && bio.interviewData.length > 0 && (
+                  <div className="space-y-2">
+                    {bio.interviewData.slice(0, 3).map((interview, idx) => (
+                      <div key={idx} className="text-sm">
+                        <span className="font-medium text-gray-700">{interview.stage}：</span>
+                        <span className="text-gray-600">
+                          {interview.content.substring(0, 50)}...
+                        </span>
+                        {interview.themes && interview.themes.length > 0 && (
+                          <span className="ml-2">
+                            {interview.themes.map(theme => (
+                              <span key={theme} className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full mr-1">
+                                {theme}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                    {bio.interviewData.length > 3 && (
+                      <p className="text-xs text-gray-500">还有 {bio.interviewData.length - 3} 个阶段...</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button onClick={() => setPageInterviews(p => Math.max(p - 1, 1))} disabled={page <= 1}>上一页</button>
+            <span>{page} / {totalPages}</span>
+            <button onClick={() => setPageInterviews(p => Math.min(p + 1, totalPages))} disabled={page >= totalPages}>下一页</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderFiles = (which, list, pageState, sizeState, setPageState, setSizeState, selectedSet, setSelectedSet) => {
     const { items, totalPages, page } = paginate(list, pageState, sizeState);
     const toggle = (id) => setSelectedSet(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
@@ -728,6 +834,7 @@ const My = () => {
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'memos' && renderMemos()}
             {activeTab === 'biographies' && renderBios()}
+            {activeTab === 'interviews' && renderInterviews()}
             {activeTab === 'photos' && renderFiles('photos', photos, pagePhotos, sizePhotos, setPagePhotos, setSizePhotos, selectedPhotos, setSelectedPhotos)}
             {activeTab === 'videos' && renderFiles('videos', videos, pageVideos, sizeVideos, setPageVideos, setSizeVideos, selectedVideos, setSelectedVideos)}
             {activeTab === 'audios' && renderFiles('audios', audios, pageAudios, sizeAudios, setPageAudios, setSizeAudios, selectedAudios, setSelectedAudios)}
