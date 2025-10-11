@@ -145,15 +145,22 @@ const CreateBiography = () => {
     } catch (_) {}
   };
 
-  // 风格偏好（语气/严格/具体/长度）
-  // 文风（替代原"语气"）：plain(平实客观) | warm(温情内敛) | poetic(诗意浪漫) | humorous(幽默风趣)
+  // 风格偏好（文风/严格/具体/长度/自定义文风）
   const [prefTone, setPrefTone] = useState(() => {
-    try { return localStorage.getItem('ai_pref_tone') || 'plain'; } catch (_) { return 'plain'; }
+    try { return localStorage.getItem('ai_pref_tone') || 'warm'; } catch (_) { return 'warm'; }
   });
-  // 固定：严格按事实、具体度高（隐藏选项）
-  const [prefStrict] = useState('strict');
-  const [prefConcrete] = useState('high');
-  const [prefLength] = useState('short'); // 固定为不渲染（短）
+  const [prefStrict, setPrefStrict] = useState(() => {
+    try { return localStorage.getItem('ai_pref_strict') || 'strict'; } catch (_) { return 'strict'; }
+  });
+  const [prefConcrete, setPrefConcrete] = useState(() => {
+    try { return localStorage.getItem('ai_pref_concrete') || 'high'; } catch (_) { return 'high'; }
+  });
+  const [prefLength, setPrefLength] = useState(() => {
+    try { return localStorage.getItem('ai_pref_length') || 'medium'; } catch (_) { return 'medium'; }
+  });
+  const [customTone, setCustomTone] = useState(() => {
+    try { return localStorage.getItem('ai_custom_tone') || ''; } catch (_) { return ''; }
+  });
   const [showStylePanel, setShowStylePanel] = useState(() => {
     try { return !(window && window.innerWidth < 640); } catch (_) { return true; }
   });
@@ -162,10 +169,10 @@ const CreateBiography = () => {
   useEffect(() => {
     try {
       localStorage.setItem('ai_pref_tone', prefTone);
-      // 固定值写入，避免后端历史值干扰
-      localStorage.setItem('ai_pref_strict', 'strict');
-      localStorage.setItem('ai_pref_concrete', 'high');
+      localStorage.setItem('ai_pref_strict', prefStrict);
+      localStorage.setItem('ai_pref_concrete', prefConcrete);
       localStorage.setItem('ai_pref_length', prefLength);
+      localStorage.setItem('ai_custom_tone', customTone);
     } catch (_) {}
     // 同步后端
     (async () => {
@@ -174,13 +181,14 @@ const CreateBiography = () => {
         if (!token) return;
         await axios.post('/api/user/prefs', {
           tone: prefTone,
-          strict: 'strict',
-          concreteness: 'high',
+          strict: prefStrict,
+          concreteness: prefConcrete,
           length: prefLength,
+          customTone: customTone,
         }, { headers: { Authorization: `Bearer ${token}` } });
       } catch (_) {}
     })();
-  }, [prefTone, prefStrict, prefConcrete, prefLength]);
+  }, [prefTone, prefStrict, prefConcrete, prefLength, customTone]);
 
   // 启动时尝试从后端拉取（覆盖本地默认）
   useEffect(() => {
@@ -191,27 +199,58 @@ const CreateBiography = () => {
         const res = await axios.get('/api/user/prefs', { headers: { Authorization: `Bearer ${token}` } });
         const p = res.data || {};
         if (p.tone) setPrefTone(p.tone);
-        // 严格与具体保持固定
+        if (p.strict) setPrefStrict(p.strict);
+        if (p.concreteness) setPrefConcrete(p.concreteness);
+        if (p.length) setPrefLength(p.length);
+        if (p.customTone) setCustomTone(p.customTone);
       } catch (_) {}
     })();
   }, []);
 
   // 构建风格约束（提问/生成）
   const buildStyleRules = (kind = 'ask') => {
-    // 文风
-    const styleText = (
+    // 文风（支持自定义）
+    let styleText = '';
+    if (customTone && customTone.trim()) {
+      styleText = `文风${customTone.trim()}`;
+    } else {
+      styleText = (
       prefTone === 'warm' ? '文风温情内敛、细腻但不煽情' :
       prefTone === 'poetic' ? '文风诗意、比喻克制、意境自然' :
       prefTone === 'humorous' ? '文风幽默风趣但分寸得体' :
-      '文风平实客观、真实不加修饰'
-    );
-    // 固定：严格事实/更具体
-    const strictText = '绝不脑补、不得新增或推断未出现的细节';
-    const concreteText = '强调具体人/事/时/地/物与动作细节，避免空泛与抽象词';
+        prefTone === 'literary' ? '文风文学化、富有感染力但不过度修饰' :
+        prefTone === 'plain' ? '文风平实客观、真实不加修饰' :
+        '文风温情内敛、细腻但不煽情'
+      );
+    }
+    
+    // 严格度
+    const strictText = prefStrict === 'strict' 
+      ? '绝不脑补、不得新增或推断未出现的细节' 
+      : prefStrict === 'moderate'
+      ? '基于已知事实可适度推断合理细节，但需谨慎'
+      : '可根据上下文适当补充场景细节';
+    
+    // 具体度
+    const concreteText = prefConcrete === 'high'
+      ? '强调具体人/事/时/地/物与动作细节，避免空泛与抽象词'
+      : prefConcrete === 'medium'
+      ? '注重具体细节，适当使用抽象概括'
+      : '以抽象概括为主，细节为辅';
+    
+    // 长度
     const lenAsk = prefLength === 'long' ? '反馈≤50字，问题≤80字' : (prefLength === 'medium' ? '反馈≤40字，问题≤60字' : '反馈≤30字，问题≤40字');
-    const lenGen = prefLength === 'long' ? '本段≤1200字（仅扩展已有事实的表达，不得新增内容）' : (prefLength === 'medium' ? '本段≤800字（仅扩展已有事实的表达，不得新增内容）' : '本段≤500字（仅整理已有事实的表达，不得新增内容）');
-    const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重（平实客观或温情内敛），避免不合时宜的幽默或过度修辞。';
-    const noFill = '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断。';
+    const lenGen = prefLength === 'long' ? '本段≤1200字' : (prefLength === 'medium' ? '本段≤800字' : '本段≤500字');
+    
+    const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重，避免不合时宜的幽默或过度修辞。';
+    
+    // 根据严格度调整
+    const noFill = prefStrict === 'strict' 
+      ? '长度提升不得以新增事实为代价，禁止为凑长度而虚构或推断' 
+      : prefStrict === 'moderate'
+      ? '可适度推断合理细节以丰富叙述，但需谨慎'
+      : '可根据上下文补充场景细节以增强可读性';
+    
     const investigative = '侦查：围绕"谁/何时/何地/因果/动作/对话/证据"提问，但优先聚焦对人生有深远影响的关键时刻，避免抽象词与琐碎细节。';
     const strengths = '优势：刻画能力、选择、韧性与体察，克制不煽情。深挖关键决策背后的思考过程、艰难抉择中的内心挣扎。';
     const conflict = '冲突：时代与个人叙述不一致时，不下结论，给出可能区间/可能解释，提示核对。';
@@ -226,9 +265,15 @@ const CreateBiography = () => {
     return prefLength === 'long' ? 1200 : (prefLength === 'medium' ? 800 : 500);
   };
 
-  // 硬性约束：绝不脑补、只按事实、语言克制
+  // 硬性约束：根据用户设置调整
   const buildHardConstraints = () => {
-    return '只使用用户提供的信息；不要添加任何未提及或猜测性的细节、场景、情感或人物。信息不足时用中性过渡语，不脑补。文风平实克制，避免宏大/煽情。发现时间节点疑似错误：给出“可能区间/两种可能解释”，提示用户核对，不得自定时间。遇到价值/选择冲突：中立呈现各方约束与考虑，提供温和的自我解释与关系建议，不评判。';
+    if (prefStrict === 'strict') {
+      return '只使用用户提供的信息；不要添加任何未提及或猜测性的细节、场景、情感或人物。信息不足时用中性过渡语，不脑补。发现时间节点疑似错误：给出"可能区间/两种可能解释"，提示用户核对，不得自定时间。遇到价值/选择冲突：中立呈现各方约束与考虑，提供温和的自我解释与关系建议，不评判。';
+    } else if (prefStrict === 'moderate') {
+      return '主要使用用户提供的信息，可基于已知事实适度推断合理细节。发现时间节点疑似错误：给出"可能区间/两种可能解释"，提示用户核对。遇到价值/选择冲突：中立呈现各方约束与考虑，提供温和的建议。';
+    } else {
+      return '基于用户提供的信息，可根据上下文适当补充场景细节以增强可读性。遇到冲突或疑问时，提供合理的解释和建议。';
+    }
   };
 
   // 显示用阶段标签：统一为"xxx回忆"（未来愿望保持不变）
@@ -1924,19 +1969,24 @@ const CreateBiography = () => {
   // 两阶段润色：第一阶段提取事实，第二阶段文学化表达
   const twoStagePolish = async (originalText, token, chapterIndex, selectedThemes = []) => {
     // 第一阶段：从原文提取事实清单
-    const stage1System = `你是一位严谨的事实提取专家。请从传记段落中提取纯粹的事实信息，以结构化方式输出。
+    const extractionRule = prefStrict === 'strict'
+      ? '只提取明确提到的事实，不做任何推断或补充'
+      : prefStrict === 'moderate'
+      ? '提取明确提到的事实，可基于上下文适度推断隐含的合理细节'
+      : '提取事实并可根据上下文推断合理的场景细节';
+    
+    const stage1System = `你是一位${prefStrict === 'strict' ? '严谨' : '专业'}的事实提取专家。请从传记段落中提取事实信息，以结构化方式输出。
 
 关键规则：
-1. 只提取明确提到的事实，不做任何推断或补充
+1. ${extractionRule}
 2. 如果原文包含问答形式，只提取回答者的内容，忽略提问
 3. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
 4. 按时间顺序或逻辑顺序组织
 5. 用简洁的陈述句表达，每个事实一行
 6. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
-7. 不要添加任何原文中未出现的内容
-8. 去除"陪伴师""提问""回答"等问答痕迹`;
+7. 去除"陪伴师""提问""回答"等问答痕迹`;
 
-    const stage1User = `原文：\n${originalText}\n\n请提取上述段落中的所有事实（忽略问答痕迹），仅输出JSON格式的事实清单。`;
+    const stage1User = `原文：\n${originalText}\n\n请提取上述段落中的事实（忽略问答痕迹），仅输出JSON格式的事实清单。`;
     
     setMessage(`第 ${chapterIndex + 1} 章：正在提取事实清单...`);
     
@@ -1983,33 +2033,32 @@ const CreateBiography = () => {
     const themeGuidePolish = selectedThemes.length > 0 
       ? `\n\n本段重点主题/事件：${selectedThemes.join('、')}。请围绕这些主题或事件组织叙事，但要自然融入，不要生硬堆砌。`
       : '';
+    
+    // 获取用户风格设置
+    const userStyleRulesPolish = buildStyleRules('gen');
       
     const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
 
 【核心要求】
-1. 严格基于事实清单，不得添加任何新情节、新人物、新事件
-2. 输出纯粹的第一人称叙述，完全去除问答痕迹
-3. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
-4. 直接用"我"的视角自然叙述，就像在讲述自己的故事
+1. 输出纯粹的第一人称叙述，完全去除问答痕迹
+2. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
+3. 直接用"我"的视角自然叙述，就像在讲述自己的故事
 
 【叙事重构】
-5. 保留事实内容，但用场景化语言重构叙事
-6. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
-7. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
-8. 通过场景重现、细节刻画来展现情绪，而非直接陈述
+4. 保留事实内容，但用场景化语言重构叙事
+5. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
+6. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+7. 通过场景重现、细节刻画来展现情绪，而非直接陈述
 
 【情感深度】
-9. 使用第一人称回忆口吻，加入内心反思与当下的感悟
-10. 让读者感受到时间沉淀后的思考和情感
+8. 使用第一人称回忆口吻，加入内心反思与当下的感悟
+9. 让读者感受到时间沉淀后的思考和情感
 
-【文风把控】
-11. 语言自然流畅，保持朴素真挚的风格
-12. 避免过度煽情、华丽辞藻或抽象概念堆砌
-13. 合理组织段落，使叙述连贯有节奏，张弛有度
+【用户风格设置】
+${userStyleRulesPolish}
 
 【输出规范】
-14. 仅输出第一人称叙述段落，不要标题、编号、总结、过渡语
-15. 输出字数：5000字以内${themeGuidePolish}`;
+仅输出第一人称叙述段落，不要标题、编号、总结、过渡语${themeGuidePolish}`;
 
     const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
@@ -2133,12 +2182,18 @@ const CreateBiography = () => {
   // 两阶段生成：第一阶段提取事实，第二阶段文学化表达
   const twoStageGenerate = async (qaText, token, chapterIndex = null, selectedThemes = []) => {
     // 第一阶段：提取事实清单
-    const stage1System = `你是一位严谨的事实提取专家。请从问答对话中提取用户回答里的纯粹事实信息。
+    const extractionRule = prefStrict === 'strict'
+      ? '只提取明确提到的事实，不做任何推断或补充'
+      : prefStrict === 'moderate'
+      ? '提取明确提到的事实，可基于上下文适度推断隐含的合理细节'
+      : '提取事实并可根据上下文推断合理的场景细节';
+    
+    const stage1System = `你是一位${prefStrict === 'strict' ? '严谨' : '专业'}的事实提取专家。请从问答对话中提取用户回答里的事实信息。
 
 关键规则：
 1. **只提取用户（"我"/"A"）的回答内容**，完全忽略陪伴师/提问者的问题
 2. 将用户的回答转换为第三人称客观事实陈述
-3. 只提取明确提到的事实，不做任何推断或补充
+3. ${extractionRule}
 4. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
 5. 按时间顺序或逻辑顺序组织
 6. 用简洁的陈述句表达，每个事实一行
@@ -2196,32 +2251,31 @@ const CreateBiography = () => {
       ? `\n\n本段重点主题/事件：${selectedThemes.join('、')}。请围绕这些主题或事件组织叙事，但要自然融入，不要生硬堆砌。`
       : '';
     
+    // 获取用户风格设置
+    const userStyleRules = buildStyleRules('gen');
+    
     const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
 
 【核心要求】
-1. 严格基于事实清单，不得添加任何新情节、新人物、新事件
-2. 输出纯粹的第一人称叙述，完全去除问答痕迹
-3. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
-4. 直接用"我"的视角自然叙述，就像在讲述自己的故事
+1. 输出纯粹的第一人称叙述，完全去除问答痕迹
+2. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
+3. 直接用"我"的视角自然叙述，就像在讲述自己的故事
 
 【叙事重构】
-5. 保留事实内容，但用场景化语言重构叙事
-6. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
-7. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
-8. 通过场景重现、细节刻画来展现情绪，而非直接陈述
+4. 保留事实内容，但用场景化语言重构叙事
+5. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
+6. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+7. 通过场景重现、细节刻画来展现情绪，而非直接陈述
 
 【情感深度】
-9. 使用第一人称回忆口吻，加入内心反思与当下的感悟
-10. 让读者感受到时间沉淀后的思考和情感
+8. 使用第一人称回忆口吻，加入内心反思与当下的感悟
+9. 让读者感受到时间沉淀后的思考和情感
 
-【文风把控】
-11. 语言自然流畅，保持朴素真挚的风格
-12. 避免过度煽情、华丽辞藻或抽象概念堆砌
-13. 合理组织段落，使叙述连贯有节奏，张弛有度
+【用户风格设置】
+${userStyleRules}
 
 【输出规范】
-14. 仅输出第一人称叙述段落，不要标题、编号、总结、过渡语
-15. 输出字数：${getGenMaxChars()}字以内${themeGuide}`;
+仅输出第一人称叙述段落，不要标题、编号、总结、过渡语${themeGuide}`;
 
     const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
@@ -2821,26 +2875,62 @@ const CreateBiography = () => {
               </button>
               {showStylePanel && (
                 <div className="p-3 sm:p-4 border-t border-gray-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block text-sm mb-1">文风</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* 文风选择 */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">文风风格</label>
                       <select className="input" value={prefTone} onChange={(e)=>setPrefTone(e.target.value)}>
-                        <option value="plain">平实客观</option>
                         <option value="warm">温情内敛</option>
+                        <option value="plain">平实客观</option>
                         <option value="poetic">诗意浪漫</option>
+                        <option value="literary">文学化</option>
                         <option value="humorous">幽默风趣</option>
                       </select>
             </div>
-                    <div className="hidden">
-                      <label className="block text-sm mb-1">严格度</label>
-                      <input className="input" value="严格按事实" readOnly />
+                    
+                    {/* 严格度 */}
+                  <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">事实严格度</label>
+                      <select className="input" value={prefStrict} onChange={(e)=>setPrefStrict(e.target.value)}>
+                        <option value="strict">严格（仅用已提及事实）</option>
+                        <option value="moderate">适中（可推断合理细节）</option>
+                        <option value="flexible">灵活（可补充场景细节）</option>
+                      </select>
                   </div>
-                    <div className="hidden">
-                      <label className="block text-sm mb-1">具体度</label>
-                      <input className="input" value="更具体" readOnly />
-                    </div>
-                  </div>
-                  <div className="mt-3 text-xs text-gray-500">严格事实与更具体已固定；文风可选。渲染度默认不渲染，仅基于问答生成原始回忆。</div>
+                    
+                    {/* 具体度 */}
+                        <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">叙述具体度</label>
+                      <select className="input" value={prefConcrete} onChange={(e)=>setPrefConcrete(e.target.value)}>
+                        <option value="high">高（强调细节）</option>
+                        <option value="medium">中（细节+概括）</option>
+                        <option value="low">低（以概括为主）</option>
+                      </select>
+                        </div>
+                    
+                    {/* 生成长度 */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">生成长度</label>
+                      <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
+                        <option value="short">简短（500字内）</option>
+                        <option value="medium">适中（800字内）</option>
+                        <option value="long">详细（1200字内）</option>
+                          </select>
+                        </div>
+                    
+                    {/* 自定义文风 */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium mb-1 text-gray-700">自定义文风（选填，将覆盖上方文风选项）</label>
+                      <input 
+                        className="input" 
+                        placeholder="如：朴实无华、充满哲理、富有诗意、温暖治愈等" 
+                        value={customTone} 
+                        onChange={(e)=>setCustomTone(sanitizeInput(e.target.value))}
+                        maxLength={50}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">提示：输入您想要的文风描述，AI会根据您的描述调整生成风格</p>
+                      </div>
+                </div>
               </div>
               )}
             </div>

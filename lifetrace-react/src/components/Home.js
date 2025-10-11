@@ -652,12 +652,12 @@ const Home = () => {
               </p>
         </button>
             <button
-              aria-label={lang === 'zh' ? '家族档案' : 'Family Archive'}
+              aria-label={lang === 'zh' ? '家族树' : 'Family Tree'}
               onClick={() => navigate(isLoggedIn ? '/family' : '/login')}
               className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
             >
-              <div className="text-2xl mb-1">👪</div>
-              <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '家族档案' : 'Family Archive'}</h3>
+              <div className="text-2xl mb-1">🌳</div>
+              <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '家族树' : 'Family Tree'}</h3>
               <p className="text-sm mt-1 text-slate-900">
                 {lang === 'zh' ? '只与家人私密共享，随时补充与回看。' : 'Private with family, add and revisit anytime.'}
               </p>
