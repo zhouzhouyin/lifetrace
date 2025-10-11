@@ -1080,6 +1080,28 @@ const CreateBiography = () => {
   const [profile, setProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem('record_profile') || '{}'); } catch(_) { return {}; }
   }); // { name, gender, birth, origin, residence, relation? }
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  
+  // 检查 profile 必填项是否完整
+  const isProfileComplete = (mode, p) => {
+    const baseOk = !!(p && p.name && p.gender && p.birth && p.origin && p.residence);
+    if (!baseOk) return false;
+    if ((mode || authorMode) === 'other') {
+      return !!(p && (p.relation || '').trim());
+    }
+    return true;
+  };
+  
+  // 检查必填项，不完整则自动弹出表单
+  useEffect(() => {
+    if (authorMode && !isProfileComplete(authorMode, profile) && !showProfileForm) {
+      // 延迟1秒后弹出，避免页面初始化时立即弹出
+      const timer = setTimeout(() => {
+        setShowProfileForm(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [authorMode, profile, showProfileForm]);
 
   // 主题选择完成后的处理
   const handleThemeSelectionComplete = () => {
@@ -1966,8 +1988,31 @@ const CreateBiography = () => {
     }
   };
 
-  // 两阶段润色：第一阶段提取事实，第二阶段文学化表达
+  // 两阶段润色：第一阶段提取事实，第二阶段文学化表达（每日回首作为补充素材）
   const twoStagePolish = async (originalText, token, chapterIndex, selectedThemes = []) => {
+    // 获取每日回首素材（仅作为参考）
+    let dailyMaterialText = '';
+    try {
+      const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
+      const allMemos = Array.isArray(res.data) ? res.data : [];
+      const dailyMemos = allMemos.filter(m => {
+        const tags = Array.isArray(m.tags) ? m.tags : [];
+        return tags.includes('每日回首') && tags.includes(lifeStages[chapterIndex]);
+      });
+      
+      if (dailyMemos.length > 0) {
+        const materials = dailyMemos.slice(0, 5).map(m => {
+          const text = (m.text || '').toString();
+          const ma = text.match(/回答：([\s\S]*)/);
+          return ma ? (ma[1] || '').trim() : '';
+        }).filter(Boolean);
+        
+        if (materials.length > 0) {
+          dailyMaterialText = `\n\n【补充素材（来自每日回首，仅供参考）】\n${materials.join('\n')}`;
+        }
+      }
+    } catch (_) {}
+    
     // 第一阶段：从原文提取事实清单
     const extractionRule = prefStrict === 'strict'
       ? '只提取明确提到的事实，不做任何推断或补充'
@@ -1978,15 +2023,16 @@ const CreateBiography = () => {
     const stage1System = `你是一位${prefStrict === 'strict' ? '严谨' : '专业'}的事实提取专家。请从传记段落中提取事实信息，以结构化方式输出。
 
 关键规则：
-1. ${extractionRule}
-2. 如果原文包含问答形式，只提取回答者的内容，忽略提问
-3. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
-4. 按时间顺序或逻辑顺序组织
-5. 用简洁的陈述句表达，每个事实一行
-6. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
-7. 去除"陪伴师""提问""回答"等问答痕迹`;
+1. **以原文为准**，补充素材（如有）仅作为参考理解背景
+2. ${extractionRule}
+3. 如果原文包含问答形式，只提取回答者的内容，忽略提问
+4. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
+5. 按时间顺序或逻辑顺序组织
+6. 用简洁的陈述句表达，每个事实一行
+7. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
+8. 去除"陪伴师""提问""回答"等问答痕迹`;
 
-    const stage1User = `原文：\n${originalText}\n\n请提取上述段落中的事实（忽略问答痕迹），仅输出JSON格式的事实清单。`;
+    const stage1User = `【原文（主要内容）】\n${originalText}${dailyMaterialText}\n\n请以原文为准提取事实（补充素材仅供理解背景），仅输出JSON格式的事实清单。`;
     
     setMessage(`第 ${chapterIndex + 1} 章：正在提取事实清单...`);
     
@@ -2061,13 +2107,16 @@ ${userStyleRulesPolish}
 仅输出第一人称叙述段落，不要标题、编号、总结、过渡语${themeGuidePolish}`;
 
     const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
-    const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
+    const hasMaterial = dailyMaterialText.length > 0;
+    
+    const stage2User = `事实清单（主要内容）：\n${factsText}${hasMaterial ? '\n\n💡 提示：您还有来自每日回首的补充素材，可以适当参考以丰富细节，但要以事实清单为主。' : ''}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
 
 关键要求：
 ✓ 直接用"我"的视角叙述，像讲述自己的故事
 ✓ 完全去除问答痕迹，不要出现"陪伴师""提问""回答"等字眼  
 ✓ 用情感或主题线索重构叙事，不要简单的时间罗列
 ✓ 加入回忆口吻和内心感悟
+✓ 以事实清单为主，补充素材仅供理解背景和丰富细节
 ✗ 不得添加任何清单中没有的内容`;
     
     setMessage(`第 ${chapterIndex + 1} 章：正在进行文学化改写...`);
@@ -2179,8 +2228,31 @@ ${userStyleRulesPolish}
     }
   };
 
-  // 两阶段生成：第一阶段提取事实，第二阶段文学化表达
+  // 两阶段生成：第一阶段提取事实，第二阶段文学化表达（每日回首作为补充素材）
   const twoStageGenerate = async (qaText, token, chapterIndex = null, selectedThemes = []) => {
+    // 获取每日回首素材（仅作为参考，不作为主要内容）
+    let dailyMaterialText = '';
+    try {
+      const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
+      const allMemos = Array.isArray(res.data) ? res.data : [];
+      const dailyMemos = allMemos.filter(m => {
+        const tags = Array.isArray(m.tags) ? m.tags : [];
+        return tags.includes('每日回首') && (chapterIndex === null || tags.includes(lifeStages[chapterIndex]));
+      });
+      
+      if (dailyMemos.length > 0) {
+        const materials = dailyMemos.slice(0, 5).map(m => {
+          const text = (m.text || '').toString();
+          const ma = text.match(/回答：([\s\S]*)/);
+          return ma ? (ma[1] || '').trim() : '';
+        }).filter(Boolean);
+        
+        if (materials.length > 0) {
+          dailyMaterialText = `\n\n【补充素材（来自每日回首，仅供参考）】\n${materials.join('\n')}`;
+        }
+      }
+    } catch (_) {}
+    
     // 第一阶段：提取事实清单
     const extractionRule = prefStrict === 'strict'
       ? '只提取明确提到的事实，不做任何推断或补充'
@@ -2191,20 +2263,21 @@ ${userStyleRulesPolish}
     const stage1System = `你是一位${prefStrict === 'strict' ? '严谨' : '专业'}的事实提取专家。请从问答对话中提取用户回答里的事实信息。
 
 关键规则：
-1. **只提取用户（"我"/"A"）的回答内容**，完全忽略陪伴师/提问者的问题
-2. 将用户的回答转换为第三人称客观事实陈述
-3. ${extractionRule}
-4. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
-5. 按时间顺序或逻辑顺序组织
-6. 用简洁的陈述句表达，每个事实一行
-7. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
+1. **以主要问答对为准**，提取用户（"我"/"A"）的回答内容，完全忽略陪伴师/提问者的问题
+2. 补充素材（如有）仅作为参考，帮助理解上下文，不作为主要提取对象
+3. 将用户的回答转换为第三人称客观事实陈述
+4. ${extractionRule}
+5. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
+6. 按时间顺序或逻辑顺序组织
+7. 用简洁的陈述句表达，每个事实一行
+8. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}
 
 示例：
 问答对：Q: 外婆为你做过什么？ A: 外婆常为我烹制美食，最怀念农忙时期的炒土豆片。
 正确提取：{"facts": ["外婆常为我烹制美食", "最怀念的是农忙时期外婆炒的土豆片"]}
 错误提取：{"facts": ["陪伴师询问外婆做过什么", "外婆常为我烹制美食"]} ❌ 不要包含提问`;
 
-    const stage1User = `${qaText}\n\n请只提取用户回答（"我"/"A"）中的事实，完全忽略陪伴师/提问者的问题，仅输出JSON格式的事实清单。`;
+    const stage1User = `【主要问答对】\n${qaText}${dailyMaterialText}\n\n请以主要问答对为准，提取用户回答中的事实（补充素材仅供理解上下文），仅输出JSON格式的事实清单。`;
     
     setMessage(chapterIndex !== null ? `第 ${chapterIndex + 1} 章：正在提取事实清单...` : '正在提取事实清单...');
     
@@ -2278,13 +2351,18 @@ ${userStyleRules}
 仅输出第一人称叙述段落，不要标题、编号、总结、过渡语${themeGuide}`;
 
     const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
-    const stage2User = `事实清单：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
+    const supplementNote = dailyMaterialText 
+      ? '\n\n【补充素材说明】上述事实清单已包含主要内容，补充素材仅供参考理解背景，不要重复使用。'
+      : '';
+    
+    const stage2User = `事实清单（主要内容）：\n${factsText}${supplementNote}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
 
 关键要求：
 ✓ 直接用"我"的视角叙述，像讲述自己的故事
 ✓ 完全去除问答痕迹，不要出现"陪伴师""提问""回答"等字眼  
 ✓ 用情感或主题线索重构叙事，不要简单的时间罗列
 ✓ 加入回忆口吻和内心感悟
+✓ 以事实清单为主，补充素材仅供理解背景
 ✗ 不得添加任何清单中没有的内容
 
 示例转换：
@@ -2308,6 +2386,7 @@ ${userStyleRules}
     const finalText = (resp2.data?.choices?.[0]?.message?.content || '').toString().trim();
     return finalText;
   };
+
 
   // 基于问答生成各个篇章（按阶段/顺序拆分），不动媒体 - 使用两阶段生成
   const handleGenerateChaptersFromQA = async () => {
@@ -2705,12 +2784,42 @@ ${userStyleRules}
         <Helmet>
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
         </Helmet>
-        {/* 记录对象基本信息表单（首页已填写，此处隐藏） */}
+        {/* 记录对象基本信息 - 简化显示 + 编辑按钮 */}
         <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">记录对象详细信息</h3>
-            <span className="text-xs text-gray-500">* 为必填项</span>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-700">记录对象信息</h3>
+            <button 
+              type="button"
+              className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => setShowProfileForm(true)}
+            >
+              {isProfileComplete(authorMode, profile) ? '编辑信息' : '完善信息'}
+            </button>
           </div>
+          <div className="text-sm text-gray-600">
+            {profile.name ? `${profile.name}，${profile.gender || ''}，${profile.birth || ''}` : '暂无信息'}
+            {authorMode === 'other' && profile.relation && ` (${profile.relation})`}
+            {!isProfileComplete(authorMode, profile) && (
+              <span className="ml-2 text-red-600 text-xs">* 必填项未完整</span>
+            )}
+          </div>
+        </div>
+        
+        {/* 记录对象信息编辑弹窗 */}
+        {showProfileForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">记录对象详细信息</h3>
+                <button 
+                  type="button"
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowProfileForm(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">* 为必填项</p>
           
           {/* 基础信息（必填） */}
           <div className="mb-4">
@@ -2738,8 +2847,8 @@ ${userStyleRules}
                 <div>
                   <input className="input" placeholder="* 与被记录人的关系（如 母亲）" value={authorRelation||profile.relation||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setAuthorRelation(v); setProfile(p=>{ const n={...(p||{}), relation:v}; try{localStorage.setItem('record_profile', JSON.stringify(n)); localStorage.setItem('author_relation', v);}catch(_){ } return n; }); }} required />
                 </div>
-              )}
-            </div>
+            )}
+          </div>
           </div>
 
           {/* 教育与职业信息（选填） */}
@@ -2839,7 +2948,45 @@ ${userStyleRules}
               </div>
             </div>
           </div>
-        </div>
+              
+              {/* 弹窗底部按钮 */}
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  onClick={() => setShowProfileForm(false)}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={() => {
+                    if (!isProfileComplete(authorMode, profile)) {
+                      alert('请填写所有必填项（带 * 的字段）');
+                      return;
+                    }
+                    // 同步到后端
+                    try {
+                      const token = localStorage.getItem('token');
+                      if (token) {
+                        axios.post('/api/record-subject', { mode: authorMode, profile }, { 
+                          headers: { Authorization: `Bearer ${token}` } 
+                        }).catch(() => {});
+                      }
+                    } catch (_) {}
+                    setShowProfileForm(false);
+                    setMessage('记录对象信息已保存');
+                    setTimeout(() => setMessage(''), 2000);
+                  }}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="mb-4">
           <input
             type="text"
@@ -3002,13 +3149,16 @@ ${userStyleRules}
                           重新选择
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 mb-1">
                         {(userThemes[currentSectionIndex] || []).map((theme) => (
                           <span key={theme} className="inline-block px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
                             {theme}
                           </span>
                         ))}
                       </div>
+                      <p className="text-xs text-blue-700 mt-1">
+                        💡 提示：使用"每日回首"时，建议选择相同的主题/事件，以便素材更贴合
+                      </p>
                     </div>
                   )}
                   <input
@@ -3095,6 +3245,47 @@ ${userStyleRules}
                     </label>
                     <button
                       type="button"
+                      className="btn btn-tertiary w-full sm:w-auto text-xs"
+                      onClick={async () => {
+                        // 显示每日回首素材统计
+                        try {
+                          const token = localStorage.getItem('token');
+                          if (!token) { setMessage('请先登录'); return; }
+                          
+                          const res = await axios.get('/api/memos', { headers: { Authorization: `Bearer ${token}` } });
+                          const allMemos = Array.isArray(res.data) ? res.data : [];
+                          const dailyMemos = allMemos.filter(m => {
+                            const tags = Array.isArray(m.tags) ? m.tags : [];
+                            return tags.includes('每日回首');
+                          });
+                          
+                          if (dailyMemos.length === 0) {
+                            setMessage('暂无每日回首素材');
+                            setTimeout(() => setMessage(''), 2000);
+                            return;
+                          }
+                          
+                          // 按阶段统计
+                          const counts = {};
+                          lifeStages.forEach((_, idx) => { counts[idx] = 0; });
+                          dailyMemos.forEach(m => {
+                            const tags = Array.isArray(m.tags) ? m.tags : [];
+                            const stageIdx = lifeStages.findIndex(s => tags.includes(s));
+                            if (stageIdx >= 0) counts[stageIdx]++;
+                          });
+                          
+                          const summary = lifeStages.map((stage, idx) => counts[idx] > 0 ? `${stage}${counts[idx]}条` : '').filter(Boolean).join('、');
+                          setMessage(`📊 每日回首素材：共${dailyMemos.length}条（${summary}）。这些素材会在生成传记时作为参考。`);
+                          setTimeout(() => setMessage(''), 5000);
+                        } catch (err) {
+                          console.error('Check daily reflections failed:', err);
+                        }
+                      }}
+                    >
+                      📊 查看每日回首素材
+                    </button>
+                    <button
+                      type="button"
                       className="btn btn-primary w-full sm:w-auto"
                       disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
                       onClick={async () => {
@@ -3106,28 +3297,44 @@ ${userStyleRules}
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) { setMessage('请先登录'); setPolishingSectionIndex(null); return; }
-                          const perspectiveHint = (authorMode === 'other')
-                            ? `请使用第一人称"我"的叙述，从写作者视角回忆与"${authorRelation || profile?.relation || '这位亲人'}"的互动；尽量使用关系称谓（如"${authorRelation || profile?.relation || '这位亲人'}"）而非"他/她"；避免出现"在他的记忆里/深处"等表达，若需表达记忆请用"在我的记忆里/深处"。`
-                            : '请使用第一人称"我"的表述方式。';
-                          const system = `你是一位资深传记写作者。${perspectiveHint} 请根据"问答对话记录"整理出一段自然流畅、朴素真挚且忠于事实的传记正文；严格依据对话内容，不编造事实；不使用列表/编号/标题，不加入总结或点评，仅输出正文。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议。${buildStyleRules('gen')} ${buildHardConstraints()}`;
+                          
+                          // 使用两阶段生成，自动包含每日回首素材
                           const qaSourceRaw = (sections[currentSectionIndex]?.text || '').toString();
                           const qaSource = filterPolishSource(qaSourceRaw);
-                          const userPayload = `以下是我与情感陪伴师在阶段「${getStageLabelByIndex(currentSectionIndex)}」的问答记录（按时间顺序，已清理元话术）：\n\n${qaSource}\n\n请仅据此输出该阶段的传记正文（第一人称、连续自然，不要标题与编号）。`;
-                          const messages = [
-                            { role: 'system', content: system },
-                            { role: 'user', content: userPayload },
-                          ];
-                          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 900, temperature: 0.3, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
-                          let polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-                          const maxChars = getGenMaxChars();
-                          if (polishedRaw.length > maxChars) polishedRaw = polishedRaw.slice(0, maxChars);
-                          const polished = finalizeNarrative(polishedRaw);
+                          
+                          // 将问答记录转换为标准格式
+                          const lines = qaSource.split(/\n+/);
+                          const qaPairs = [];
+                          let currentQ = '';
+                          for (const line of lines) {
+                            if (/^陪伴师[：:]/.test(line)) {
+                              currentQ = line.replace(/^陪伴师[：:]\s*/, '').trim();
+                            } else if (/^我[：:]/.test(line)) {
+                              const a = line.replace(/^我[：:]\s*/, '').trim();
+                              if (currentQ && a) {
+                                qaPairs.push({ q: currentQ, a });
+                              }
+                              currentQ = '';
+                            }
+                          }
+                          
+                          if (qaPairs.length === 0) {
+                            setMessage('未找到有效的问答对，请先进行访谈');
+                            setPolishingSectionIndex(null);
+                            return;
+                          }
+                          
+                          const qaText = `问答对如下：\n${qaPairs.map((p, idx) => `Q${idx + 1}：${p.q}\nA${idx + 1}：${p.a}`).join('\n')}`;
+                          const chapterThemes = userThemes[currentSectionIndex] || [];
+                          
+                          const polished = await twoStageGenerate(qaText, token, currentSectionIndex, chapterThemes);
+                          
                           if (polished) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: polished } : s));
                             // 中心提示：请核查并修改...
-                            const tip = '请核查并修改任何与您记忆不符的内容，再次点击"生成本篇回忆"。';
+                            const tip = '已生成（已参考每日回首素材）。请核查并修改任何与您记忆不符的内容。';
                             setCenterToast(tip);
-                            setTimeout(() => setCenterToast(''), 1000);
+                            setTimeout(() => setCenterToast(''), 2000);
                           }
                         } catch (e) {
                           console.error('Polish current section error:', e);

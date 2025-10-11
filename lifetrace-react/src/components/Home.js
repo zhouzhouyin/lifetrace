@@ -17,6 +17,34 @@ const Home = () => {
   const [isLoadingQ, setIsLoadingQ] = useState(false);
   const lastShownRef = useRef('');
   const lifeStages = ['童年','少年','青年','成年','中年','当下','未来愿望'];
+  
+  // 每日回首：阶段和主题选择
+  const [showStageThemeSelector, setShowStageThemeSelector] = useState(false);
+  const [selectedDailyStage, setSelectedDailyStage] = useState(() => {
+    try { return Number(localStorage.getItem('daily_selected_stage') || '0') || 0; } catch(_) { return 0; }
+  });
+  const [dailyThemes, setDailyThemes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('daily_themes') || '{}'); } catch(_) { return {}; }
+  });
+  
+  // 主题库（与CreateBiography保持一致）
+  const STAGE_THEMES = {
+    0: ['家庭关系', '童年玩伴', '启蒙教育', '第一次经历', '性格形成', '兴趣萌芽', '家庭变故', '难忘趣事', '童年创伤', '祖辈故事', '兄弟姐妹', '搬家经历'],
+    1: ['学业经历', '友情故事', '师生关系', '青春期变化', '初恋', '叛逆与成长', '兴趣爱好', '价值观形成', '重要选择', '转折事件', '成长困惑', '理想萌芽'],
+    2: ['升学就业', '恋爱婚姻', '职业选择', '人生目标', '重大决策', '迷茫与探索', '重要相遇', '独立成长', '北漂/打拼', '创业经历', '失败挫折', '突破时刻'],
+    3: ['事业发展', '婚姻家庭', '子女教育', '经济状况', '人际关系', '挫折与突破', '成就与荣誉', '责任担当', '工作转变', '置业安家', '职场经历', '角色转换'],
+    4: ['家庭变化', '事业转型', '健康危机', '人生顿悟', '子女独立', '婚姻关系', '财务规划', '精神追求', '中年危机', '父母养老', '重新出发', '生活平衡'],
+    5: ['生活状态', '家庭关系', '健康养生', '兴趣爱好', '社会参与', '代际关系', '内心感悟', '遗憾与满足', '退休生活', '天伦之乐', '回忆往事', '生活智慧'],
+    6: ['人生愿望', '家族传承', '未竟之事', '后代期望', '精神寄托', '人生总结', '遗愿', '生命意义', '想说的话', '未来憧憬', '临终关怀', '精神遗产']
+  };
+  
+  useEffect(() => {
+    try { localStorage.setItem('daily_themes', JSON.stringify(dailyThemes)); } catch(_){}
+  }, [dailyThemes]);
+  
+  useEffect(() => {
+    try { localStorage.setItem('daily_selected_stage', String(selectedDailyStage)); } catch(_){}
+  }, [selectedDailyStage]);
   // 生成回忆建议
   const [showSuggestCard, setShowSuggestCard] = useState(false);
   const [stageStats, setStageStats] = useState({});
@@ -219,31 +247,174 @@ const Home = () => {
 
   const handleOpenDaily = async () => {
     setAnswer('');
+    // 先显示阶段和主题选择界面
+    setShowStageThemeSelector(true);
+  };
+  
+  // 阶段和主题选择完成后开始提问
+  const startDailyWithStageTheme = async () => {
+    setShowStageThemeSelector(false);
     setShowDailyCard(true);
-    await pickAndStoreQuestion();
+    setCurrentStageIndex(selectedDailyStage);
+    await generateLinearQuestion(selectedDailyStage);
+  };
+  
+  // 基于历史问答生成下一个线性问题
+  const generateLinearQuestion = async (stageIdx) => {
+    setIsLoadingQ(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) { 
+        setIsLoadingQ(false);
+        return; 
+      }
+      
+      // 从后端获取该阶段的历史问答
+      let historyQA = [];
+      try {
+        const historyRes = await axios.get(`/api/daily/history?stage=${stageIdx}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        historyQA = Array.isArray(historyRes.data) ? historyRes.data : [];
+      } catch (_) {}
+      
+      // 获取用户选择的主题
+      const selectedThemes = dailyThemes[stageIdx] || [];
+      const themeGuide = selectedThemes.length > 0 
+        ? `用户特别关注的主题/事件：${selectedThemes.join('、')}。请围绕这些主题提问，但要自然融入对话。`
+        : '';
+      
+      // 获取用户画像
+      let profileInfo = {};
+      try { profileInfo = JSON.parse(localStorage.getItem('record_profile') || '{}'); } catch(_) {}
+      const authorMode = localStorage.getItem('author_mode') || 'self';
+      const authorRelation = localStorage.getItem('author_relation') || '';
+      
+      const writerName = localStorage.getItem('username') || '';
+      const writerGender = localStorage.getItem('writer_gender') || '';
+      const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
+      const subjectProfile = `被记录者资料：姓名${profileInfo.name||'（未填）'}，性别${profileInfo.gender||'（未填）'}，出生${profileInfo.birth||'（未填）'}，祖籍${profileInfo.origin||'（未填）'}，现居${profileInfo.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||profileInfo.relation||'（未填）'}`:''}${profileInfo.education?`，学历${profileInfo.education}`:''}${profileInfo.occupation?`，职业${profileInfo.occupation}`:''}。`;
+      
+      const perspective = authorMode === 'other'
+        ? `采用"关系视角"并使用第二人称"你"与写作者对话：问题聚焦"你与${authorRelation || '这位亲人'}"的互动细节与影响；`
+        : '以第二人称"您/你"与当事人对话；';
+      
+      // 构建历史对话上下文
+      const historyContext = historyQA.length > 0
+        ? `\n\n历史问答（用于保持线性逻辑）：\n${historyQA.slice(-5).map((h, i) => `Q${i+1}: ${h.question}\nA${i+1}: ${h.answer}`).join('\n\n')}`
+        : '';
+      
+      const system = `你是一位温暖、耐心的情感访谈引导者。${perspective}${writerProfile} ${subjectProfile} ${themeGuide}
+
+当前阶段：${lifeStages[stageIdx]}
+
+要求：
+- 基于历史问答继续线性提问，保持逻辑连贯性和递进关系
+- 问题优先级：①人生重大转折 ②深刻影响 ③情感深度
+- 具体可回忆，有画面感（谁/何时/在哪/当时感觉/细节）
+- 触及情绪与关系，不做空泛哲思
+- 单句≤40字；仅输出一个问题，不要编号、前缀
+- 如果是第一个问题，请开门见山直接询问本阶段最重要的经历或事件`;
+      
+      const userMsg = `当前阶段：${lifeStages[stageIdx]}${historyContext}
+
+请基于上述历史对话（如有），提出下一个有深度、有逻辑连贯性的问题。`;
+      
+      const resp = await axios.post('/api/spark', { 
+        model: 'x1', 
+        messages: [ 
+          { role: 'system', content: system }, 
+          { role: 'user', content: userMsg } 
+        ], 
+        max_tokens: 150, 
+        temperature: 0.4, 
+        user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') 
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      const question = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+      setCurrentQuestion(question);
+      setCurrentQuestionId(historyQA.length + 1);
+    } catch (err) {
+      console.error('Generate linear question failed:', err);
+      // 使用兜底问题
+      const fallbackQuestions = {
+        0: '童年时期，有没有一件事让您开始理解这个世界？',
+        1: '少年时期，有没有遇到过影响您价值观的重要事件？',
+        2: '青年阶段，有没有一个关键决定改变了您的人生轨迹？',
+        3: '成年后，有没有经历过让您重新认识自己的重要时刻？',
+        4: '中年时期，有没有做过一个艰难但重要的人生抉择？',
+        5: '回顾人生，哪个时刻让您感受到自己真正成长了？',
+        6: '关于未来，您最想实现的人生愿望是什么？'
+      };
+      setCurrentQuestion(fallbackQuestions[stageIdx] || '有没有一个改变您人生的重要时刻？');
+      setCurrentQuestionId(1);
+    } finally {
+      setIsLoadingQ(false);
+    }
   };
 
+  // 保存每日回首答案（同时保存到后端历史和随手记）
+  const saveDailyAnswer = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) { navigate('/login'); return; }
+    
+    if (!answer.trim()) {
+      alert('请先输入您的回答');
+      return;
+    }
+    
+    try {
+      // 1. 保存到后端每日回首历史（用于AI线性提问）
+      await axios.post('/api/daily/save-answer', {
+        stage: currentStageIndex,
+        question: currentQuestion,
+        answer: answer,
+        questionId: currentQuestionId
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      // 2. 同时保存到随手记（打上"每日回首"标签）
+      const authorMode = (localStorage.getItem('author_mode') || 'self');
+      let relation = '';
+      try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
+      const baseTags = ['每日回首', lifeStages[currentStageIndex]];
+      const tags = (authorMode === 'other' && relation) ? [...baseTags, relation] : baseTags;
+      const subjectVersion = localStorage.getItem('subject_version') || '';
+      
+      const content = `阶段：${lifeStages[currentStageIndex]}\n问题：${currentQuestion}\n回答：${answer}`;
+      
+      const memoResp = await axios.post('/api/memo', { 
+        text: content, 
+        tags, 
+        media: [], 
+        subjectVersion 
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      const created = {
+        id: memoResp.data?.id || `local-${Date.now()}`,
+        text: content,
+        tags,
+        media: [],
+        timestamp: memoResp.data?.timestamp || new Date().toISOString(),
+        subjectVersion,
+      };
+      setMemosHome(prev => [created, ...(Array.isArray(prev)?prev:[])]);
+      try { setMemosCtx && setMemosCtx(prev => [created, ...(Array.isArray(prev)?prev:[])]); } catch(_) {}
+      
+      // 3. 生成下一个问题
+      setAnswer('');
+      await generateLinearQuestion(currentStageIndex);
+      
+    } catch (err) {
+      console.error('Save daily answer failed:', err);
+      alert('保存失败，请重试');
+    }
+  };
+  
   // 非线性旧方法已不使用；保留名称以免引用报错
   const handleSwap = async () => { await pickAndStoreQuestion(); };
   const handleSkip = async () => {
-    // 跳过前，将当前问题（若有回答）按每日回首保存为随手记，便于连续回首形成轨迹
-    try {
-      if ((currentQuestion || '').trim()) {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const label = currentQuestionId ? `Q${currentQuestionId}` : '';
-          const content = `阶段：${lifeStages[currentStageIndex]}\n问题：${label ? (label + ' ') : ''}${currentQuestion}\n回答：${answer || '（未填写）'}`;
-          const authorMode = (localStorage.getItem('author_mode') || 'self');
-          let relation = '';
-          try { relation = (JSON.parse(localStorage.getItem('record_profile')||'{}')?.relation || '').trim(); } catch(_) {}
-          const baseTags = ['每日回首', lifeStages[currentStageIndex]];
-          const tags = (authorMode === 'other' && relation) ? [...baseTags, relation] : baseTags;
-          const subjectVersion = localStorage.getItem('subject_version') || '';
-          await axios.post('/api/memo', { text: content, tags, media: [], subjectVersion }, { headers: { Authorization: `Bearer ${token}` } }).catch(()=>{});
-        }
-      }
-    } catch (_) {}
-    setShowDailyCard(false); setAnswer('');
+    setShowDailyCard(false); 
+    setAnswer('');
   };
 
   // 新增：线性10问流程（使用后端 daily/session 接口）
@@ -523,6 +694,117 @@ const Home = () => {
       <Helmet>
         <title>{lang === 'zh' ? '首页 - 永念' : 'Home - LifeTrace'}</title>
       </Helmet>
+      
+      {/* 阶段和主题选择模态框 */}
+      {showStageThemeSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowStageThemeSelector(false)} />
+          <div className="relative z-10 bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">选择今天要回忆的阶段和主题</h2>
+            <p className="text-sm text-gray-600 mb-4">选择一个人生阶段和您想重点记录的主题/事件</p>
+            
+            {/* 阶段选择 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">选择人生阶段</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {lifeStages.map((stage, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedDailyStage(idx)}
+                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      selectedDailyStage === idx
+                        ? 'bg-blue-600 border-blue-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
+                    }`}
+                  >
+                    {stage}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* 主题选择 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">选择重点主题/事件（可选，建议2-5个）</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 border rounded">
+                {(STAGE_THEMES[selectedDailyStage] || []).map((theme) => {
+                  const isSelected = (dailyThemes[selectedDailyStage] || []).includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => {
+                        setDailyThemes(prev => {
+                          const stageThemes = prev[selectedDailyStage] || [];
+                          if (stageThemes.includes(theme)) {
+                            return { ...prev, [selectedDailyStage]: stageThemes.filter(t => t !== theme) };
+                          } else {
+                            return { ...prev, [selectedDailyStage]: [...stageThemes, theme] };
+                          }
+                        });
+                      }}
+                      className={`px-2 py-1.5 rounded border text-xs font-medium transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 border-blue-700 text-white' 
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                      }`}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {(dailyThemes[selectedDailyStage] || []).length > 0 && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">已选择的主题/事件：</p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(dailyThemes[selectedDailyStage] || []).map((theme) => (
+                    <span key={theme} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                      {theme}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDailyThemes(prev => ({
+                            ...prev,
+                            [selectedDailyStage]: (prev[selectedDailyStage] || []).filter(t => t !== theme)
+                          }));
+                        }}
+                        className="hover:bg-blue-700 rounded-full"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-blue-700">
+                  💡 提示：建议与"创作传记"中{lifeStages[selectedDailyStage]}阶段的主题保持一致
+                </p>
+              </div>
+            )}
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowStageThemeSelector(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={startDailyWithStageTheme}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+              >
+                开始每日回首
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Hero */}
       <section className="container mx-auto px-4 pt-10 pb-8 sm:pt-16 sm:pb-12">
         <div className="max-w-5xl mx-auto text-center">
@@ -574,46 +856,52 @@ const Home = () => {
             {slogans[sloganIndex] || (lang === 'zh' ? '让记忆延续，让精神成为家族的财富' : 'Memories continue, love is passed on')}
           </p>
           
-          {/* 每日回首弹窗（默认弹出，可跳过当天） */}
+          {/* 每日回首弹窗 */}
           {showDailyCard && (
             <div className="fixed inset-0 z-40 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
               <div className="relative z-50 card w-11/12 max-w-xl text-left p-4 sm:p-5" role="dialog" aria-modal="true" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
-                <div className="text-sm text-gray-600 mb-1">每日回首 · {lifeStages[currentStageIndex]} {linearMode ? `（${Math.min(linearProgress.idx+1, linearProgress.total)}/${linearProgress.total}）` : ''}</div>
-                <div className="text-lg font-semibold text-gray-900 mb-2">{isLoadingQ ? '加载中…' : (currentQuestion || '...')}</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-600">每日回首 · {lifeStages[currentStageIndex]}</div>
+                  <button 
+                    type="button"
+                    onClick={() => setShowStageThemeSelector(true)}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    更换阶段/主题
+                  </button>
+                </div>
+                {(dailyThemes[currentStageIndex] || []).length > 0 && (
+                  <div className="mb-2">
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      <span className="text-xs text-gray-600">关注：</span>
+                      {(dailyThemes[currentStageIndex] || []).map((theme) => (
+                        <span key={theme} className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                          {theme}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-blue-600">
+                      💡 建议与"创作传记"中的主题保持一致，生成效果更好
+                    </p>
+                  </div>
+                )}
+                <div className="text-lg font-semibold text-gray-900 mb-3">{isLoadingQ ? '正在生成问题…' : (currentQuestion || '...')}</div>
                 <textarea
                   className="input w-full mb-3"
-                  placeholder={lang === 'zh' ? '在这里写下你的回答（可选）' : 'Write your brief answer (optional)'}
+                  placeholder={lang === 'zh' ? '在这里写下您的回答…' : 'Write your answer...'}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  rows={3}
-                  maxLength={500}
+                  rows={4}
+                  maxLength={1000}
                 />
-                <label className="flex items-center gap-2 text-sm text-gray-800 mb-2">
-                  <input type="checkbox" checked={saveToMemoChecked} onChange={(e)=>setSaveToMemoChecked(e.target.checked)} />
-                  记为随手记
-                </label>
                 <div className="flex flex-wrap gap-2">
-                  <button className="btn btn-secondary" onClick={handleSkip}>返回</button>
-                  <button className="btn btn-secondary" onClick={answerAndNext}>提交并继续</button>
-                  <button className="btn btn-primary" onClick={() => {
-                    // 按随手记相同格式，携带Q&A并精确落到对应阶段
-                    try {
-                      const raw = localStorage.getItem('dailyPasteboard');
-                      const obj = raw ? JSON.parse(raw) : { items: [] };
-                      const label = currentQuestionId ? `Q${currentQuestionId}` : '';
-                      const line = `陪伴师：${label ? (label + ' ') : ''}${currentQuestion}\n我：${answer || ''}`;
-                      obj.items.push({ stageIndex: currentStageIndex, text: line });
-                      localStorage.setItem('dailyPasteboard', JSON.stringify(obj));
-                      // 双通道：既写 localStorage，又通过路由 state 传输，确保一定落章
-                      setTimeout(() => navigate('/create', { replace: false, state: { pasteItems: [{ stageIndex: currentStageIndex, text: line }] } }), 0);
-                      setShowDailyCard(false); setAnswer('');
-                    } catch (_) {
-                      navigate('/create');
-                    }
-                  }}>粘贴到记录</button>
-                  <button className="btn" onClick={handleSaveToMemo} disabled={!saveToMemoChecked}>保存</button>
+                  <button className="btn btn-secondary" onClick={handleSkip}>稍后再答</button>
+                  <button className="btn btn-primary" onClick={saveDailyAnswer} disabled={!answer.trim()}>
+                    提交并继续
+                  </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">💡 提示：答案会自动保存到随手记（带"每日回首"标签），最终可一键生成完整传记</p>
               </div>
             </div>
           )}
