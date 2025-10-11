@@ -116,15 +116,15 @@ const CreateBiography = () => {
     try { return JSON.parse(localStorage.getItem('user_themes') || '{}'); } catch(_) { return {}; }
   });
   
-  // 预设主题库：每个阶段的重要主题选项
+  // 预设主题/事件库：每个阶段的重要主题和关键事件选项
   const STAGE_THEMES = {
-    0: ['家庭关系', '童年玩伴', '启蒙教育', '难忘事件', '性格形成', '兴趣萌芽', '家庭变故', '童年创伤'],
-    1: ['学业经历', '友情', '师生关系', '青春期变化', '初恋', '叛逆与成长', '兴趣爱好', '价值观形成'],
-    2: ['升学就业', '恋爱婚姻', '职业选择', '人生目标', '重大决策', '迷茫与探索', '重要相遇', '独立成长'],
-    3: ['事业发展', '婚姻家庭', '子女教育', '经济状况', '人际关系', '挫折与突破', '成就与荣誉', '责任担当'],
-    4: ['家庭变化', '事业转型', '健康问题', '人生顿悟', '子女独立', '婚姻关系', '财务规划', '精神追求'],
-    5: ['生活状态', '家庭关系', '健康养生', '兴趣爱好', '社会参与', '代际关系', '内心感悟', '遗憾与满足'],
-    6: ['人生愿望', '家族传承', '未竟之事', '后代期望', '精神寄托', '人生总结', '遗愿', '生命意义']
+    0: ['家庭关系', '童年玩伴', '启蒙教育', '第一次经历', '性格形成', '兴趣萌芽', '家庭变故', '难忘趣事', '童年创伤', '祖辈故事', '兄弟姐妹', '搬家经历'],
+    1: ['学业经历', '友情故事', '师生关系', '青春期变化', '初恋', '叛逆与成长', '兴趣爱好', '价值观形成', '重要选择', '转折事件', '成长困惑', '理想萌芽'],
+    2: ['升学就业', '恋爱婚姻', '职业选择', '人生目标', '重大决策', '迷茫与探索', '重要相遇', '独立成长', '北漂/打拼', '创业经历', '失败挫折', '突破时刻'],
+    3: ['事业发展', '婚姻家庭', '子女教育', '经济状况', '人际关系', '挫折与突破', '成就与荣誉', '责任担当', '工作转变', '置业安家', '职场经历', '角色转换'],
+    4: ['家庭变化', '事业转型', '健康危机', '人生顿悟', '子女独立', '婚姻关系', '财务规划', '精神追求', '中年危机', '父母养老', '重新出发', '生活平衡'],
+    5: ['生活状态', '家庭关系', '健康养生', '兴趣爱好', '社会参与', '代际关系', '内心感悟', '遗憾与满足', '退休生活', '天伦之乐', '回忆往事', '生活智慧'],
+    6: ['人生愿望', '家族传承', '未竟之事', '后代期望', '精神寄托', '人生总结', '遗愿', '生命意义', '想说的话', '未来憧憬', '临终关怀', '精神遗产']
   };
   
   useEffect(() => {
@@ -254,33 +254,7 @@ const CreateBiography = () => {
   };
   // 注意：自动锚定放在 sections 声明之后，避免 TDZ 报错
 
-  // 时代锚点（简版）：输入出生年与关键词，给出建议并采纳
-  const [eraBirthYear, setEraBirthYear] = useState('');
-  const [eraKeyword, setEraKeyword] = useState('');
-  const [eraSuggestions, setEraSuggestions] = useState([]);
-  const [eraAnchors, setEraAnchors] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('era_anchors') || '[]'); } catch(_) { return []; }
-  });
-  useEffect(() => { try { localStorage.setItem('era_anchors', JSON.stringify(eraAnchors)); } catch(_){} }, [eraAnchors]);
-  const ERA_DB = [
-    { id: '1978_reform', label: '1978 改革开放开始（中国）', start: 1978, end: 1985, tags: ['改革开放'] },
-    { id: '1990s_internet', label: '1990s 互联网与市场化加速', start: 1993, end: 2000, tags: ['互联网'] },
-    { id: '2008_crisis', label: '2008 全球金融危机', start: 2007, end: 2009, tags: ['金融'] },
-    { id: '2007_2015_mobile', label: '2007-2015 移动互联网爆发', start: 2007, end: 2015, tags: ['移动互联网'] },
-  ];
-  useEffect(() => {
-    try {
-      const by = parseInt(eraBirthYear || '0', 10);
-      const kw = (eraKeyword || '').trim();
-      if (!by && !kw) { setEraSuggestions([]); return; }
-      const res = ERA_DB.filter(e => {
-        const hitKw = !kw || e.label.includes(kw) || e.tags.some(t => t.includes(kw));
-        const within = !by || (e.end - by >= 0 && e.start - by <= 60);
-        return hitKw && within;
-      }).map(e => ({ ...e, reason: by ? `当时年龄约 ${e.start - by} 至 ${e.end - by} 岁` : '' }));
-      setEraSuggestions(res);
-    } catch(_) { setEraSuggestions([]); }
-  }, [eraBirthYear, eraKeyword]);
+  // 时代锚点功能已移除，统一使用主题/事件选择
 
   // 篇章区域展示用标签：显示为"X篇"（不影响情感访谈师区域）
   const getSectionLabelByIndex = (idx) => {
@@ -374,22 +348,6 @@ const CreateBiography = () => {
   // 图文并茂篇章（每篇章：title + text + media[]）——固定为各阶段一一对应
   const [sections, setSections] = useState(Array.from({ length: lifeStages.length }, () => ({ title: '', text: '', media: [] })));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // 用户主动选择的当前篇章
-  // 自动锚定：根据当前篇章文本推荐时代锚点
-  useEffect(()=>{
-    try {
-      const txt = (sections[currentSectionIndex]?.text || '').toString();
-      if (!txt.trim()) return;
-      const hasInternet = /互联网|上网|网吧|手机|QQ|OICQ|微信|微博|智能机/.test(txt);
-      const hasFinance = /金融危机|次贷|雷曼|基金暴跌/.test(txt);
-      const rec = [];
-      if (hasInternet) rec.push('2007_2015_mobile','1990s_internet');
-      if (hasFinance) rec.push('2008_crisis');
-      if (rec.length) {
-        const add = ERA_DB.filter(e => rec.includes(e.id) && !(eraAnchors||[]).find(x=>x.id===e.id));
-        if (add.length) setEraSuggestions(prev => [...prev, ...add.map(e=>({ ...e, reason: '来自正文线索的自动推荐' }))]);
-      }
-    } catch(_){}
-  }, [sections, currentSectionIndex]);
   // 访谈节流：防止用户过快连续提问
   const lastAskAtRef = useRef(0);
   const MIN_INTERVAL_MS = 3200;
@@ -927,8 +885,8 @@ const CreateBiography = () => {
     const writerName = (localStorage.getItem('username') || username || '').toString();
     const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
-    const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const profileGuideFollow = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
+    const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}${p.education?`，学历${p.education}`:''}${p.occupation?`，职业${p.occupation}`:''}${p.maritalStatus?`，婚姻${p.maritalStatus}`:''}${p.children?`，子女${p.children}`:''}${p.personality?`，性格${p.personality}`:''}${p.hobbies?`，爱好${p.hobbies}`:''}${p.achievements?`，成就${p.achievements}`:''}。`;
+    const profileGuideFollow = '请在提问时参考被记录者的个人资料（祖籍、现居地、出生信息、教育背景、职业、家庭状况、性格特点、兴趣爱好等），从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
     const factRules = `${buildHardConstraints()}；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。请从"追踪视角（谁/何时/何地/因果/动作/对话/证据）"与"优势视角（能力/选择/韧性/体察）"两条线并用，避免空泛与琐碎日常。优先询问有深远意义的事件，而非表面细节。`;
     try {
       const perspectiveKick = (authorMode === 'other')
@@ -937,7 +895,7 @@ const CreateBiography = () => {
       const toneKick = (authorMode === 'other')
         ? '你现在是"引导者/助手"，帮助记录者一起梳理对方的人生经历，强调"整理与梳理"。'
         : '你现在是"情感陪伴师"，与当事人交流，语气自然温和。';
-      const profileGuideKick = '提问时请充分参考上述资料（如祖籍、现居地、出生年代、家庭与教育背景等），在不引入新信息的前提下，从不同维度切入，避免重复维度；若某项资料为空，切勿猜测。';
+      const profileGuideKick = '提问时请充分参考上述资料（如祖籍、现居地、出生年代、教育背景、职业、家庭状况、性格特点、兴趣爱好、重要成就等），在不引入新信息的前提下，从不同维度切入，避免重复维度；若某项资料为空，切勿猜测。';
       // 用户选择的主题引导
       const userSelectedThemes = userThemes[targetIndex] || [];
       const themeGuide = userSelectedThemes.length > 0 
@@ -993,7 +951,7 @@ const CreateBiography = () => {
         const writerName2 = (localStorage.getItem('username') || username || '').toString();
         const writerGender2 = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
         const writerProfile2 = `写作者资料：姓名${writerName2 || '（未填）'}，性别${writerGender2 || '（未填）'}。`;
-        const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}。`;
+        const subjectProfile2 = `被记录者资料：姓名${p2.name||'（未填）'}，性别${p2.gender||'（未填）'}，出生${p2.birth||'（未填）'}，祖籍${p2.origin||'（未填）'}，现居${p2.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p2.relation||'（未填）'}`:''}${p2.education?`，学历${p2.education}`:''}${p2.occupation?`，职业${p2.occupation}`:''}${p2.maritalStatus?`，婚姻${p2.maritalStatus}`:''}${p2.children?`，子女${p2.children}`:''}${p2.personality?`，性格${p2.personality}`:''}${p2.hobbies?`，爱好${p2.hobbies}`:''}${p2.achievements?`，成就${p2.achievements}`:''}。`;
         const factRules2 = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。请并用"追踪视角（谁/何时/何地/因果/动作/对话/证据）"与"优势视角（能力/选择/韧性/体察）"。优先询问有深远意义的事件，而非表面细节。';
         // 用户选择的主题引导（重试块）
         const userSelectedThemes2 = userThemes[targetIndex] || [];
@@ -1236,8 +1194,8 @@ const CreateBiography = () => {
     const writerName = (localStorage.getItem('username') || username || '').toString();
     const writerGender = (localStorage.getItem('writer_gender') || localStorage.getItem('user_gender') || '（未填）').toString();
     const writerProfile = `写作者资料：姓名${writerName || '（未填）'}，性别${writerGender || '（未填）'}。`;
-    const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}。`;
-    const profileGuide = '请在提问时参考被记录者的祖籍、现居地、出生信息与家庭教育背景等资料，从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
+    const subjectProfile = `被记录者资料：姓名${p.name||'（未填）'}，性别${p.gender||'（未填）'}，出生${p.birth||'（未填）'}，祖籍${p.origin||'（未填）'}，现居${p.residence||'（未填）'}${authorMode==='other'?`，与写作者关系${authorRelation||p.relation||'（未填）'}`:''}${p.education?`，学历${p.education}`:''}${p.occupation?`，职业${p.occupation}`:''}${p.maritalStatus?`，婚姻${p.maritalStatus}`:''}${p.children?`，子女${p.children}`:''}${p.personality?`，性格${p.personality}`:''}${p.hobbies?`，爱好${p.hobbies}`:''}${p.achievements?`，成就${p.achievements}`:''}。`;
+    const profileGuide = '请在提问时参考被记录者的个人资料（祖籍、现居地、出生信息、教育背景、职业、家庭状况、性格特点、兴趣爱好、重要成就等），从多维度切入并保持与已知事实一致，资料缺失时不要猜测。';
     const factRules = '严格事实：仅依据用户资料与已出现的问答事实，信息不足请先追问，禁止脑补与抽象词；反馈≤30字，问题≤40字；不要使用列表或编号。问题优先级：①人生重大转折（关键决策、重要选择、命运改变）②深刻影响（对人生观的塑造、重要关系的建立）③情感深度（内心冲突、成长顿悟、难忘时刻）。优先询问有深远意义的事件，而非表面细节与琐碎日常。';
     // 用户选择的主题引导
     const userSelectedThemes = userThemes[stageIndex] || [];
@@ -2023,7 +1981,7 @@ const CreateBiography = () => {
     
     // 第二阶段：文学化表达
     const themeGuidePolish = selectedThemes.length > 0 
-      ? `\n\n本段重点主题：${selectedThemes.join('、')}。请围绕这些主题组织叙事，但要自然融入，不要生硬堆砌。`
+      ? `\n\n本段重点主题/事件：${selectedThemes.join('、')}。请围绕这些主题或事件组织叙事，但要自然融入，不要生硬堆砌。`
       : '';
       
     const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
@@ -2235,7 +2193,7 @@ const CreateBiography = () => {
     
     // 第二阶段：文学化表达
     const themeGuide = selectedThemes.length > 0 
-      ? `\n\n本段重点主题：${selectedThemes.join('、')}。请围绕这些主题组织叙事，但要自然融入，不要生硬堆砌。`
+      ? `\n\n本段重点主题/事件：${selectedThemes.join('、')}。请围绕这些主题或事件组织叙事，但要自然融入，不要生硬堆砌。`
       : '';
     
     const stage2System = `你是一位优秀的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
@@ -2551,8 +2509,6 @@ const CreateBiography = () => {
     try { return localStorage.getItem('richtext_mode') === '1'; } catch(_) { return false; }
   });
   const richDivRef = useRef(null);
-  // 时代面板展开
-  const [showEraPanel, setShowEraPanel] = useState(false);
 
   return (
     <div className="min-h-screen py-4 sm:py-6">
@@ -2561,9 +2517,9 @@ const CreateBiography = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowThemeSelector(false); }}>
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">选择您想重点记录的主题</h2>
-              <p className="text-sm text-gray-600">为「{getStageLabelByIndex(currentThemeStageIndex)}」阶段选择您认为重要的主题，系统会据此提出更有针对性的问题。</p>
-              <p className="text-xs text-gray-500 mt-1">建议选择 2-4 个主题，也可以跳过直接开始。</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">选择您想重点记录的主题/事件</h2>
+              <p className="text-sm text-gray-600">为「{getStageLabelByIndex(currentThemeStageIndex)}」阶段选择您认为重要的主题或关键事件，系统会据此提出更有针对性的问题。</p>
+              <p className="text-xs text-gray-500 mt-1">建议选择 2-5 个主题/事件，也可以跳过直接开始。</p>
             </div>
             
             <div className="mb-4">
@@ -2598,12 +2554,12 @@ const CreateBiography = () => {
             </div>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">自定义主题（可选）</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">自定义主题/事件（可选）</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="输入您的自定义主题，然后点击添加"
+                  placeholder="输入您的自定义主题或事件，然后点击添加"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.target.value.trim()) {
                       const custom = e.target.value.trim();
@@ -2643,7 +2599,7 @@ const CreateBiography = () => {
             
             {(userThemes[currentThemeStageIndex] || []).length > 0 && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-2">已选择的主题：</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">已选择的主题/事件：</p>
                 <div className="flex flex-wrap gap-2">
                   {(userThemes[currentThemeStageIndex] || []).map((theme) => (
                     <span key={theme} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
@@ -2696,17 +2652,138 @@ const CreateBiography = () => {
           <title>{(bioTitle || '我的一生') + ' - 永念'}</title>
         </Helmet>
         {/* 记录对象基本信息表单（首页已填写，此处隐藏） */}
-        <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900 hidden">
-          <h3 className="text-lg font-semibold mb-2">记录对象信息</h3>
+        <div className="mb-4 border rounded p-3 sm:p-4 bg-white border-gray-200 text-gray-900">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold">记录对象详细信息</h3>
+            <span className="text-xs text-gray-500">* 为必填项</span>
+          </div>
+          
+          {/* 基础信息（必填） */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-blue-600 mr-2"></span>
+              基础信息（必填）
+            </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input className="input" placeholder="姓名" value={profile.name||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), name:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
-            <input className="input" placeholder="性别" value={profile.gender||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), gender:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
-            <input className="input" placeholder="出生年月（如 1950-06）" value={profile.birth||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), birth:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
-            <input className="input" placeholder="祖籍" value={profile.origin||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), origin:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
-            <input className="input" placeholder="现居住地" value={profile.residence||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), residence:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              <div>
+                <input className="input" placeholder="* 姓名" value={profile.name||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), name:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} required />
+              </div>
+              <div>
+                <input className="input" placeholder="* 性别" value={profile.gender||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), gender:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} required />
+              </div>
+              <div>
+                <input className="input" placeholder="* 出生年月（如 1950-06-15）" value={profile.birth||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), birth:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} required />
+              </div>
+              <div>
+                <input className="input" placeholder="* 祖籍" value={profile.origin||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), origin:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} required />
+              </div>
+              <div>
+                <input className="input" placeholder="* 现居住地" value={profile.residence||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), residence:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} required />
+              </div>
             {authorMode==='other' && (
-              <input className="input" placeholder="与被记录人的关系（如 母亲）" value={authorRelation||profile.relation||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setAuthorRelation(v); setProfile(p=>{ const n={...(p||{}), relation:v}; try{localStorage.setItem('record_profile', JSON.stringify(n)); localStorage.setItem('author_relation', v);}catch(_){ } return n; }); }} />
-            )}
+                <div>
+                  <input className="input" placeholder="* 与被记录人的关系（如 母亲）" value={authorRelation||profile.relation||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setAuthorRelation(v); setProfile(p=>{ const n={...(p||{}), relation:v}; try{localStorage.setItem('record_profile', JSON.stringify(n)); localStorage.setItem('author_relation', v);}catch(_){ } return n; }); }} required />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 教育与职业信息（选填） */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-green-600 mr-2"></span>
+              教育与职业信息（选填）
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <input className="input" placeholder="学历/教育背景（如 大学本科）" value={profile.education||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), education:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="毕业院校（如 北京大学）" value={profile.school||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), school:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="职业/工作（如 教师/退休）" value={profile.occupation||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), occupation:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="工作单位（如 XX中学）" value={profile.workplace||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), workplace:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+            </div>
+          </div>
+
+          {/* 家庭信息（选填） */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-purple-600 mr-2"></span>
+              家庭信息（选填）
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <input className="input" placeholder="婚姻状况（如 已婚/未婚）" value={profile.maritalStatus||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), maritalStatus:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="子女情况（如 一子一女）" value={profile.children||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), children:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="父母情况（如 父母健在）" value={profile.parents||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), parents:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="兄弟姐妹（如 排行老二，有兄长）" value={profile.siblings||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), siblings:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+            </div>
+          </div>
+
+          {/* 个人特征（选填） */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-orange-600 mr-2"></span>
+              个人特征（选填）
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <input className="input" placeholder="性格特点（如 开朗乐观、坚韧不拔）" value={profile.personality||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), personality:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div className="sm:col-span-2">
+                <input className="input" placeholder="兴趣爱好（如 书法、园艺、旅游）" value={profile.hobbies||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), hobbies:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div className="sm:col-span-2">
+                <input className="input" placeholder="重要成就（如 省级劳模、发表多篇论文）" value={profile.achievements||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), achievements:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+            </div>
+          </div>
+
+          {/* 信仰与价值观（选填） */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-red-600 mr-2"></span>
+              信仰与价值观（选填）
+            </h4>
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <input className="input" placeholder="信仰/宗教（如 佛教、基督教、无）" value={profile.religion||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), religion:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="人生座右铭/价值观（如 知足常乐）" value={profile.motto||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), motto:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+            </div>
+          </div>
+
+          {/* 其他信息（选填） */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="inline-block w-1 h-4 bg-gray-600 mr-2"></span>
+              其他信息（选填）
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <input className="input" placeholder="健康状况（如 身体健康/有慢性病）" value={profile.health||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), health:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div>
+                <input className="input" placeholder="重要人生节点（如 1978年参军）" value={profile.milestones||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), milestones:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+              <div className="sm:col-span-2">
+                <textarea className="input min-h-[80px]" placeholder="补充说明（其他想要记录的重要信息）" value={profile.notes||''} onChange={e=>{ const v=sanitizeInput(e.target.value); setProfile(p=>{ const n={...(p||{}), notes:v}; try{localStorage.setItem('record_profile', JSON.stringify(n));}catch(_){ } return n; }); }} />
+              </div>
+            </div>
           </div>
         </div>
         <div className="mb-4">
@@ -2765,74 +2842,6 @@ const CreateBiography = () => {
                   </div>
                   <div className="mt-3 text-xs text-gray-500">严格事实与更具体已固定；文风可选。渲染度默认不渲染，仅基于问答生成原始回忆。</div>
               </div>
-            )}
-            </div>
-          </div>
-          {/* 时代锚点面板 */}
-          <div className="-mx-4 sm:mx-0 px-4">
-            <div className="border rounded bg-white border-gray-200 text-gray-900">
-              <button type="button" className="w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3" onClick={()=>setShowEraPanel(v=>!v)}>
-                <span className="font-semibold">时代锚点（可选）</span>
-                <span className="text-sm text-gray-500">建议先确定出生年，再输入关键词</span>
-              </button>
-              {showEraPanel && (
-              <div className="p-3 sm:p-4 border-t border-gray-200">
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-sm mb-1">出生年份</label>
-                    <input className="input" placeholder="如 1970" value={eraBirthYear} onChange={(e)=>setEraBirthYear(e.target.value)} />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm mb-1">事件关键词</label>
-                    <input className="input" placeholder="如 改革开放/互联网/金融危机" value={eraKeyword} onChange={(e)=>setEraKeyword(e.target.value)} />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <div className="text-xs text-gray-600 mb-2">建议：</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {(eraSuggestions || []).length === 0 && <div className="text-xs text-gray-400">暂无建议</div>}
-                    {(eraSuggestions || []).map(s => (
-                      <div key={s.id} className="p-3 border rounded bg-slate-50 flex items-start justify-between">
-                        <div>
-                          <div className="text-sm font-medium">{s.label}</div>
-                          <div className="text-xs text-gray-500">{s.reason}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <select className="input text-xs" onChange={(e)=>{ const stage = e.target.value; setEraAnchors(prev=>[...prev.filter(x=>x.id!==s.id), { ...s, stage }]); }} defaultValue="">
-                            <option value="">关联阶段</option>
-                            {lifeStages.map((ls, idx)=>(<option key={idx} value={ls}>{ls}</option>))}
-                          </select>
-                          <button className="btn btn-tertiary text-xs" onClick={()=>{ if (!eraAnchors.find(a=>a.id===s.id)) setEraAnchors(prev=>[...prev, s]); }}>采纳</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {(eraAnchors || []).length > 0 && (
-                    <div className="mt-3">
-                      <div className="text-xs text-gray-600 mb-2">已采纳（按人生节点分组）：</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {lifeStages.map((ls, idx)=>{
-                          const items = eraAnchors.filter(a => (a.stage || '') === ls);
-                          if (items.length === 0) return null;
-                          return (
-                            <div key={idx} className="p-3 border rounded">
-                              <div className="text-sm font-semibold mb-2">{ls}</div>
-                              <div className="space-y-2">
-                                {items.map(a => (
-                                  <div key={a.id} className="p-2 border rounded bg-white flex items-center justify-between">
-                                    <div className="text-sm">{a.label}</div>
-                                    <button className="text-xs text-red-500" onClick={()=>setEraAnchors(prev=>prev.filter(x=>x.id!==a.id))}>移除</button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
               )}
             </div>
           </div>
@@ -2887,11 +2896,11 @@ const CreateBiography = () => {
                       )}
                   </div>
                   </div>
-                  {/* 显示已选主题 */}
+                  {/* 显示已选主题/事件 */}
                   {(userThemes[currentSectionIndex] || []).length > 0 && (
                     <div className="mb-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-xs font-medium text-blue-900">重点主题：</span>
+                        <span className="text-xs font-medium text-blue-900">重点主题/事件：</span>
                         <button
                           type="button"
                           onClick={() => {
