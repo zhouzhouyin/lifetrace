@@ -819,19 +819,96 @@ const Home = () => {
                 <button className="btn btn-secondary" onClick={() => handleAuthorPick('other')}>为他人记录</button>
               </div>
               {showProfileForm && (
-                <div className="mt-4 text-left">
-                  <h4 className="font-semibold mb-2">请先填写基本资料</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input className="input" placeholder="姓名" value={profile.name||''} onChange={e=>setProfile(p=>({...(p||{}), name:e.target.value}))} />
-                    <input className="input" placeholder="性别" value={profile.gender||''} onChange={e=>setProfile(p=>({...(p||{}), gender:e.target.value}))} />
-                    <input className="input" placeholder="出生年月（如 1950-06）" value={profile.birth||''} onChange={e=>setProfile(p=>({...(p||{}), birth:e.target.value}))} />
-                    <input className="input" placeholder="祖籍" value={profile.origin||''} onChange={e=>setProfile(p=>({...(p||{}), origin:e.target.value}))} />
-                    <input className="input" placeholder="现居住地" value={profile.residence||''} onChange={e=>setProfile(p=>({...(p||{}), residence:e.target.value}))} />
-                    {(localStorage.getItem('author_mode')||'self')==='other' && (
-                      <input className="input" placeholder="与被记录人的关系（如 母亲）" value={profile.relation||''} onChange={e=>setProfile(p=>({...(p||{}), relation:e.target.value}))} />
-                    )}
+                <div className="mt-4 text-left max-h-[60vh] overflow-y-auto">
+                  <h4 className="font-semibold mb-2">请填写记录对象详细信息</h4>
+                  <p className="text-xs text-gray-500 mb-3">* 为必填项</p>
+                  
+                  {/* 基础信息（必填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-blue-600 mr-2"></span>
+                      基础信息（必填）
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input className="input" placeholder="* 姓名" value={profile.name||''} onChange={e=>setProfile(p=>({...(p||{}), name:e.target.value}))} />
+                      <input className="input" placeholder="* 性别" value={profile.gender||''} onChange={e=>setProfile(p=>({...(p||{}), gender:e.target.value}))} />
+                      <input className="input" placeholder="* 出生年月（如 1950-06-15）" value={profile.birth||''} onChange={e=>setProfile(p=>({...(p||{}), birth:e.target.value}))} />
+                      <input className="input" placeholder="* 祖籍" value={profile.origin||''} onChange={e=>setProfile(p=>({...(p||{}), origin:e.target.value}))} />
+                      <input className="input" placeholder="* 现居住地" value={profile.residence||''} onChange={e=>setProfile(p=>({...(p||{}), residence:e.target.value}))} />
+                      {(localStorage.getItem('author_mode')||'self')==='other' && (
+                        <input className="input" placeholder="* 与被记录人的关系（如 母亲）" value={profile.relation||''} onChange={e=>setProfile(p=>({...(p||{}), relation:e.target.value}))} />
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-3 flex gap-2">
+
+                  {/* 教育与职业信息（选填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-green-600 mr-2"></span>
+                      教育与职业信息（选填）
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input className="input" placeholder="学历（如 大学本科）" value={profile.education||''} onChange={e=>setProfile(p=>({...(p||{}), education:e.target.value}))} />
+                      <input className="input" placeholder="毕业院校（如 北京大学）" value={profile.school||''} onChange={e=>setProfile(p=>({...(p||{}), school:e.target.value}))} />
+                      <input className="input" placeholder="职业（如 教师/退休）" value={profile.occupation||''} onChange={e=>setProfile(p=>({...(p||{}), occupation:e.target.value}))} />
+                      <input className="input" placeholder="工作单位（如 XX中学）" value={profile.workplace||''} onChange={e=>setProfile(p=>({...(p||{}), workplace:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  {/* 家庭信息（选填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-purple-600 mr-2"></span>
+                      家庭信息（选填）
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input className="input" placeholder="婚姻状况（如 已婚）" value={profile.maritalStatus||''} onChange={e=>setProfile(p=>({...(p||{}), maritalStatus:e.target.value}))} />
+                      <input className="input" placeholder="子女情况（如 一子一女）" value={profile.children||''} onChange={e=>setProfile(p=>({...(p||{}), children:e.target.value}))} />
+                      <input className="input" placeholder="父母情况（如 父母健在）" value={profile.parents||''} onChange={e=>setProfile(p=>({...(p||{}), parents:e.target.value}))} />
+                      <input className="input" placeholder="兄弟姐妹（如 排行老二）" value={profile.siblings||''} onChange={e=>setProfile(p=>({...(p||{}), siblings:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  {/* 个人特征（选填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-orange-600 mr-2"></span>
+                      个人特征（选填）
+                    </h5>
+                    <div className="grid grid-cols-1 gap-3">
+                      <input className="input" placeholder="性格特点（如 开朗乐观、坚韧不拔）" value={profile.personality||''} onChange={e=>setProfile(p=>({...(p||{}), personality:e.target.value}))} />
+                      <input className="input" placeholder="兴趣爱好（如 书法、园艺、旅游）" value={profile.hobbies||''} onChange={e=>setProfile(p=>({...(p||{}), hobbies:e.target.value}))} />
+                      <input className="input" placeholder="重要成就（如 省级劳模）" value={profile.achievements||''} onChange={e=>setProfile(p=>({...(p||{}), achievements:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  {/* 信仰与价值观（选填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-red-600 mr-2"></span>
+                      信仰与价值观（选填）
+                    </h5>
+                    <div className="grid grid-cols-1 gap-3">
+                      <input className="input" placeholder="信仰/宗教（如 佛教、无）" value={profile.religion||''} onChange={e=>setProfile(p=>({...(p||{}), religion:e.target.value}))} />
+                      <input className="input" placeholder="人生座右铭（如 知足常乐）" value={profile.motto||''} onChange={e=>setProfile(p=>({...(p||{}), motto:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  {/* 其他信息（选填） */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <span className="inline-block w-1 h-4 bg-gray-600 mr-2"></span>
+                      其他信息（选填）
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input className="input" placeholder="健康状况（如 身体健康）" value={profile.health||''} onChange={e=>setProfile(p=>({...(p||{}), health:e.target.value}))} />
+                      <input className="input" placeholder="重要人生节点（如 1978年参军）" value={profile.milestones||''} onChange={e=>setProfile(p=>({...(p||{}), milestones:e.target.value}))} />
+                      <textarea className="input min-h-[60px] sm:col-span-2" placeholder="补充说明" value={profile.notes||''} onChange={e=>setProfile(p=>({...(p||{}), notes:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex gap-2 justify-end pt-3 border-t sticky bottom-0 bg-white">
+                    <button className="btn btn-secondary" onClick={() => setShowProfileForm(false)}>取消</button>
                     <button className="btn btn-primary" onClick={handleProfileSave}>保存</button>
                   </div>
                 </div>

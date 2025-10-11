@@ -265,7 +265,7 @@ const My = () => {
 
   // 重置记录对象（防错提示）
   const handleResetSubject = () => {
-    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被“隔离”（仅可查看与删除，无法再落章）。请先完成当前对象的回忆整理，再开始新的对象。是否继续？');
+    const ok = window.confirm('重要提示：重置记录对象后，之前的随手记将被"隔离"（仅可查看与删除，无法再落章）。\n\n您可以在首页重新选择"为自己记录"或"为他人记录"，并填写新的对象信息。\n\n是否继续？');
     if (!ok) return;
     try {
       const oldVersion = Number(localStorage.getItem('subject_version') || '0') || 0;
@@ -275,8 +275,8 @@ const My = () => {
       localStorage.removeItem('record_profile');
       // 后端同步重置
       try { const token = localStorage.getItem('token'); axios.delete('/api/record-subject', { headers: { Authorization: `Bearer ${token}` } }).catch(()=>{}); } catch (_) {}
-      setMessage('已重置记录对象。请返回首页重新选择。');
-      setTimeout(() => setMessage(''), 1600);
+      setMessage('已重置记录对象。正在跳转到首页...');
+      setTimeout(() => navigate('/'), 1000);
     } catch (_) {}
   };
 
