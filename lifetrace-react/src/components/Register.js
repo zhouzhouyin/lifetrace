@@ -72,9 +72,9 @@ const Register = () => {
       return;
     }
 
-    // 隐私与条款校验（必须已查看并勾选同意）
-    if (!(viewedPrivacy && viewedTerms && agreedPolicies)) {
-      setMessage('请先点击查看《隐私政策》《服务条款》，并勾选同意后再注册');
+    // 隐私与条款校验（只需勾选同意即可）
+    if (!agreedPolicies) {
+      setMessage('请勾选同意《隐私政策》和《服务条款》后再注册');
       return;
     }
 
@@ -208,13 +208,13 @@ const Register = () => {
               <a href="/terms" className="underline" style={{ color: '#2563eb' }} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('viewed_terms','1'); }catch(_){}; setViewedTerms(true); window.location.href='/terms'; }}>{lang === 'zh' ? '《服务条款》' : 'Terms of Service'}</a>
             </div>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={agreedPolicies} disabled={!(viewedPrivacy && viewedTerms)} onChange={(e)=>{ const v=e.target.checked; setAgreedPolicies(v); try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
-              <span>{lang === 'zh' ? '我已阅读并同意上述条款（需先点击查看）' : 'I have read and agree to the above (please view first)'}</span>
+              <input type="checkbox" checked={agreedPolicies} onChange={(e)=>{ const v=e.target.checked; setAgreedPolicies(v); try{ localStorage.setItem('agree_policies_reg', v ? '1':''); }catch(_){} }} />
+              <span>{lang === 'zh' ? '我已阅读并同意上述条款' : 'I have read and agree to the above'}</span>
             </label>
           </div>
 
           <div className="flex gap-4">
-            <button type="submit" className="btn btn-primary w-full" disabled={isLoading || !(viewedPrivacy && viewedTerms && agreedPolicies)}>
+            <button type="submit" className="btn btn-primary w-full" disabled={isLoading || !agreedPolicies}>
               {isLoading ? (lang === 'zh' ? '注册中...' : 'Registering...') : (lang === 'zh' ? '注册' : 'Register')}
             </button>
             <button
