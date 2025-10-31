@@ -45,7 +45,7 @@ export const AppContextProvider = ({ children }) => {
   const [lang, setLang] = useState(localStorage.getItem('lang') || 'zh');
   const translations = {
     zh: {
-      titlePlaceholder: '请输入传记主标题（例如：我的一生）',
+      titlePlaceholder: '请输入标题',
       startInterview: '开始访谈',
       voiceInput: '语音输入',
       stopRecording: '停止录音',
