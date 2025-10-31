@@ -162,7 +162,8 @@ const CreateBiography = () => {
     try { return localStorage.getItem('ai_custom_tone') || ''; } catch (_) { return ''; }
   });
   const [showStylePanel, setShowStylePanel] = useState(() => {
-    try { return !(window && window.innerWidth < 640); } catch (_) { return true; }
+    // 默认收起，用户需要主动点击展开
+    return false;
   });
 
   // 保存到本地 & 同步后端（最佳努力）
