@@ -439,38 +439,9 @@ const CreateBiography = () => {
     setCurrentSectionIndex(Math.max(0, Math.min(stageIdx, lifeStages.length - 1)));
   };
 
-  // 若Q&A不足，先发起一次有针对性的追问再生成
+  // 已去掉必须问答数量限制，允许随时生成
   const maybeAskFollowUpBeforeGenerate = async (sectionIndex) => {
-    try {
-      const txt = (sections[sectionIndex]?.text || '').toString();
-      const answers = (txt.match(/^我：/gm) || []).length;
-      const plainLen = txt.replace(/^陪伴师：.*$/gm, '').length;
-      if (answers >= 2 && plainLen >= 80) return false; // 足够生成
-      const token = localStorage.getItem('token');
-      if (!token) return false;
-      const stageName = getStageLabelByIndex(sectionIndex);
-      const perspectiveKick = (authorMode === 'other')
-        ? `请用第二人称"你"，采用关系视角，面向写作者追问与"${authorRelation || profile?.relation || '这位亲人'}"相关的一个关键细节。`
-        : '请用第二人称"您/你"提出一个关键细节问题。';
-      const askRule = `目的：当前材料不足以顺畅成文，请先提出一个最关键、最具体的问题以补齐细节（仅一句）。${buildStyleRules('ask')}`;
-      const system = `你是一位温暖而克制的引导者。当前阶段：${stageName}。${perspectiveKick} ${askRule}`;
-      const snippet = txt.slice(-800);
-      const messages = [
-        { role: 'system', content: system },
-        { role: 'user', content: `以下是已收集的部分问答片段：\n\n${snippet}\n\n请仅输出一个最关键的追问（仅一句），不要其它文字。` },
-      ];
-      const resp = await callSparkThrottled({ model: 'x1', messages, max_tokens: 120, temperature: 0.3,
-        user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true });
-      const q = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-      if (q) {
-        const out = finalizeAssistant(q);
-        setChatMessages(prev => [...prev, { role: 'assistant', content: out }]);
-        appendLineToSection(sectionIndex, `陪伴师：${out}`);
-        setMessage('信息稍显不足，我已补充一个追问，请先回答再生成本篇回忆');
-        setTimeout(() => setMessage(''), 1600);
-        return true; // 已追问，暂不生成
-      }
-    } catch (_) {}
+    // 不再检查问答数量，允许随时生成
     return false;
   };
 
@@ -2398,10 +2369,7 @@ ${userStyleRules}
       setTimeout(() => navigate('/login'), 1000);
       return;
     }
-    if (!chatMessages || chatMessages.length === 0) {
-      setMessage('暂无对话记录，无法生成篇章');
-      return;
-    }
+    // 已去掉对对话记录的强制要求，允许直接生成
     setIsGeneratingChapters(true);
     try {
       // 将最近对话按"陪伴师问/我答"对组装成清晰的QA序列，供模型分章
@@ -2417,10 +2385,15 @@ ${userStyleRules}
           currentQ = '';
         }
       }
+      // 允许没有问答对时也能生成，基于现有篇章内容
       if (qaPairs.length === 0) {
-        setMessage('未找到有效的问答对，无法生成篇章');
-        setIsGeneratingChapters(false);
-        return;
+        // 如果没有问答对，检查是否有现有篇章内容可以生成
+        const hasContent = sections.some(s => (s.text || '').trim().length > 0);
+        if (!hasContent) {
+          setMessage('暂无问答记录或篇章内容，请先进行访谈或在篇章中输入内容');
+          setIsGeneratingChapters(false);
+          return;
+        }
       }
 
       // 把现有章节媒体暂存，后续仅替换 text
@@ -2818,7 +2791,7 @@ ${userStyleRules}
           <input
             type="text"
             className="input text-center text-2xl sm:text-3xl font-bold"
-            placeholder={t ? t('titlePlaceholder') : '请输入标题'}
+            placeholder={t ? t('titlePlaceholder') : '请输入标题：如（我的一生）'}
             value={bioTitle}
             onChange={(e) => setBioTitle(sanitizeInput(e.target.value))}
             maxLength={200}
@@ -3070,10 +3043,9 @@ ${userStyleRules}
                     <button
                       type="button"
                       className="btn btn-primary w-full sm:w-auto"
-                      disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading || !((sections[currentSectionIndex]?.text)||'').trim()}
+                      disabled={polishingSectionIndex === currentSectionIndex || isSaving || isUploading}
                       onClick={async () => {
-                        const section = sections[currentSectionIndex] || {};
-                        if (!((section.text || '').trim())) return;
+                        // 已去掉对文本内容的强制要求，允许直接生成
                         const asked = await maybeAskFollowUpBeforeGenerate(currentSectionIndex);
                         if (asked) return;
                         setPolishingSectionIndex(currentSectionIndex);
@@ -3101,13 +3073,20 @@ ${userStyleRules}
                             }
                           }
                           
-                          if (qaPairs.length === 0) {
-                            setMessage('未找到有效的问答对，请先进行访谈');
-                            setPolishingSectionIndex(null);
-                            return;
+                          // 允许没有问答对时也能生成，使用现有文本内容
+                          let qaText = '';
+                          if (qaPairs.length > 0) {
+                            qaText = `问答对如下：\n${qaPairs.map((p, idx) => `Q${idx + 1}：${p.q}\nA${idx + 1}：${p.a}`).join('\n')}`;
+                          } else {
+                            // 如果没有问答对，使用现有文本内容作为输入
+                            const existingText = (sections[currentSectionIndex]?.text || '').trim();
+                            if (!existingText) {
+                              setMessage('当前篇章没有内容，请先输入一些文字或进行访谈');
+                              setPolishingSectionIndex(null);
+                              return;
+                            }
+                            qaText = `请基于以下内容生成篇章：\n${existingText}`;
                           }
-                          
-                          const qaText = `问答对如下：\n${qaPairs.map((p, idx) => `Q${idx + 1}：${p.q}\nA${idx + 1}：${p.a}`).join('\n')}`;
                           const chapterThemes = userThemes[currentSectionIndex] || [];
                           
                           const polished = await twoStageGenerate(qaText, token, currentSectionIndex, chapterThemes);
