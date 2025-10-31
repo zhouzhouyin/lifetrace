@@ -1236,7 +1236,7 @@ const CreateBiography = () => {
             <input
               type="text"
               className="input w-full"
-              placeholder="请输入传记标题"
+              placeholder="请输入标题"
               value={bioTitle}
               onChange={(e) => setBioTitle(sanitizeInput(e.target.value))}
               maxLength={200}
