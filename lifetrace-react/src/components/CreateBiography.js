@@ -238,9 +238,9 @@ const CreateBiography = () => {
       ? '注重具体细节，适当使用抽象概括'
       : '以抽象概括为主，细节为辅';
     
-    // 长度（已去掉字数限制，AI根据问答想生成多少文字就生成多少文字）
+    // 长度（已完全去掉生成字数限制，AI根据问答内容的丰富程度自动决定生成长度）
     const lenAsk = prefLength === 'long' ? '反馈≤50字，问题≤80字' : (prefLength === 'medium' ? '反馈≤40字，问题≤60字' : '反馈≤30字，问题≤40字');
-    const lenGen = ''; // 已去掉生成字数限制
+    const lenGen = '根据问答内容的丰富程度和需要，自动决定生成长度。如果问答内容丰富详细，可以生成较长的段落；如果内容简单，则生成简洁的段落。不要为了凑字数而重复或扩展，也不要因为内容少而强行缩短。';
     
     const adapt = '如检测到悲伤/庄重情境（如离别、疾病、悼念等），自动将文风调为更克制与庄重，避免不合时宜的幽默或过度修辞。';
     
@@ -606,13 +606,13 @@ const CreateBiography = () => {
         const original = (sections[i]?.text || '').trim();
         if (!original) continue;
         setMessage(`正在润色：第 ${i + 1}/${sections.length} 篇章…`);
-        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文；输出不超过5000字。请并用“追踪视角（谁/何时/何地/因果/动作/对话/证据）”与“优势视角（能力/选择/韧性/体察）”，遇到时间冲突仅提示可能区间与核对建议，禁止自定具体时间。';
+        const system = '你是一位专业的文本润色助手。仅润色用户提供的这一章内容，使其更流畅、自然、朴素而真挚；保持第一人称与事实细节（姓名、地名、时间等）；不新增编造的事实；不添加总结或标题；仅输出润色后的正文。请并用"追踪视角（谁/何时/何地/因果/动作/对话/证据）"与"优势视角（能力/选择/韧性/体察）"，遇到时间冲突仅提示可能区间与核对建议，禁止自定具体时间。根据原文内容的丰富程度，自动决定润色后的长度，保持自然流畅。';
         const messages = [
           { role: 'system', content: system },
           { role: 'user', content: `请润色这一章内容：\n${original}` },
         ];
         try {
-          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+          const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 8000, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
           const polished = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
           if (polished) {
             setSections(prev => prev.map((s, idx) => idx === i ? { ...s, text: polished } : s));
@@ -2016,7 +2016,7 @@ const CreateBiography = () => {
         { role: 'system', content: stage1System },
         { role: 'user', content: stage1User },
       ],
-      max_tokens: 1500,
+      max_tokens: 8000, // 设置较大的上限，AI根据问答内容自动决定实际生成长度
       temperature: 0.2,
       user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
     }, token, { silentThrottle: true }));
@@ -2070,15 +2070,21 @@ const CreateBiography = () => {
 6. 若信息不足，可保持空白或使用'……'表示，不得自行编造
 7. 严格依据问答记录中的事实，禁止任何形式的脑补或推断
 
+【生成长度】
+8. 根据问答内容的丰富程度和需要，自动决定生成长度
+9. 如果问答内容丰富详细，可以生成较长的段落；如果内容简单，则生成简洁的段落
+10. 不要为了凑字数而重复或扩展内容，也不要因为内容少而强行缩短
+11. 以自然、流畅、完整地表达事实清单中的所有内容为准
+
 【叙事重构】
-8. 保留事实内容，但用场景化语言重构叙事
-9. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
-10. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
-11. 通过场景重现、细节刻画来展现情绪，但仅限于事实清单中的细节
+12. 保留事实内容，但用场景化语言重构叙事
+13. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
+14. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+15. 通过场景重现、细节刻画来展现情绪，但仅限于事实清单中的细节
 
 【情感深度】
-12. 使用第一人称回忆口吻，加入内心反思与当下的感悟（但不得编造情感）
-13. 让读者感受到时间沉淀后的思考和情感（基于事实的情感表达）
+16. 使用第一人称回忆口吻，加入内心反思与当下的感悟（但不得编造情感）
+17. 让读者感受到时间沉淀后的思考和情感（基于事实的情感表达）
 
 【用户风格设置】
 ${userStyleRulesPolish}
@@ -2097,6 +2103,12 @@ ${userStyleRulesPolish}
 ✗ 若某个部分信息不足，使用'……'表示，不得自行编造
 ✗ 严格依据问答记录中的事实，禁止任何形式的脑补、推断或想象
 
+【生成长度】
+✓ 根据事实清单的内容丰富程度，自动决定合适的长度
+✓ 如果事实清单内容丰富详细，可以生成较长的段落；如果内容简单，则生成简洁的段落
+✓ 以完整、自然地表达所有事实内容为准，不要为了凑字数而重复或扩展
+✓ 也不要因为内容少而强行缩短，保持自然流畅的表达
+
 【表达要求】
 ✓ 直接用"我"的视角叙述，像讲述自己的故事
 ✓ 完全去除问答痕迹，不要出现"陪伴师""提问""回答"等字眼  
@@ -2112,7 +2124,7 @@ ${userStyleRulesPolish}
         { role: 'system', content: stage2System },
         { role: 'user', content: stage2User },
       ],
-      max_tokens: 3000, // 增加token限制，允许更长的生成
+      max_tokens: 8000, // 设置较大的上限，AI根据问答内容自动决定实际生成长度
       temperature: 0.4, // 降低温度，确保严格依据事实
       user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
     }, token, { silentThrottle: true }));
@@ -2163,12 +2175,12 @@ ${userStyleRulesPolish}
       // 简介自动润色（可选）：仅当已有简介时尝试润色一遍
       if ((bioSummary || '').trim()) {
         try {
-          const systemSum = '你是一位专业的编辑。请将以下传记简介润色，保持朴素真挚、简练清晰，不编造事实，输出不超过150字，仅输出润色后的简介文本。';
+          const systemSum = '你是一位专业的编辑。请将以下传记简介润色，保持朴素真挚、简练清晰，不编造事实，仅输出润色后的简介文本。根据原文内容的丰富程度，自动决定合适的长度，保持简洁但完整。';
           const messagesSum = [
             { role: 'system', content: systemSum },
             { role: 'user', content: `请润色这段传记简介：\n${bioSummary}` },
           ];
-          const respSum = await retry(() => callSparkThrottled({ model: 'x1', messages: messagesSum, max_tokens: 300, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+          const respSum = await retry(() => callSparkThrottled({ model: 'x1', messages: messagesSum, max_tokens: 800, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
           const polishedSum = (respSum.data?.choices?.[0]?.message?.content || '').toString().trim();
           if (polishedSum) setBioSummary(polishedSum);
         } catch (_) { /* 忽略简介润色失败 */ }
@@ -2198,13 +2210,13 @@ ${userStyleRulesPolish}
         if (!(bioSummary || '').trim()) {
           const token = localStorage.getItem('token');
           if (token) {
-            const system = '你是一位严谨的传记内容编辑，请基于提供的正文材料，生成一段不超过150字的简介，语言朴素真诚，不使用列表与编号。仅输出简介正文。';
+            const system = '你是一位严谨的传记内容编辑，请基于提供的正文材料，生成一段简介，语言朴素真诚，不使用列表与编号。仅输出简介正文。根据正文内容的丰富程度，自动决定合适的长度，保持简洁但完整。';
             const src = getPreviewText(sections.map(s => s.text || '').join('\n\n'));
-            const userPayload = `以下是传记正文片段（已过滤未回答的提问）：\n\n${src}\n\n请输出一段不超过150字简介，仅正文。`;
+            const userPayload = `以下是传记正文片段（已过滤未回答的提问）：\n\n${src}\n\n请输出一段简介，仅正文。根据内容自动决定长度。`;
             const messages = [ { role: 'system', content: system }, { role: 'user', content: userPayload } ];
-            const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 220, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+            const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 800, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
             const text = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
-            if (text) setBioSummary(text.slice(0, 150));
+            if (text) setBioSummary(text); // 已去掉长度限制
           }
         }
       } catch (_) {}
@@ -2272,7 +2284,7 @@ ${userStyleRulesPolish}
         { role: 'system', content: stage1System },
         { role: 'user', content: stage1User },
       ],
-      max_tokens: 1500,
+      max_tokens: 8000, // 设置较大的上限，AI根据问答内容自动决定实际生成长度
       temperature: 0.2, // 低温度，确保严格按事实
       user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
     }, token, { silentThrottle: true }));
@@ -2325,15 +2337,21 @@ ${userStyleRulesPolish}
 6. 若信息不足，可保持空白或使用'……'表示，不得自行编造
 7. 严格依据问答记录中的事实，禁止任何形式的脑补或推断
 
+【生成长度】
+8. 根据问答内容的丰富程度和需要，自动决定生成长度
+9. 如果问答内容丰富详细，可以生成较长的段落；如果内容简单，则生成简洁的段落
+10. 不要为了凑字数而重复或扩展内容，也不要因为内容少而强行缩短
+11. 以自然、流畅、完整地表达事实清单中的所有内容为准
+
 【叙事重构】
-8. 保留事实内容，但用场景化语言重构叙事
-9. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
-10. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
-11. 通过场景重现、细节刻画来展现情绪，但仅限于事实清单中的细节
+12. 保留事实内容，但用场景化语言重构叙事
+13. 将段落聚焦于一个核心情绪或主题（如"温暖""成长""失落""坚持"等）
+14. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+15. 通过场景重现、细节刻画来展现情绪，但仅限于事实清单中的细节
 
 【情感深度】
-12. 使用第一人称回忆口吻，加入内心反思与当下的感悟（但不得编造情感）
-13. 让读者感受到时间沉淀后的思考和情感（基于事实的情感表达）
+16. 使用第一人称回忆口吻，加入内心反思与当下的感悟（但不得编造情感）
+17. 让读者感受到时间沉淀后的思考和情感（基于事实的情感表达）
 
 【用户风格设置】
 ${userStyleRules}
@@ -2353,6 +2371,12 @@ ${userStyleRules}
 ✗ 不得添加任何事实清单中没有的内容、细节、场景、对话或情节
 ✗ 若某个部分信息不足，使用'……'表示，不得自行编造
 ✗ 严格依据问答记录中的事实，禁止任何形式的脑补、推断或想象
+
+【生成长度】
+✓ 根据事实清单的内容丰富程度，自动决定合适的长度
+✓ 如果事实清单内容丰富详细，可以生成较长的段落；如果内容简单，则生成简洁的段落
+✓ 以完整、自然地表达所有事实内容为准，不要为了凑字数而重复或扩展
+✓ 也不要因为内容少而强行缩短，保持自然流畅的表达
 
 【表达要求】
 ✓ 直接用"我"的视角叙述，像讲述自己的故事
@@ -2375,7 +2399,7 @@ ${userStyleRules}
         { role: 'system', content: stage2System },
         { role: 'user', content: stage2User },
       ],
-      max_tokens: 3000, // 增加token限制，允许更长的生成
+      max_tokens: 8000, // 设置较大的上限，AI根据问答内容自动决定实际生成长度
       temperature: 0.4, // 降低温度，确保严格依据事实
       user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon')
     }, token, { silentThrottle: true }));
@@ -2996,15 +3020,7 @@ ${userStyleRules}
                       </select>
                         </div>
                     
-                    {/* 生成长度 */}
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">生成长度</label>
-                      <select className="input" value={prefLength} onChange={(e)=>setPrefLength(e.target.value)}>
-                        <option value="short">简短（500字内）</option>
-                        <option value="medium">适中（800字内）</option>
-                        <option value="long">详细（1200字内）</option>
-                          </select>
-                        </div>
+                    {/* 生成长度已移除，AI根据问答内容自动决定长度 */}
                     
                     {/* 自定义文风 */}
                     <div className="sm:col-span-2">
@@ -3261,7 +3277,7 @@ ${userStyleRules}
                           const src = (sections[currentSectionIndex]?.text || '').toString();
                           const system = '你是一位文本编辑，请将以下内容从口语化整理为更清晰的书面表达。不得新增任何事实或细节；不得改变人称与时间；避免煽情与夸饰；仅输出整理后的正文。';
                           const messages = [ { role: 'system', content: system }, { role: 'user', content: src } ];
-                          const resp = await retry(()=>callSparkThrottled({ model:'x1', messages, max_tokens: 900, temperature: 0.2, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle:true }));
+                          const resp = await retry(()=>callSparkThrottled({ model:'x1', messages, max_tokens: 8000, temperature: 0.2, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle:true }));
                           const out = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
                           if (out) {
                             setSections(prev => prev.map((s, i) => i === currentSectionIndex ? { ...s, text: out } : s));
@@ -3469,7 +3485,7 @@ ${userStyleRules}
                       { role: 'system', content: system },
                       { role: 'user', content: userPayload },
                     ];
-                    const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 1200, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
+                    const resp = await retry(() => callSparkThrottled({ model: 'x1', messages, max_tokens: 8000, temperature: 0.5, user: (localStorage.getItem('uid') || localStorage.getItem('username') || 'user_anon') }, token, { silentThrottle: true }));
                     const polishedRaw = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
                     const polished = finalizeNarrative(polishedRaw);
                     if (polished) {
