@@ -46,6 +46,7 @@ const My = () => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [favorites, setFavorites] = useState([]);
+  const [interviews, setInterviews] = useState([]);
   const navigate = useNavigate();
 
   const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5002';
@@ -176,6 +177,17 @@ const My = () => {
         setFavorites(favs);
       } catch (err) {
         console.error('My.js: Fetch favorites error:', err);
+      }
+
+      // 获取访谈记录
+      try {
+        const interviewRes = await retry(() =>
+          axios.get('/api/interviews', { headers: { Authorization: `Bearer ${token}` } })
+        );
+        const fetchedInterviews = (interviewRes.data || []).filter(i => i && i.id);
+        setInterviews(fetchedInterviews);
+      } catch (err) {
+        console.error('My.js: Fetch interviews error:', err);
       }
 
       // 获取上传文件
@@ -577,6 +589,7 @@ const My = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button className="btn btn-secondary" onClick={()=>setActiveTab('memos')}>随手记（{memos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('biographies')}>我的记录（{biographies.length}）</button>
+          <button className="btn btn-secondary" onClick={()=>setActiveTab('interviews')}>原始采访（{interviews.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('photos')}>照片（{photos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('videos')}>视频（{videos.length}）</button>
           <button className="btn btn-secondary" onClick={()=>setActiveTab('audios')}>音频（{audios.length}）</button>
@@ -673,17 +686,83 @@ const My = () => {
   const lifeStages = ['童年', '少年', '青年', '中年', '壮年', '老年', '晚年'];
 
   const renderInterviews = () => {
-    // 获取所有包含采访数据的传记
-    const interviewBios = biographies.filter(bio => bio.interviewData && bio.interviewData.length > 0);
-    const { items, totalPages, page } = paginate(interviewBios, pageInterviews, sizeInterviews);
+    const { items, totalPages, page } = paginate(interviews, pageInterviews, sizeInterviews);
+    const toggle = (id) => setSelectedInterviews(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+    
+    const handleShareToFamily = async (interviewId) => {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(`/api/interview/${interviewId}/share-to-family`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMessage('已上传到家族树');
+        setTimeout(() => setMessage(''), 2000);
+      } catch (err) {
+        setMessage('上传失败：' + (err.response?.data?.message || err.message));
+      }
+    };
+
+    const handleDeleteInterview = async (interviewId) => {
+      if (!window.confirm('确定要删除这条访谈记录吗？')) return;
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/interview/${interviewId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setInterviews(prev => prev.filter(i => i.id !== interviewId));
+        setMessage('访谈记录已删除');
+        setTimeout(() => setMessage(''), 2000);
+      } catch (err) {
+        setMessage('删除失败：' + (err.response?.data?.message || err.message));
+      }
+    };
+
+    const handleViewInterview = (interviewId) => {
+      navigate(`/interview/${interviewId}`);
+    };
     
     return (
       <div>
         <div className="mb-4 p-3 bg-blue-50 rounded-lg">
           <p className="text-sm text-gray-700">
-            这里保存了您与情感陪伴师的原始对话记录，是您珍贵的采访素材。您可以随时将这些素材重新导入到创作传记中生成新的内容。
+            这里保存了您与情感陪伴师的原始对话记录，是您珍贵的采访素材。您可以随时将这些素材重新用于生成传记，或上传到家族树中供家人查看。
           </p>
         </div>
+
+        {selectedInterviews.size > 0 && (
+          <div className="toolbar mb-3">
+            <button className="btn btn-primary" onClick={async () => {
+              const token = localStorage.getItem('token');
+              const ids = Array.from(selectedInterviews);
+              try {
+                await Promise.all(ids.map(id => axios.post(`/api/interview/${id}/share-to-family`, {}, {
+                  headers: { Authorization: `Bearer ${token}` }
+                })));
+                setSelectedInterviews(new Set());
+                setMessage('已批量上传到家族树');
+                setTimeout(() => setMessage(''), 2000);
+              } catch (e) {
+                setMessage('批量上传失败：' + (e?.response?.data?.message || e?.message));
+              }
+            }}>批量上传到家族树</button>
+            <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={async () => {
+              if (!window.confirm(`确定要删除选中的 ${selectedInterviews.size} 条访谈记录吗？`)) return;
+              const token = localStorage.getItem('token');
+              const ids = Array.from(selectedInterviews);
+              try {
+                await Promise.all(ids.map(id => axios.delete(`/api/interview/${id}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                })));
+                setInterviews(prev => prev.filter(i => !ids.includes(i.id)));
+                setSelectedInterviews(new Set());
+                setMessage('已批量删除访谈记录');
+                setTimeout(() => setMessage(''), 2000);
+              } catch (e) {
+                setMessage('批量删除失败：' + (e?.response?.data?.message || e?.message));
+              }
+            }}>批量删除</button>
+          </div>
+        )}
         
         {items.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
@@ -691,68 +770,44 @@ const My = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {items.map((bio) => (
-              <div key={bio.id || bio._id} className="card p-4 bg-white border border-gray-200">
+            {items.map((interview) => (
+              <div key={interview.id} className="card p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 60%)', borderColor: '#e5e7eb' }}>
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-lg">{bio.title}</h4>
-                    <p className="text-sm text-gray-500">
-                      {new Date(bio.createdAt || bio.timestamp).toLocaleString('zh-CN')}
-                      {bio.interviewData && ` · ${bio.interviewData.length} 个阶段采访`}
-                    </p>
+                  <div className="flex items-start gap-2 flex-1">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedInterviews.has(interview.id)} 
+                      onChange={() => toggle(interview.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg">
+                        {interview.noteTitle || '未关联传记的访谈记录'}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        {new Date(interview.timestamp).toLocaleString('zh-CN')}
+                        {interview.qaCount > 0 && ` · ${interview.qaCount} 个问答对`}
+                      </p>
+                    </div>
                   </div>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      // 将采访数据导入到CreateBiography
-                      const importData = {
-                        title: bio.title,
-                        sections: Array.from({ length: lifeStages.length }, (_, idx) => {
-                          const interviewForStage = bio.interviewData.find(i => i.stage === lifeStages[idx]);
-                          return interviewForStage ? {
-                            title: interviewForStage.title || '',
-                            text: interviewForStage.content || '',
-                            media: []
-                          } : { title: '', text: '', media: [] };
-                        }),
-                        themes: bio.interviewData.reduce((acc, interview) => {
-                          const stageIndex = lifeStages.indexOf(interview.stage);
-                          if (stageIndex >= 0) {
-                            acc[stageIndex] = interview.themes || [];
-                          }
-                          return acc;
-                        }, {})
-                      };
-                      localStorage.setItem('importInterviewData', JSON.stringify(importData));
-                      navigate('/create');
-                    }}
-                  >
-                    导入创作
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="btn btn-secondary" onClick={() => handleViewInterview(interview.id)}>查看详情</button>
+                    <button className="btn btn-primary" onClick={() => handleShareToFamily(interview.id)}>上传到家族树</button>
+                    <button className="btn" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={() => handleDeleteInterview(interview.id)}>删除</button>
+                  </div>
                 </div>
                 
-                {/* 显示各阶段采访概要 */}
-                {bio.interviewData && bio.interviewData.length > 0 && (
-                  <div className="space-y-2">
-                    {bio.interviewData.slice(0, 3).map((interview, idx) => (
-                      <div key={idx} className="text-sm">
-                        <span className="font-medium text-gray-700">{interview.stage}：</span>
-                        <span className="text-gray-600">
-                          {interview.content.substring(0, 50)}...
-                        </span>
-                        {interview.themes && interview.themes.length > 0 && (
-                          <span className="ml-2">
-                            {interview.themes.map(theme => (
-                              <span key={theme} className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full mr-1">
-                                {theme}
-                              </span>
-                            ))}
-                          </span>
-                        )}
+                {/* 显示问答对预览 */}
+                {interview.qaPairs && interview.qaPairs.length > 0 && (
+                  <div className="space-y-2 mt-3 border-t pt-3">
+                    {interview.qaPairs.slice(0, 3).map((qa, idx) => (
+                      <div key={idx} className="text-sm bg-white p-2 rounded">
+                        <div className="font-medium text-gray-700 mb-1">Q: {qa.question || qa.q}</div>
+                        <div className="text-gray-600">A: {qa.answer || qa.a}</div>
                       </div>
                     ))}
-                    {bio.interviewData.length > 3 && (
-                      <p className="text-xs text-gray-500">还有 {bio.interviewData.length - 3} 个阶段...</p>
+                    {interview.qaPairs.length > 3 && (
+                      <p className="text-xs text-gray-500">还有 {interview.qaPairs.length - 3} 个问答对...</p>
                     )}
                   </div>
                 )}
@@ -761,13 +816,14 @@ const My = () => {
           </div>
         )}
         
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button onClick={() => setPageInterviews(p => Math.max(p - 1, 1))} disabled={page <= 1}>上一页</button>
-            <span>{page} / {totalPages}</span>
-            <button onClick={() => setPageInterviews(p => Math.min(p + 1, totalPages))} disabled={page >= totalPages}>下一页</button>
-          </div>
-        )}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPrev={()=> setPageInterviews(p => Math.max(1, p-1))}
+          onNext={()=> setPageInterviews(p => Math.min(totalPages, p+1))}
+          size={sizeInterviews}
+          onSize={(s)=> { setSizeInterviews(s); setPageInterviews(1); }}
+        />
       </div>
     );
   };

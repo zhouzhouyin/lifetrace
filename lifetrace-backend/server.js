@@ -229,6 +229,23 @@ const reportSchema = new mongoose.Schema({
 reportSchema.index({ reporterId: 1, noteId: 1 }, { unique: true });
 const Report = mongoose.model('Report', reportSchema);
 
+// 访谈记录模型
+const interviewRecordSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' }, // 关联的传记ID
+  qaPairs: [{ 
+    question: String, 
+    answer: String 
+  }],
+  chatMessages: [{ 
+    role: { type: String, enum: ['user', 'assistant'] }, 
+    content: String 
+  }],
+  timestamp: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+const InterviewRecord = mongoose.model('InterviewRecord', interviewRecordSchema);
+
 // PaymentFailure schema: 记录支付失败
 const paymentFailureSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -1754,6 +1771,379 @@ app.post('/api/note/upload', authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error('Upload note error', { error: err.message, noteId: id, ip: req.ip });
     res.status(500).json({ message: '上传笔记失败：' + err.message });
+  }
+});
+
+// 保存访谈记录
+app.post('/api/interview/save', authenticateToken, async (req, res) => {
+  try {
+    const { noteId, qaPairs, chatMessages } = req.body;
+    if (!qaPairs || !Array.isArray(qaPairs)) {
+      return res.status(400).json({ message: '问答对格式错误' });
+    }
+    
+    const interviewRecord = new InterviewRecord({
+      userId: req.user.userId,
+      noteId: noteId || null,
+      qaPairs: qaPairs.map(p => ({
+        question: p.q || p.question || '',
+        answer: p.a || p.answer || ''
+      })),
+      chatMessages: chatMessages || [],
+      timestamp: new Date(),
+      updatedAt: new Date()
+    });
+    
+    await interviewRecord.save();
+    logger.info('Interview record saved', { userId: req.user.userId, recordId: interviewRecord._id });
+    res.json({ success: true, recordId: interviewRecord._id });
+  } catch (err) {
+    logger.error('Save interview record error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '保存访谈记录失败：' + err.message });
+  }
+});
+
+// 根据访谈记录生成文章
+app.post('/api/interview/generate', authenticateToken, aiLimiter, async (req, res) => {
+  try {
+    const { recordId, qaPairs, chapterIndex, selectedThemes } = req.body;
+    
+    if (!recordId && (!qaPairs || !Array.isArray(qaPairs) || qaPairs.length === 0)) {
+      return res.status(400).json({ message: '请提供访谈记录ID或问答对' });
+    }
+    
+    let qaText = '';
+    if (recordId) {
+      const record = await InterviewRecord.findOne({ _id: recordId, userId: req.user.userId });
+      if (!record) {
+        return res.status(404).json({ message: '访谈记录不存在' });
+      }
+      qaText = record.qaPairs.map((p, i) => `Q${i + 1}：${p.question}\nA${i + 1}：${p.answer}`).join('\n');
+    } else {
+      qaText = qaPairs.map((p, i) => `Q${i + 1}：${p.q || p.question}\nA${i + 1}：${p.a || p.answer}`).join('\n');
+    }
+    
+    // 第一阶段：提取事实清单
+    const stage1System = `你是一位严谨的事实提取专家。请从问答对话中提取用户回答里的事实信息。
+
+关键规则：
+1. **以主要问答对为准**，提取用户（"我"/"A"）的回答内容，完全忽略陪伴师/提问者的问题
+2. 只提取明确提到的事实，不做任何推断或补充
+3. 将用户的回答转换为第三人称客观事实陈述
+4. 保留所有具体细节：人名、地点、时间、事件、对话、数字等
+5. 按时间顺序或逻辑顺序组织
+6. 用简洁的陈述句表达，每个事实一行
+7. 输出格式为JSON对象：{"facts": ["事实1", "事实2", ...]}`;
+
+    const stage1User = `【主要问答对】\n${qaText}\n\n请以主要问答对为准，提取用户回答中的事实，仅输出JSON格式的事实清单。`;
+    
+    const resp1 = await axios.post(
+      'https://spark-api-open.xf-yun.com/v2/chat/completions',
+      {
+        model: 'x1',
+        messages: [
+          { role: 'system', content: stage1System },
+          { role: 'user', content: stage1User }
+        ],
+        max_tokens: 1500,
+        temperature: 0.2
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SPARK_API_PASSWORD}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const raw1 = (resp1.data?.choices?.[0]?.message?.content || '').toString().trim();
+    let factsList = [];
+    try {
+      const parsed = JSON.parse(raw1);
+      if (Array.isArray(parsed.facts)) {
+        factsList = parsed.facts;
+      }
+    } catch (_) {
+      const start = raw1.indexOf('{');
+      const end = raw1.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        try {
+          const parsed = JSON.parse(raw1.slice(start, end + 1));
+          if (Array.isArray(parsed.facts)) {
+            factsList = parsed.facts;
+          }
+        } catch (_) {}
+      }
+    }
+    
+    if (factsList.length === 0) {
+      return res.status(400).json({ message: '无法提取事实清单' });
+    }
+    
+    // 第二阶段：根据事实清单生成文章
+    const themeGuide = selectedThemes && selectedThemes.length > 0
+      ? `\n\n本段重点主题/事件：${selectedThemes.join('、')}。请围绕这些主题或事件组织叙事，但要自然融入，不要生硬堆砌。`
+      : '';
+    
+    const stage2System = `你是一位严谨的传记作家。请根据提供的事实清单，写一段第一人称的自传段落。
+
+【核心要求】
+1. 输出纯粹的第一人称叙述，完全去除问答痕迹
+2. 不要出现"陪伴师""提问""回答""继而""随后询问"等字眼
+3. 直接用"我"的视角自然叙述，就像在讲述自己的故事
+
+【严格事实约束】
+4. 只能根据事实清单中的内容生成，不得推测、想象、扩展或补全
+5. 不得添加任何事实清单中没有的内容、细节、场景或情节
+6. 若信息不足，可保持空白或使用'……'表示，不得自行编造
+7. 严格依据问答记录中的事实，禁止任何形式的脑补或推断
+
+【叙事重构】
+8. 保留事实内容，但用场景化语言重构叙事
+9. 将段落聚焦于一个核心情绪或主题
+10. 避免简单的时间顺序罗列，改用情感主线或主题线索串联事件
+11. 通过场景重现、细节刻画来展现情绪，但仅限于事实清单中的细节
+
+【输出规范】
+仅输出第一人称叙述段落，不要标题、编号、总结、过渡语${themeGuide}`;
+
+    const factsText = factsList.map((f, i) => `${i + 1}. ${f}`).join('\n');
+    const stage2User = `事实清单（主要内容）：\n${factsText}\n\n请基于以上事实清单，写一段自然流畅的第一人称自传段落。
+
+【严格约束】
+✗ 只能根据以上事实清单生成内容，不得推测、想象、扩展或补全
+✗ 不得添加任何事实清单中没有的内容、细节、场景、对话或情节
+✗ 若某个部分信息不足，使用'……'表示，不得自行编造
+✗ 严格依据问答记录中的事实，禁止任何形式的脑补、推断或想象`;
+    
+    const resp2 = await axios.post(
+      'https://spark-api-open.xf-yun.com/v2/chat/completions',
+      {
+        model: 'x1',
+        messages: [
+          { role: 'system', content: stage2System },
+          { role: 'user', content: stage2User }
+        ],
+        max_tokens: 3000,
+        temperature: 0.4
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SPARK_API_PASSWORD}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const generatedText = (resp2.data?.choices?.[0]?.message?.content || '').toString().trim();
+    
+    logger.info('Article generated from interview', { userId: req.user.userId, recordId });
+    res.json({ success: true, text: generatedText, factsList });
+  } catch (err) {
+    logger.error('Generate article from interview error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '生成文章失败：' + (err.response?.data?.message || err.message) });
+  }
+});
+
+// 验证生成内容是否与访谈记录相符
+app.post('/api/interview/verify', authenticateToken, aiLimiter, async (req, res) => {
+  try {
+    const { recordId, qaPairs, generatedText } = req.body;
+    
+    if (!generatedText) {
+      return res.status(400).json({ message: '请提供生成的内容' });
+    }
+    
+    let qaText = '';
+    if (recordId) {
+      const record = await InterviewRecord.findOne({ _id: recordId, userId: req.user.userId });
+      if (!record) {
+        return res.status(404).json({ message: '访谈记录不存在' });
+      }
+      qaText = record.qaPairs.map((p, i) => `Q${i + 1}：${p.question}\nA${i + 1}：${p.answer}`).join('\n');
+    } else if (qaPairs && Array.isArray(qaPairs)) {
+      qaText = qaPairs.map((p, i) => `Q${i + 1}：${p.q || p.question}\nA${i + 1}：${p.a || p.answer}`).join('\n');
+    } else {
+      return res.status(400).json({ message: '请提供访谈记录ID或问答对' });
+    }
+    
+    const verifySystem = `你是一位严谨的内容审核专家。请检查生成的文章内容是否与访谈记录相符。
+
+【检查规则】
+1. 生成的文章内容必须严格依据访谈记录中的问答对
+2. 不得包含访谈记录中没有的事实、细节、场景或情节
+3. 如果发现生成内容中有访谈记录中没有的信息，指出具体位置
+4. 如果内容符合访谈记录，返回验证通过
+5. 如果不符合，提供优化建议，确保严格依据事实`;
+
+    const verifyUser = `【访谈记录】
+${qaText}
+
+【生成的文章内容】
+${generatedText}
+
+请检查生成的文章内容是否与访谈记录相符。如果发现不符合的地方，请指出并提供优化后的内容。`;
+    
+    const resp = await axios.post(
+      'https://spark-api-open.xf-yun.com/v2/chat/completions',
+      {
+        model: 'x1',
+        messages: [
+          { role: 'system', content: verifySystem },
+          { role: 'user', content: verifyUser }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SPARK_API_PASSWORD}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const verification = (resp.data?.choices?.[0]?.message?.content || '').toString().trim();
+    const isValid = !verification.toLowerCase().includes('不符合') && !verification.toLowerCase().includes('错误');
+    
+    logger.info('Content verified', { userId: req.user.userId, recordId, isValid });
+    res.json({ success: true, isValid, verification, optimizedText: isValid ? null : verification });
+  } catch (err) {
+    logger.error('Verify content error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '验证失败：' + (err.response?.data?.message || err.message) });
+  }
+});
+
+// 获取用户的访谈记录列表
+app.get('/api/interviews', authenticateToken, async (req, res) => {
+  try {
+    const interviews = await InterviewRecord.find({ userId: req.user.userId })
+      .sort({ timestamp: -1 })
+      .populate('noteId', 'title')
+      .lean();
+    
+    const formatted = interviews.map(record => ({
+      id: record._id.toString(),
+      noteId: record.noteId ? (typeof record.noteId === 'object' ? record.noteId._id.toString() : record.noteId.toString()) : null,
+      noteTitle: record.noteId && typeof record.noteId === 'object' ? record.noteId.title : null,
+      qaPairs: record.qaPairs || [],
+      chatMessages: record.chatMessages || [],
+      timestamp: record.timestamp,
+      updatedAt: record.updatedAt,
+      qaCount: record.qaPairs ? record.qaPairs.length : 0
+    }));
+    
+    logger.info('Interviews retrieved', { userId: req.user.userId, count: formatted.length });
+    res.json(formatted);
+  } catch (err) {
+    logger.error('Get interviews error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '获取访谈记录失败：' + err.message });
+  }
+});
+
+// 获取单个访谈记录详情
+app.get('/api/interview/:id', authenticateToken, async (req, res) => {
+  try {
+    const record = await InterviewRecord.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.userId 
+    }).populate('noteId', 'title').lean();
+    
+    if (!record) {
+      return res.status(404).json({ message: '访谈记录不存在' });
+    }
+    
+    res.json({
+      id: record._id.toString(),
+      noteId: record.noteId ? (typeof record.noteId === 'object' ? record.noteId._id.toString() : record.noteId.toString()) : null,
+      noteTitle: record.noteId && typeof record.noteId === 'object' ? record.noteId.title : null,
+      qaPairs: record.qaPairs || [],
+      chatMessages: record.chatMessages || [],
+      timestamp: record.timestamp,
+      updatedAt: record.updatedAt
+    });
+  } catch (err) {
+    logger.error('Get interview detail error', { error: err.message, interviewId: req.params.id });
+    res.status(500).json({ message: '获取访谈记录详情失败：' + err.message });
+  }
+});
+
+// 将访谈记录上传到家族树（通过关联的传记）
+app.post('/api/interview/:id/share-to-family', authenticateToken, async (req, res) => {
+  try {
+    const record = await InterviewRecord.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.userId 
+    });
+    
+    if (!record) {
+      return res.status(404).json({ message: '访谈记录不存在' });
+    }
+    
+    // 如果有关联的传记，将传记分享到家族
+    if (record.noteId) {
+      const note = await Note.findById(record.noteId);
+      if (note && note.userId.toString() === req.user.userId.toString()) {
+        note.sharedWithFamily = true;
+        await note.save();
+        logger.info('Interview shared to family via note', { userId: req.user.userId, interviewId: record._id, noteId: note._id });
+        return res.json({ success: true, message: '已上传到家族树' });
+      }
+    }
+    
+    // 如果没有关联传记，返回提示
+    res.status(400).json({ message: '该访谈记录未关联传记，无法上传到家族树。请先将访谈记录用于生成传记。' });
+  } catch (err) {
+    logger.error('Share interview to family error', { error: err.message, interviewId: req.params.id });
+    res.status(500).json({ message: '上传到家族树失败：' + err.message });
+  }
+});
+
+// 更新访谈记录（关联到传记）
+app.put('/api/interview/:id', authenticateToken, async (req, res) => {
+  try {
+    const { noteId } = req.body;
+    const record = await InterviewRecord.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.userId 
+    });
+    
+    if (!record) {
+      return res.status(404).json({ message: '访谈记录不存在' });
+    }
+    
+    if (noteId) {
+      record.noteId = noteId;
+    }
+    record.updatedAt = new Date();
+    await record.save();
+    
+    logger.info('Interview updated', { userId: req.user.userId, interviewId: req.params.id, noteId });
+    res.json({ success: true, message: '访谈记录已更新' });
+  } catch (err) {
+    logger.error('Update interview error', { error: err.message, interviewId: req.params.id });
+    res.status(500).json({ message: '更新访谈记录失败：' + err.message });
+  }
+});
+
+// 删除访谈记录
+app.delete('/api/interview/:id', authenticateToken, async (req, res) => {
+  try {
+    const record = await InterviewRecord.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.userId 
+    });
+    
+    if (!record) {
+      return res.status(404).json({ message: '访谈记录不存在' });
+    }
+    
+    await InterviewRecord.deleteOne({ _id: req.params.id });
+    logger.info('Interview deleted', { userId: req.user.userId, interviewId: req.params.id });
+    res.json({ success: true, message: '访谈记录已删除' });
+  } catch (err) {
+    logger.error('Delete interview error', { error: err.message, interviewId: req.params.id });
+    res.status(500).json({ message: '删除访谈记录失败：' + err.message });
   }
 });
 
