@@ -9,6 +9,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 
 const Home = lazy(() => import('./components/Home'));
+const TimeCapsule = lazy(() => import('./components/TimeCapsule'));
 const Login = lazy(() => import('./components/Login'));
 const Register = lazy(() => import('./components/Register'));
 const CreateBiography = lazy(() => import('./components/CreateBiography'));
@@ -44,7 +45,7 @@ const App = () => {
             <Layout>
               <Suspense fallback={<Loading />}>
                 <Routes>
-                  <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                  <Route path="/" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
                   <Route path="/home" element={<Navigate to="/" replace />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />

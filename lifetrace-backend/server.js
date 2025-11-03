@@ -229,6 +229,32 @@ const reportSchema = new mongoose.Schema({
 reportSchema.index({ reporterId: 1, noteId: 1 }, { unique: true });
 const Report = mongoose.model('Report', reportSchema);
 
+// Time Capsule schema: 时光胶囊
+const capsuleMediaSchema = new mongoose.Schema({
+  type: { type: String, enum: ['image', 'video', 'audio'], required: true },
+  url: { type: String, required: true },
+  desc: { type: String, default: '' }
+}, { _id: false });
+
+const timeCapsuleSchema = new mongoose.Schema({
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  recipients: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] },
+  title: { type: String, default: '' },
+  content: { type: String, default: '' },
+  media: { type: [capsuleMediaSchema], default: [] },
+  scheduleAt: { type: Date, required: true },
+  locked: { type: Boolean, default: true },
+  delivered: { type: Boolean, default: false },
+  deliveredAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+timeCapsuleSchema.index({ ownerId: 1, createdAt: -1 });
+timeCapsuleSchema.index({ recipients: 1, scheduleAt: 1 });
+timeCapsuleSchema.index({ delivered: 1, scheduleAt: 1 });
+timeCapsuleSchema.pre('save', function(next) { this.updatedAt = new Date(); next(); });
+const TimeCapsule = mongoose.model('TimeCapsule', timeCapsuleSchema);
+
 // 访谈记录模型
 const interviewRecordSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -574,6 +600,136 @@ app.get('/api/user', authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error('Get user error', { error: err.message, ip: req.ip });
     res.status(500).json({ message: '获取用户信息失败：' + err.message });
+  }
+});
+
+// Time Capsules: create
+app.post('/api/capsules', authenticateToken, async (req, res) => {
+  try {
+    const { title, content, media, recipientIds, scheduleAt } = req.body || {};
+    const safeTitle = String(title || '').slice(0, 200);
+    const safeContent = String(content || '');
+    if (!safeContent && !(Array.isArray(media) && media.length > 0)) {
+      return res.status(400).json({ message: '请填写内容或添加媒体' });
+    }
+    if (!scheduleAt) return res.status(400).json({ message: '缺少发送时间' });
+    const when = new Date(scheduleAt);
+    if (isNaN(when.getTime())) return res.status(400).json({ message: '无效的发送时间' });
+    const now = new Date();
+    if (when.getTime() < now.getTime() + 60 * 1000) {
+      return res.status(400).json({ message: '发送时间需至少比当前时间晚 1 分钟' });
+    }
+    if (containsIllegalContent(safeTitle) || containsIllegalContent(safeContent)) {
+      return res.status(400).json({ message: '内容包含不合规信息，请修改后再提交' });
+    }
+    // Validate recipients are family if provided
+    let recips = Array.isArray(recipientIds) ? recipientIds.filter(id => isValidObjectId(id)) : [];
+    if (recips.length > 0) {
+      // ensure every recipient is in family with owner
+      const rels = await Family.find({ $or: [
+        { userAId: req.user.userId, userBId: { $in: recips } },
+        { userAId: { $in: recips }, userBId: req.user.userId },
+      ]}).lean();
+      const okSet = new Set();
+      for (const r of rels) {
+        okSet.add(String(r.userAId) === String(req.user.userId) ? String(r.userBId) : String(r.userAId));
+      }
+      const allOk = recips.every(id => okSet.has(String(id)));
+      if (!allOk) return res.status(403).json({ message: '仅可发送给已互认的家人（通过UID添加）' });
+    }
+    const mediaArr = Array.isArray(media) ? media.slice(0, 30).map(m => ({
+      type: (m?.type || 'image'), url: String(m?.url || ''), desc: String(m?.desc || '')
+    })) : [];
+    const doc = await TimeCapsule.create({
+      ownerId: req.user.userId,
+      recipients: recips,
+      title: safeTitle,
+      content: safeContent,
+      media: mediaArr,
+      scheduleAt: when,
+      locked: true,
+      delivered: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    logger.info('Time capsule created', { userId: req.user.userId, capsuleId: doc._id });
+    res.status(201).json({ id: doc._id.toString() });
+  } catch (err) {
+    logger.error('Create capsule error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '创建时光胶囊失败：' + err.message });
+  }
+});
+
+// Time Capsules: list (sent or received)
+app.get('/api/capsules', authenticateToken, async (req, res) => {
+  try {
+    const box = (req.query.box || 'sent').toString();
+    const now = new Date();
+    if (box === 'received') {
+      const items = await TimeCapsule.find({ recipients: req.user.userId }).sort({ scheduleAt: -1 }).lean();
+      const result = items.map(c => ({
+        id: c._id.toString(),
+        ownerId: c.ownerId?.toString?.() || '',
+        title: c.title,
+        scheduleAt: c.scheduleAt,
+        delivered: c.delivered,
+        deliveredAt: c.deliveredAt,
+        isLocked: now < c.scheduleAt && !c.delivered,
+        // 内容在锁定前不可见
+        content: (now >= c.scheduleAt || c.delivered) ? (c.content || '') : '',
+        media: (now >= c.scheduleAt || c.delivered) ? (c.media || []) : []
+      }));
+      return res.json(result);
+    }
+    // sent
+    const items = await TimeCapsule.find({ ownerId: req.user.userId }).sort({ createdAt: -1 }).lean();
+    const result = items.map(c => ({
+      id: c._id.toString(),
+      recipients: (c.recipients || []).map(r => r.toString()),
+      title: c.title,
+      scheduleAt: c.scheduleAt,
+      delivered: c.delivered,
+      deliveredAt: c.deliveredAt,
+      locked: c.locked,
+      createdAt: c.createdAt
+    }));
+    return res.json(result);
+  } catch (err) {
+    logger.error('List capsules error', { error: err.message, userId: req.user.userId });
+    res.status(500).json({ message: '获取时光胶囊失败：' + err.message });
+  }
+});
+
+// Time Capsules: detail (owner or recipient). Mask content if locked for recipient
+app.get('/api/capsule/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) return res.status(400).json({ message: '无效的胶囊ID' });
+    const c = await TimeCapsule.findById(id).lean();
+    if (!c) return res.status(404).json({ message: '时光胶囊不存在' });
+    const isOwner = String(c.ownerId) === String(req.user.userId);
+    const isRecipient = (c.recipients || []).some(r => String(r) === String(req.user.userId));
+    if (!isOwner && !isRecipient) return res.status(403).json({ message: '无权访问该时光胶囊' });
+    const now = new Date();
+    const lockedForRecipient = !isOwner && (now < c.scheduleAt && !c.delivered);
+    res.json({
+      id: c._id.toString(),
+      ownerId: c.ownerId?.toString?.() || '',
+      recipients: (c.recipients || []).map(r => r.toString()),
+      title: c.title,
+      content: lockedForRecipient ? '' : (c.content || ''),
+      media: lockedForRecipient ? [] : (c.media || []),
+      scheduleAt: c.scheduleAt,
+      delivered: c.delivered,
+      deliveredAt: c.deliveredAt,
+      locked: c.locked,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      isLocked: lockedForRecipient
+    });
+  } catch (err) {
+    logger.error('Get capsule detail error', { error: err.message, userId: req.user.userId, capsuleId: req.params.id });
+    res.status(500).json({ message: '获取时光胶囊失败：' + err.message });
   }
 });
 
@@ -2185,3 +2341,30 @@ wss.on('connection', (ws, req) => {
     logger.info('WebSocket client disconnected', { ip: req.socket.remoteAddress });
   });
 });
+
+// Time Capsule scheduler: every minute deliver due capsules
+setInterval(async () => {
+  try {
+    const now = new Date();
+    const due = await TimeCapsule.find({ delivered: false, scheduleAt: { $lte: now } }).limit(50);
+    if (due.length === 0) return;
+    for (const c of due) {
+      c.delivered = true;
+      c.deliveredAt = now;
+      c.locked = false;
+      await c.save();
+      logger.info('Time capsule delivered', { capsuleId: c._id, ownerId: c.ownerId, recipients: (c.recipients || []).map(r=>r.toString()) });
+      // Optional: notify via websocket broadcast (basic)
+      try {
+        const payload = { type: 'capsule_delivered', capsuleId: c._id.toString(), scheduleAt: c.scheduleAt, deliveredAt: c.deliveredAt };
+        wss.clients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(payload));
+          }
+        });
+      } catch(_) {}
+    }
+  } catch (err) {
+    logger.error('Capsule scheduler error', { error: err.message });
+  }
+}, 60 * 1000);
