@@ -81,6 +81,11 @@ app.get('/healthz', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Serve Baidu verification file
+app.get('/baidu_verify_codeva-t02Y7z0JWa.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'baidu_verify_codeva-t02Y7z0JWa.html'));
+});
+
 // (moved below authenticateToken)
 // Serve static files with explicit CORS headers
 app.use('/Uploads', (req, res, next) => {
