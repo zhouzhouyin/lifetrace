@@ -45,8 +45,9 @@ const App = () => {
             <Layout>
               <Suspense fallback={<Loading />}>
                 <Routes>
-                  <Route path="/" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
+                  <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                   <Route path="/home" element={<Navigate to="/" replace />} />
+                  <Route path="/capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/create" element={<ProtectedRoute><CreateBiography /></ProtectedRoute>} />
