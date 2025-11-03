@@ -123,9 +123,6 @@ const TimeCapsule = () => {
         {message && (
           <div className="mb-4 p-2 text-center rounded bg-blue-50 text-blue-700 border border-blue-200">{message}</div>
         )}
-        <div className="mb-3">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
-        </div>
         <div className="flex gap-2 mb-4">
           <button type="button" className={`btn ${tab==='compose'?'btn-primary':'btn-secondary'}`} onClick={()=>setTab('compose')}>写胶囊</button>
           <button type="button" className={`btn ${tab==='sent'?'btn-primary':'btn-secondary'}`} onClick={()=>setTab('sent')}>我写的</button>
@@ -185,6 +182,7 @@ const TimeCapsule = () => {
               <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={submitting || (!content && media.length===0) || (recipientsMode==='family' && selectedRecipients.length===0)}>
                 {submitting ? '创建中...' : '创建并锁定'}
               </button>
+              <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
             </div>
           </div>
         )}
@@ -203,6 +201,9 @@ const TimeCapsule = () => {
                 </div>
               ))}
               {sentList.length === 0 && <div className="text-sm text-gray-500">暂无</div>}
+            </div>
+            <div className="mt-4">
+              <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
             </div>
           </div>
         )}
@@ -232,6 +233,9 @@ const TimeCapsule = () => {
                 </div>
               ))}
               {recvList.length === 0 && <div className="text-sm text-gray-500">暂无</div>}
+            </div>
+            <div className="mt-4">
+              <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
             </div>
           </div>
         )}
