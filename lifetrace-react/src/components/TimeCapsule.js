@@ -170,6 +170,9 @@ const TimeCapsule = () => {
                       <span className="text-sm text-gray-800">{m.username}（UID:{m.uid}）</span>
                     </label>
                   ))}
+                  {(familyMembers || []).length === 0 && (
+                    <div className="text-sm text-gray-500 col-span-2">暂无已认证的家人，请先在"家族树"中添加家人</div>
+                  )}
                 </div>
               )}
             </div>
