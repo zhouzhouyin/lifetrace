@@ -83,7 +83,8 @@ app.get('/healthz', (req, res) => {
 
 // Serve Baidu verification file
 app.get('/baidu_verify_codeva-t02Y7z0JWa.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'baidu_verify_codeva-t02Y7z0JWa.html'));
+  res.type('text/html');
+  res.send('4c23c167ea144daeeedc2dda3809c878');
 });
 
 // (moved below authenticateToken)
