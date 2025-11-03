@@ -1,10 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 
 const TimeCapsule = () => {
   const { isLoggedIn, familyMembers, setFamilyMembers, lang } = useContext(AppContext);
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [media, setMedia] = useState([]); // {type,url,desc}
@@ -121,6 +123,9 @@ const TimeCapsule = () => {
         {message && (
           <div className="mb-4 p-2 text-center rounded bg-blue-50 text-blue-700 border border-blue-200">{message}</div>
         )}
+        <div className="mb-3">
+          <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>返回</button>
+        </div>
         <div className="flex gap-2 mb-4">
           <button type="button" className={`btn ${tab==='compose'?'btn-primary':'btn-secondary'}`} onClick={()=>setTab('compose')}>写胶囊</button>
           <button type="button" className={`btn ${tab==='sent'?'btn-primary':'btn-secondary'}`} onClick={()=>setTab('sent')}>我写的</button>
