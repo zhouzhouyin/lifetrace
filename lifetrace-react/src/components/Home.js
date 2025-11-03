@@ -2,7 +2,6 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { AppContext } from '../context/AppContext';
-import TimeCapsule from './TimeCapsule';
 import axios from 'axios';
 
 const Home = () => {
@@ -994,7 +993,7 @@ const Home = () => {
             </div>
           )}
           {/* CTA cards with copy (mobile-first) */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-5 gap-3 sm:gap-4">
             <button
               aria-label={lang === 'zh' ? '开始记录' : 'Start Now'}
               onClick={() => navigate(isLoggedIn ? '/create' : '/login')}
@@ -1029,6 +1028,17 @@ const Home = () => {
               </p>
         </button>
             <button
+              aria-label={lang === 'zh' ? '时光胶囊' : 'Time Capsule'}
+              onClick={() => navigate(isLoggedIn ? '/capsule' : '/login')}
+              className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
+            >
+              <div className="text-2xl mb-1">⏰</div>
+              <h3 className="font-semibold text-lg text-slate-900">{lang === 'zh' ? '时光胶囊' : 'Time Capsule'}</h3>
+              <p className="text-sm mt-1 text-slate-900">
+                {lang === 'zh' ? '写给未来的自己或家人，到时自动开启。' : 'Write to future self or family, auto-deliver on schedule.'}
+              </p>
+        </button>
+            <button
               aria-label={lang === 'zh' ? '我的' : 'My'}
               onClick={() => navigate(isLoggedIn ? '/my' : '/login')}
               className="text-left p-4 rounded-lg transition shadow-sm border ring-1 ring-blue-200 bg-gradient-to-br from-blue-200 to-blue-300 text-slate-900 border-blue-200 hover:from-blue-300 hover:to-blue-400"
@@ -1059,25 +1069,6 @@ const Home = () => {
       {/* Features removed per request */}
 
       {/* Quote removed per request to avoid large block on desktop */}
-
-      {/* 时光胶囊板块（嵌入首页） */}
-      <section className="mt-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-gray-900">{lang === 'zh' ? '时光胶囊' : 'Time Capsule'}</h2>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate('/capsule')}
-            >
-              {lang === 'zh' ? '前往完整页面' : 'Open Full Page'}
-            </button>
-          </div>
-          <div className="card">
-            <TimeCapsule embedded />
-          </div>
-        </div>
-      </section>
     </div>
   );
 };
