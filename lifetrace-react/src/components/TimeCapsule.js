@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 
-const TimeCapsule = () => {
+const TimeCapsule = ({ embedded = false }) => {
   const { isLoggedIn, familyMembers, setFamilyMembers, lang } = useContext(AppContext);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -113,10 +113,12 @@ const TimeCapsule = () => {
   };
 
   return (
-    <div className="min-h-screen py-6">
-      <Helmet>
-        <title>时光胶囊</title>
-      </Helmet>
+    <div className={embedded ? "py-6" : "min-h-screen py-6"}>
+      {!embedded && (
+        <Helmet>
+          <title>时光胶囊</title>
+        </Helmet>
+      )}
       <div className="max-w-4xl mx-auto px-4">
         {message && (
           <div className="mb-4 p-2 text-center rounded bg-blue-50 text-blue-700 border border-blue-200">{message}</div>
